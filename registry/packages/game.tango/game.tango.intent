@@ -1,0 +1,537 @@
+AIM: game.tango#intent@1.5
+
+INTENT TangoGame {
+  SUMMARY: "A logic puzzle game where players fill a grid with two symbols, ensuring equal distribution and no more than two adjacent, with special constraint cells."
+  REQUIREMENTS {
+    - "Game board is a square grid (6x6, 8x8, or 10x10) with cells to fill."
+    - "Players fill each cell with one of two symbols (e.g., 🫐 blueberry or 🍋 lemon, or ⚫/⚪, or 0/1)."
+    - "Each row must contain an equal number of both symbols."
+    - "Each column must contain an equal number of both symbols."
+    - "No more than two of the same symbol can be adjacent horizontally or vertically."
+    - "Some cells have constraint symbols: = (adjacent cells must be same) or × (adjacent cells must be opposite)."
+    - "Clicking an empty cell cycles through: first symbol → second symbol → empty."
+    - "Invalid placements are highlighted in red to guide the player."
+    - "Puzzle has exactly one unique solution solvable through logic (no guessing)."
+    - "Game tracks time taken to complete each puzzle."
+    - "Players can clear cells, reset puzzle, check solution, or get hints."
+    - "Game generates unlimited random puzzles in endless mode with configurable difficulty."
+    - "Statistics track games played, completed, win rate, and average completion time."
+    - "Leaderboard shows top 10 fastest completion times stored locally."
+    - "All game data persists in browser localStorage (no backend required)."
+    - "UI is modern, responsive, and mobile-friendly with smooth animations."
+    - "When working with datetime attributes from localStorage, always wrap them with new Date() before calling Date methods like .getTime() to handle deserialized data safely."
+  }
+
+  TESTS {
+    - "Placing a third consecutive symbol horizontally is rejected."
+    - "Placing a third consecutive symbol vertically is rejected."
+    - "Placing a symbol that violates = constraint is highlighted as error."
+    - "Placing a symbol that violates × constraint is highlighted as error."
+    - "Completing a row/column with equal symbols of each type removes error highlights."
+    - "Filling all cells correctly completes the puzzle and stops the timer."
+    - "Reset restores the puzzle to initial state."
+    - "Check solution validates current board state."
+    - "Completing a puzzle faster than leaderboard entries updates the leaderboard."
+    - "Statistics correctly increment after each game completion."
+  }
+
+  SCHEMA GameBoard {
+    SUMMARY: "Represents the current state of a Tango puzzle board."
+    REQUIREMENTS {
+      - "Board is a square grid (size × size) initialized with empty cells and constraints."
+      - "Some cells may be pre-filled as part of the puzzle."
+      - "Constraint symbols (=, ×) appear between cells to define relationships."
+      - "Board state updates as players place or remove symbols."
+    }
+
+    ATTRIBUTES {
+      id: uuid required generated immutable
+      size: integer required min(6) max(10) enum(6, 8, 10)
+      grid: array<array<string>> required
+      constraints: array<object> required
+      prefilledCells: array<object> required
+      difficulty: enum(easy, medium, hard) required
+      createdAt: datetime required generated immutable
+    }
+  }
+
+  SCHEMA CellConstraint {
+    SUMMARY: "Represents a constraint between two adjacent cells."
+    REQUIREMENTS {
+      - "Constraint type is either 'equals' (=) or 'different' (×)."
+      - "Constraint applies to two specific adjacent cells."
+    }
+
+    ATTRIBUTES {
+      id: uuid required generated immutable
+      type: enum(equals, different) required
+      cell1Position: object required
+      cell2Position: object required
+      orientation: enum(horizontal, vertical) required
+    }
+  }
+
+  SCHEMA CellPlacement {
+    SUMMARY: "Represents a player's symbol placement in a cell."
+    REQUIREMENTS {
+      - "Placement records position and symbol type."
+      - "Can be validated against game rules."
+    }
+
+    ATTRIBUTES {
+      id: uuid required generated immutable
+      position: object required
+      symbol: enum(symbol1, symbol2, empty) required
+      isValid: boolean required default(true)
+      violatedRules: array<string> required default([])
+      timestamp: datetime required generated immutable
+    }
+  }
+
+  SCHEMA GameSession {
+    SUMMARY: "Tracks one complete game session from start to finish."
+    REQUIREMENTS {
+      - "Session begins when a new puzzle is generated."
+      - "Timer starts when first placement is made."
+      - "Session ends when puzzle is completed or abandoned."
+      - "When loading session from storage, datetime fields must be converted to Date objects using new Date() before calling Date methods."
+    }
+
+    ATTRIBUTES {
+      id: uuid required generated immutable
+      boardId: uuid required
+      status: enum(active, completed, abandoned) required default(active)
+      placements: array<uuid> required default([])
+      hintsUsed: integer required default(0) min(0)
+      errorsFound: integer required default(0) min(0)
+      startTime: datetime required generated immutable
+      endTime: datetime optional
+      durationSeconds: integer optional min(0)
+      completed: boolean required default(false)
+    }
+  }
+
+  SCHEMA PlayerStatistics {
+    SUMMARY: "Aggregated statistics for the player across all games."
+    REQUIREMENTS {
+      - "Statistics persist in localStorage."
+      - "Stats update after each completed game."
+      - "Stats broken down by difficulty level."
+    }
+
+    ATTRIBUTES {
+      id: uuid required generated immutable
+      gamesPlayed: integer required default(0) min(0)
+      gamesCompleted: integer required default(0) min(0)
+      gamesAbandoned: integer required default(0) min(0)
+      totalPlayTimeSeconds: integer required default(0) min(0)
+      averageCompletionSeconds: number optional min(0)
+      fastestCompletionSeconds: integer optional min(0)
+      currentStreak: integer required default(0) min(0)
+      bestStreak: integer required default(0) min(0)
+      perfectGames: integer required default(0) min(0)
+      totalHintsUsed: integer required default(0) min(0)
+      statsByDifficulty: object required
+      lastPlayedAt: datetime optional
+      createdAt: datetime required generated immutable
+      updatedAt: datetime required generated
+    }
+  }
+
+  SCHEMA LeaderboardEntry {
+    SUMMARY: "A single entry in the local leaderboard for fastest completions."
+    REQUIREMENTS {
+      - "Leaderboard stores top 10 fastest completion times per difficulty."
+      - "Entries persist in localStorage."
+    }
+
+    ATTRIBUTES {
+      id: uuid required generated immutable
+      sessionId: uuid required
+      difficulty: enum(easy, medium, hard) required
+      size: integer required
+      durationSeconds: integer required min(1)
+      hintsUsed: integer required min(0)
+      completedAt: datetime required generated immutable
+    }
+  }
+
+  FLOW GeneratePuzzle {
+    SUMMARY: "Generates a new random Tango puzzle with a unique solution."
+    REQUIREMENTS {
+      - "Puzzle is solvable using logic without guessing."
+      - "Solution is unique (only one valid completion)."
+      - "Difficulty affects number of pre-filled cells and constraint density."
+    }
+
+    TRIGGER: Contract.StartNewGame
+    STEPS {
+      - "Create empty grid of specified size."
+      - "Generate valid complete solution respecting all rules."
+      - "Remove cells strategically to create puzzle with unique solution."
+      - "Add constraint symbols (=, ×) between cells."
+      - "Validate puzzle has exactly one solution."
+      - "PERSIST Schema.GameBoard."
+      - "CREATE Schema.GameSession with boardId."
+    }
+  }
+
+  FLOW ValidatePlacement {
+    SUMMARY: "Validates that a symbol placement follows all game rules."
+    REQUIREMENTS {
+      - "Checks no-three-in-a-row rule horizontally and vertically."
+      - "Checks equal distribution in completed rows/columns."
+      - "Checks constraint satisfaction (=, ×)."
+      - "Returns list of violated rules if any."
+    }
+
+    TRIGGER: Contract.PlaceSymbol
+    REQUIRES {
+      - "Schema.GameSession.status = active"
+    }
+    STEPS {
+      - "Check if placement creates three consecutive same symbols horizontally."
+      - "Check if placement creates three consecutive same symbols vertically."
+      - "Check if row/column has too many of one symbol."
+      - "Check constraint violations with adjacent cells."
+      - "RETURN validation result with violated rules."
+    }
+  }
+
+  FLOW CheckCompletion {
+    SUMMARY: "Checks if the puzzle is completely and correctly solved."
+    REQUIREMENTS {
+      - "All cells must be filled."
+      - "All rows and columns must have equal distribution."
+      - "No rule violations exist."
+    }
+
+    TRIGGER: Contract.PlaceSymbol
+    REQUIRES {
+      - "All grid cells are non-empty"
+    }
+    STEPS {
+      - "REQUIRES all cells are filled."
+      - "REQUIRES each row has equal count of both symbols."
+      - "REQUIRES each column has equal count of both symbols."
+      - "REQUIRES no three consecutive same symbols exist."
+      - "REQUIRES all constraints are satisfied."
+      - "IF all checks pass: EXECUTE Flow.CompleteGame."
+    }
+  }
+
+  FLOW CompleteGame {
+    SUMMARY: "Finalizes a game session when puzzle is correctly solved."
+    REQUIREMENTS {
+      - "Timer stops and final duration is calculated."
+      - "Statistics and leaderboard update if applicable."
+    }
+
+    TRIGGER: Flow.CheckCompletion
+    REQUIRES {
+      - "Puzzle is fully solved correctly"
+    }
+    STEPS {
+      - "UPDATE Schema.GameSession.status = completed."
+      - "SET Schema.GameSession.endTime = current time."
+      - "CALCULATE Schema.GameSession.durationSeconds."
+      - "EXECUTE Flow.UpdateStatistics."
+      - "EXECUTE Flow.UpdateLeaderboard."
+      - "SHOW completion celebration animation."
+    }
+  }
+
+  FLOW UpdateStatistics {
+    SUMMARY: "Updates player statistics after a completed game."
+    REQUIREMENTS {
+      - "Increments games completed counter."
+      - "Updates stats by difficulty level."
+      - "Recalculates averages and streaks."
+    }
+
+    TRIGGER: Flow.CompleteGame
+    STEPS {
+      - "INCREMENT Schema.PlayerStatistics.gamesCompleted."
+      - "UPDATE Schema.PlayerStatistics.totalPlayTimeSeconds."
+      - "RECALCULATE Schema.PlayerStatistics.averageCompletionSeconds."
+      - "UPDATE Schema.PlayerStatistics.fastestCompletionSeconds if new record."
+      - "INCREMENT Schema.PlayerStatistics.currentStreak."
+      - "UPDATE Schema.PlayerStatistics.bestStreak if needed."
+      - "IF hintsUsed = 0: INCREMENT perfectGames."
+      - "UPDATE statsByDifficulty for current difficulty."
+      - "SET Schema.PlayerStatistics.lastPlayedAt = current time."
+      - "PERSIST Schema.PlayerStatistics to localStorage."
+    }
+  }
+
+  FLOW UpdateLeaderboard {
+    SUMMARY: "Updates local leaderboard if completion time qualifies."
+    REQUIREMENTS {
+      - "Only top 10 fastest times per difficulty are kept."
+      - "Leaderboard persists in localStorage."
+    }
+
+    TRIGGER: Flow.CompleteGame
+    STEPS {
+      - "FETCH existing leaderboard entries for difficulty."
+      - "IF leaderboard has < 10 entries OR durationSeconds < slowest entry:"
+      - "CREATE Schema.LeaderboardEntry."
+      - "SORT leaderboard by durationSeconds ascending."
+      - "KEEP top 10 entries per difficulty."
+      - "PERSIST leaderboard to localStorage."
+    }
+  }
+
+  FLOW ProvideHint {
+    SUMMARY: "Provides a hint by revealing one correct placement."
+    REQUIREMENTS {
+      - "Hint selects a cell that can be logically deduced."
+      - "Hint count is tracked in session."
+    }
+
+    TRIGGER: Contract.GetHint
+    REQUIRES {
+      - "Schema.GameSession.status = active"
+      - "Puzzle is not yet complete"
+    }
+    STEPS {
+      - "FETCH puzzle solution."
+      - "FIND empty cell with highest logical certainty."
+      - "REVEAL correct symbol for that cell."
+      - "INCREMENT Schema.GameSession.hintsUsed."
+      - "RETURN hint position and symbol."
+    }
+  }
+
+  CONTRACT StartNewGame {
+    SUMMARY: "Generates a new puzzle and starts a fresh game session."
+    REQUIREMENTS {
+      - "Any active session is marked as abandoned before starting new game."
+      - "Accepts difficulty and size parameters."
+    }
+
+    INPUT {
+      - difficulty
+      - size
+    }
+    LOGIC {
+      - "IF active session exists: UPDATE status = abandoned"
+      - "EXECUTE Flow.GeneratePuzzle with difficulty and size"
+      - "RETURN Schema.GameBoard and Schema.GameSession"
+    }
+  }
+
+  CONTRACT PlaceSymbol {
+    SUMMARY: "Places or removes a symbol in a cell, cycling through options."
+    REQUIREMENTS {
+      - "Cell must not be a pre-filled cell."
+      - "Symbol cycles: empty → symbol1 → symbol2 → empty."
+      - "Validates placement and highlights errors."
+    }
+
+    INPUT {
+      - position
+      - symbol
+    }
+    LOGIC {
+      - "REQUIRES position is not a prefilled cell"
+      - "EXECUTE Flow.ValidatePlacement"
+      - "UPDATE cell with symbol"
+      - "CREATE Schema.CellPlacement with validation result"
+      - "EXECUTE Flow.CheckCompletion"
+      - "RETURN updated Schema.GameBoard with validation feedback"
+    }
+  }
+
+  CONTRACT ResetPuzzle {
+    SUMMARY: "Resets the current puzzle to its initial state."
+    REQUIREMENTS {
+      - "Clears all player placements."
+      - "Keeps pre-filled cells intact."
+      - "Resets timer."
+    }
+
+    INPUT {
+      - none
+    }
+    LOGIC {
+      - "RESTORE Schema.GameBoard to initial state"
+      - "CLEAR Schema.GameSession.placements"
+      - "RESET timer"
+      - "RETURN reset Schema.GameBoard"
+    }
+  }
+
+  CONTRACT CheckSolution {
+    SUMMARY: "Validates the current board state against the solution."
+    REQUIREMENTS {
+      - "Highlights incorrect placements."
+      - "Increments error count."
+    }
+
+    INPUT {
+      - none
+    }
+    LOGIC {
+      - "FETCH puzzle solution"
+      - "COMPARE current board with solution"
+      - "HIGHLIGHT incorrect cells"
+      - "INCREMENT Schema.GameSession.errorsFound"
+      - "RETURN validation feedback"
+    }
+  }
+
+  CONTRACT GetHint {
+    SUMMARY: "Provides a hint by revealing one logically deducible placement."
+    REQUIREMENTS {
+      - "Only available during active game."
+      - "Increments hint counter."
+    }
+
+    INPUT {
+      - none
+    }
+    LOGIC {
+      - "EXECUTE Flow.ProvideHint"
+      - "RETURN hint position and symbol"
+    }
+  }
+
+  CONTRACT GetStatistics {
+    SUMMARY: "Retrieves current player statistics."
+    REQUIREMENTS {
+      - "Returns all statistics or creates default if none exist."
+    }
+
+    INPUT {
+      - none
+    }
+    LOGIC {
+      - "FETCH Schema.PlayerStatistics from localStorage"
+      - "IF not exists: CREATE default Schema.PlayerStatistics"
+      - "RETURN Schema.PlayerStatistics"
+    }
+  }
+
+  CONTRACT GetLeaderboard {
+    SUMMARY: "Retrieves top 10 fastest completion times for a difficulty."
+    REQUIREMENTS {
+      - "Returns sorted leaderboard entries."
+      - "Filters by difficulty level."
+    }
+
+    INPUT {
+      - difficulty
+    }
+    LOGIC {
+      - "FETCH leaderboard entries from localStorage"
+      - "FILTER by difficulty"
+      - "SORT by durationSeconds ascending"
+      - "RETURN top 10 Schema.LeaderboardEntry"
+    }
+  }
+
+  PERSONA Player {
+    SUMMARY: "Any user who plays the Tango logic puzzle game."
+    REQUIREMENTS {
+      - "Player can start new games with chosen difficulty and size."
+      - "Player can place/remove symbols by clicking cells."
+      - "Player can use hints, reset, or check solution."
+      - "No authentication required, all data is local."
+    }
+
+    VIEW GameBoard {
+      SUMMARY: "Main game interface showing the puzzle grid and controls."
+      REQUIREMENTS {
+        - "Grid displays cells with symbols, constraints, and validation feedback."
+        - "Clicking cell cycles through: empty → symbol1 → symbol2 → empty."
+        - "Invalid cells highlight in red."
+        - "Constraint symbols (=, ×) visible between cells."
+        - "Timer displays during active game."
+        - "Mobile-responsive touch interactions."
+      }
+
+      DISPLAY {
+        - "grid as interactive-board"
+        - "constraints as symbols-between-cells"
+        - "durationSeconds as timer"
+        - "hintsUsed as badge"
+        - "errorsFound as badge"
+        - "validation-feedback as highlighted-cells"
+      }
+      ACTIONS {
+        - "New Game (with difficulty selector) -> Contract.StartNewGame"
+        - "Click Cell -> Contract.PlaceSymbol"
+        - "Reset -> Contract.ResetPuzzle"
+        - "Check -> Contract.CheckSolution"
+        - "Hint -> Contract.GetHint"
+        - "View Statistics -> VIEW Statistics"
+        - "View Leaderboard -> VIEW Leaderboard"
+      }
+    }
+
+    VIEW NewGameDialog {
+      SUMMARY: "Modal for selecting difficulty and grid size for a new game."
+      REQUIREMENTS {
+        - "Allows selection of difficulty: easy, medium, hard."
+        - "Allows selection of grid size: 6x6, 8x8, 10x10."
+        - "Shows description of each difficulty level."
+      }
+
+      DISPLAY {
+        - "difficulty as button-group"
+        - "size as button-group"
+        - "difficulty-descriptions as info-text"
+      }
+      ACTIONS {
+        - "Start -> Contract.StartNewGame"
+        - "Cancel -> Close dialog"
+      }
+    }
+
+    VIEW Statistics {
+      SUMMARY: "Dashboard showing player performance metrics."
+      REQUIREMENTS {
+        - "Displays all tracked statistics in card layout."
+        - "Shows breakdown by difficulty level."
+        - "Shows progress indicators and trends."
+      }
+
+      DISPLAY {
+        - "gamesPlayed as stat-card"
+        - "gamesCompleted as stat-card"
+        - "averageCompletionSeconds as stat-card with format"
+        - "fastestCompletionSeconds as stat-card with badge"
+        - "currentStreak as streak-indicator"
+        - "bestStreak as streak-indicator"
+        - "perfectGames as stat-card"
+        - "statsByDifficulty as breakdown-cards"
+        - "totalPlayTimeSeconds as formatted-duration"
+      }
+      ACTIONS {
+        - "Back to Game -> VIEW GameBoard"
+      }
+    }
+
+    VIEW Leaderboard {
+      SUMMARY: "List of top 10 fastest completion times per difficulty."
+      REQUIREMENTS {
+        - "Tabs or filter for difficulty levels."
+        - "Entries show rank, time, hints used, and date."
+        - "Current session highlighted if in leaderboard."
+      }
+
+      DISPLAY {
+        - "difficulty as tab-selector"
+        - "entries as ranked-list"
+        - "durationSeconds as formatted-time"
+        - "hintsUsed as badge"
+        - "size as badge"
+        - "completedAt as relative-date"
+      }
+      ACTIONS {
+        - "Back to Game -> VIEW GameBoard"
+      }
+    }
+  }
+}
