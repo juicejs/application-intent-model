@@ -25,6 +25,11 @@
       "name": "game.tango",
       "version": "1.5",
       "entry": "registry/packages/game.tango/game.tango.intent"
+    },
+    {
+      "name": "tool.pixelart",
+      "version": "1.5",
+      "entry": "registry/packages/tool.pixelart/tool.pixelart.intent"
     }
   ]
 }
