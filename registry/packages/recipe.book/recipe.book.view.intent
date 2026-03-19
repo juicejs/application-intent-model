@@ -1,0 +1,76 @@
+AIM: recipe.book#view@1.5
+
+VIEW RecipeList {
+  SUMMARY: "The main browsing interface displaying all recipes with search and filter options."
+  DISPLAY {
+    - "A grid or list of Recipe cards showing title, difficulty, prepTime, cookTime, and tags"
+    - "A search bar for filtering recipes by name"
+    - "Tag-based filter chips for narrowing results"
+    - "Category filter chips for narrowing results (e.g. lunch, dessert, pasta)"
+    - "A toggle to show only favorite recipes"
+    - "Visual indicator for favorite status on each card"
+    - "Empty state message when no recipes match the current filters"
+  }
+  ACTIONS {
+    - "Clicking 'Add Recipe' -> CALL CreateRecipe via RecipeForm"
+    - "Clicking a recipe card -> navigate to RecipeDetail"
+    - "Clicking the favorite icon on a card -> CALL ToggleFavorite"
+    - "Typing in the search bar -> CALL ListRecipes with searchTerm"
+    - "Selecting a tag filter -> CALL ListRecipes with tag"
+    - "Selecting a category filter -> CALL ListRecipes with category"
+    - "Clicking 'Import from URL' -> open ImportRecipeModal"
+  }
+}
+
+VIEW RecipeDetail {
+  SUMMARY: "Full display of a single recipe with ingredients, steps, and metadata."
+  DISPLAY {
+    - "Recipe title, description, and image"
+    - "Metadata badges for servings, prepTime, cookTime, and difficulty"
+    - "Ordered list of Ingredient records with quantity and unit"
+    - "Numbered list of Step records ordered by orderIndex"
+    - "Tags displayed as chips"
+    - "Favorite status indicator"
+  }
+  ACTIONS {
+    - "Clicking 'Edit' -> navigate to RecipeForm with existing data"
+    - "Clicking 'Delete' -> confirm and CALL DeleteRecipe"
+    - "Clicking the favorite icon -> CALL ToggleFavorite"
+  }
+}
+
+VIEW RecipeForm {
+  SUMMARY: "Form interface for creating or editing a recipe with dynamic ingredient and step rows."
+  DISPLAY {
+    - "Text inputs for title, description, servings, prepTime, and cookTime"
+    - "Dropdown selector for difficulty level"
+    - "Text input for category (e.g. lunch, dessert, pasta)"
+    - "Tag input with autocomplete from existing tags"
+    - "Image URL input with preview"
+    - "Dynamic list of ingredient rows with name, quantity, and unit fields"
+    - "Dynamic list of step rows with instruction field, reorderable by drag"
+    - "Add buttons to append new ingredient or step rows"
+  }
+  ACTIONS {
+    - "Clicking 'Save' -> CALL CreateRecipe or CALL UpdateRecipe"
+    - "Clicking 'Cancel' -> navigate back without saving"
+    - "Clicking remove on an ingredient row -> remove it from the form"
+    - "Clicking remove on a step row -> remove it from the form"
+    - "Dragging a step row -> reorder steps"
+  }
+}
+
+VIEW ImportRecipeModal {
+  SUMMARY: "Modal dialog for importing a recipe from an external URL."
+  DISPLAY {
+    - "Text input for pasting a recipe URL"
+    - "Loading spinner while fetching and extracting recipe data"
+    - "Preview of extracted recipe title, ingredients, and steps before saving"
+    - "Error message when extraction fails or URL is invalid"
+  }
+  ACTIONS {
+    - "Clicking 'Import' -> CALL ImportRecipe with the entered URL"
+    - "Clicking 'Save' after preview -> confirm and persist the imported recipe"
+    - "Clicking 'Cancel' -> close modal without saving"
+  }
+}
