@@ -30,6 +30,11 @@
       "name": "tool.pixelart",
       "version": "1.5",
       "entry": "registry/packages/tool.pixelart/tool.pixelart.intent"
+    },
+    {
+      "name": "app.task-manager",
+      "version": "1.4",
+      "entry": "registry/packages/app.task-manager/app.task-manager.intent"
     }
   ]
 }

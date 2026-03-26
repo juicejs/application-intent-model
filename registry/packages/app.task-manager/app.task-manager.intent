@@ -1,0 +1,173 @@
+AIM: app.task-manager#intent@1.4
+
+INTENT DesktopPlanner {
+  SUMMARY: "A specialized desktop Kanban and Task Management application. Users categorize tasks into colored Sections (e.g., Work, Car, House), view them in a global Kanban board, or filter by specific sections. State is persisted to a local data.json file."
+  REQUIREMENTS {
+    - "User can create, read, update, and delete custom Sections with a name and theme color."
+    - "User can create tasks assigned to a Section with a title and status (todo, in-progress, done)."
+    - "Tasks are displayed on a Kanban board with three columns: To Do, In Progress, Done."
+    - "Tasks can be dragged between Kanban columns to update their status."
+    - "A sidebar lists all Sections and provides an All Tasks global view."
+    - "Clicking a Section in the sidebar filters the dashboard to show only that Section's tasks."
+    - "Each task card displays a visual color indicator (4px left-border) matching its parent Section color."
+    - "A dynamic toolbar displays a time-based greeting: Good morning (05:00-11:59), Good afternoon (12:00-17:59), Good evening (18:00-04:59), followed by the user name Ian."
+    - "If zero Sections exist, the main dashboard is hidden and replaced by a welcome prompt: Welcome! Create your first section in the sidebar to get started."
+    - "Inline task creation is available via a + button on each Kanban column header, auto-assigning the task to the active Section and that column's status."
+    - "A scrollable task listing panel sits beside the Kanban board showing all tasks in the current filter with title and colored Section badge."
+    - "All application state is saved to and loaded from a local data.json file."
+  }
+
+  SCHEMA Section {
+    SUMMARY: "Represents a user-defined task category with a theme color."
+    REQUIREMENTS {
+      - "Section name must be non-empty and unique."
+      - "Color must be a valid hex color string."
+    }
+
+    ATTRIBUTES {
+      id: string required generated immutable pattern("^sec_[0-9]+$")
+      name: string required min(1) max(100) unique
+      color: string required pattern("^#[0-9a-fA-F]{6}$")
+    }
+  }
+
+  SCHEMA Task {
+    SUMMARY: "Represents a single task belonging to a Section with a Kanban status."
+    REQUIREMENTS {
+      - "Task must belong to an existing Section."
+      - "Status must be one of: todo, in-progress, done."
+      - "Title must be non-empty."
+      - "Deadline is optional but when set must be a future date at creation time."
+      - "Progress percentage is derived: (now - createdAt) / (deadline - createdAt) * 100, clamped 0-100."
+    }
+
+    ATTRIBUTES {
+      id: string required generated immutable pattern("^task_[0-9]+$")
+      sectionId: string required reference(Section.id)
+      title: string required min(1) max(255)
+      status: string required enum("todo", "in-progress", "done") default("todo")
+      deadline: datetime optional
+      createdAt: datetime required generated immutable
+    }
+  }
+
+  FLOW ValidateSectionInput {
+    SUMMARY: "Validates Section name uniqueness and color format before persistence."
+    REQUIREMENTS {
+      - "Reject empty or duplicate Section names."
+      - "Reject invalid hex color values."
+    }
+
+    TRIGGER: Contract.CreateSection
+    STEPS {
+      - "Trim Section name input."
+      - "REQUIRES trimmed name length > 0."
+      - "REQUIRES name is unique among existing Sections."
+      - "REQUIRES color matches hex pattern #RRGGBB."
+    }
+  }
+
+  FLOW ValidateTaskInput {
+    SUMMARY: "Validates Task title, deadline, and ensures the referenced Section exists."
+    REQUIREMENTS {
+      - "Reject empty task titles."
+      - "Reject references to non-existent Sections."
+      - "If deadline is provided, it must be in the future at creation time."
+    }
+
+    TRIGGER: Contract.CreateTask, Contract.UpdateTask
+    STEPS {
+      - "Trim Task title input."
+      - "REQUIRES trimmed title length > 0."
+      - "REQUIRES sectionId references an existing Schema.Section."
+      - "IF deadline is provided: REQUIRES deadline > now."
+    }
+  }
+
+  FLOW ComputeDeadlineProgress {
+    SUMMARY: "Computes the percentage of elapsed time between task creation and its deadline."
+    REQUIREMENTS {
+      - "Returns null if no deadline is set."
+      - "Clamps result between 0 and 100."
+      - "Returns 100 if current time is past the deadline."
+    }
+
+    TRIGGER: View.Dashboard.Render, View.TaskDetail.Render
+    STEPS {
+      - "IF Task.deadline is null: RETURN null."
+      - "Compute elapsed = now - Task.createdAt."
+      - "Compute total = Task.deadline - Task.createdAt."
+      - "Compute progress = (elapsed / total) * 100."
+      - "Clamp progress to range 0-100."
+      - "RETURN progress as integer."
+    }
+  }
+
+  FLOW PersistState {
+    SUMMARY: "Writes the current Sections and Tasks arrays to data.json on every mutation."
+    REQUIREMENTS {
+      - "File is written atomically to prevent corruption."
+      - "JSON structure matches the defined schema with sections and tasks arrays."
+    }
+
+    TRIGGER: Contract.CreateSection, Contract.UpdateSection, Contract.DeleteSection, Contract.CreateTask, Contract.UpdateTask, Contract.UpdateTaskStatus, Contract.DeleteTask
+    STEPS {
+      - "Serialize current Sections and Tasks arrays to JSON."
+      - "Write JSON to data.json in project directory."
+    }
+    ON_ERROR {
+      - "Log write failure and return error to caller."
+    }
+  }
+
+  FLOW LoadState {
+    SUMMARY: "Reads Sections and Tasks from data.json on application startup."
+    REQUIREMENTS {
+      - "If data.json does not exist, initialize with empty sections and tasks arrays."
+      - "If data.json is malformed, initialize with empty state and log warning."
+    }
+
+    TRIGGER: Application.Init
+    STEPS {
+      - "Check if data.json exists at project path."
+      - "IF exists: parse JSON and load into Schema.Section and Schema.Task arrays."
+      - "IF not exists: initialize empty state and create data.json."
+    }
+    ON_ERROR {
+      - "Initialize empty state and log warning about malformed data.json."
+    }
+  }
+
+  FLOW ResolveGreeting {
+    SUMMARY: "Determines the dynamic greeting based on current time of day."
+    REQUIREMENTS {
+      - "Greeting changes based on hour: morning (05-11), afternoon (12-17), evening (18-04)."
+    }
+
+    TRIGGER: View.Toolbar.Render
+    STEPS {
+      - "Get current hour from system clock."
+      - "IF hour >= 5 AND hour <= 11: RETURN Good morning."
+      - "IF hour >= 12 AND hour <= 17: RETURN Good afternoon."
+      - "ELSE: RETURN Good evening."
+    }
+  }
+
+  PERSONA Owner {
+    SUMMARY: "The sole user (Ian) who manages all Sections and Tasks."
+    ROLE {
+      - "user:owner"
+    }
+    ACCESS {
+      - VIEW Toolbar
+      - VIEW Sidebar
+      - VIEW Dashboard
+      - VIEW TaskDetail
+    }
+  }
+}
+
+INCLUDES {
+  contract: "app.task-manager.contract.intent"
+  view: "app.task-manager.view.intent"
+}

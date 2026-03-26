@@ -1,0 +1,143 @@
+AIM: app.task-manager#contract@1.4
+
+CONTRACT CreateSection {
+  SUMMARY: "Creates a new Section with a name and theme color."
+  INPUT {
+    name: string required
+    color: string required
+  }
+  EXPECTS {
+    - "Name must be unique and non-empty."
+    - "Color must be valid hex."
+  }
+  ENSURES {
+    - CALLS "Flow.ValidateSectionInput"
+    - PERSISTS "Schema.Section with generated sec_ prefixed id"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "The created Section"
+  }
+}
+
+CONTRACT UpdateSection {
+  SUMMARY: "Updates an existing Section's name and/or color."
+  INPUT {
+    sectionId: string required
+    name: string required
+    color: string required
+  }
+  EXPECTS {
+    - "Section must exist."
+    - "If name changes, new name must be unique."
+  }
+  ENSURES {
+    - CALLS "Flow.ValidateSectionInput"
+    - UPDATES "Schema.Section"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "The updated Section"
+  }
+}
+
+CONTRACT DeleteSection {
+  SUMMARY: "Deletes a Section and all Tasks belonging to it."
+  INPUT {
+    sectionId: string required
+  }
+  EXPECTS {
+    - "Section must exist."
+  }
+  ENSURES {
+    - DELETES "All Schema.Task WHERE sectionId matches"
+    - DELETES "Schema.Section"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "Deletion confirmation"
+  }
+}
+
+CONTRACT CreateTask {
+  SUMMARY: "Creates a new Task within a Section at a given Kanban status."
+  INPUT {
+    sectionId: string required
+    title: string required
+    status: string optional
+    deadline: datetime optional
+  }
+  EXPECTS {
+    - "Title must be non-empty."
+    - "Section must exist."
+    - "Status defaults to todo if not provided."
+  }
+  ENSURES {
+    - CALLS "Flow.ValidateTaskInput"
+    - PERSISTS "Schema.Task with generated task_ prefixed id and createdAt set to now"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "The created Task"
+  }
+}
+
+CONTRACT UpdateTask {
+  SUMMARY: "Updates a Task's title, deadline, status, or section from the edit popup."
+  INPUT {
+    taskId: string required
+    title: string optional
+    sectionId: string optional
+    status: string optional
+    deadline: datetime optional
+  }
+  EXPECTS {
+    - "Task must exist."
+    - "Title must be non-empty if provided."
+    - "Deadline must be in the future if changed."
+  }
+  ENSURES {
+    - CALLS "Flow.ValidateTaskInput"
+    - UPDATES "Schema.Task"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "The updated Task"
+  }
+}
+
+CONTRACT UpdateTaskStatus {
+  SUMMARY: "Updates a Task's status when dragged between Kanban columns."
+  INPUT {
+    taskId: string required
+    status: string required
+  }
+  EXPECTS {
+    - "Task must exist."
+    - "New status must be one of: todo, in-progress, done."
+  }
+  ENSURES {
+    - UPDATES "Schema.Task.status"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "The updated Task"
+  }
+}
+
+CONTRACT DeleteTask {
+  SUMMARY: "Deletes a single Task by its ID."
+  INPUT {
+    taskId: string required
+  }
+  EXPECTS {
+    - "Task must exist."
+  }
+  ENSURES {
+    - DELETES "Schema.Task"
+    - CALLS "Flow.PersistState"
+  }
+  RETURNS {
+    - "Deletion confirmation"
+  }
+}

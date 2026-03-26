@@ -1,0 +1,68 @@
+AIM: app.task-manager#view@1.4
+
+VIEW Toolbar {
+  SUMMARY: "Fixed top toolbar displaying a time-based personalized greeting."
+  DISPLAY {
+    - "greeting as centered-text: Flow.ResolveGreeting + ', Ian'"
+  }
+  ACTIONS {}
+}
+
+VIEW Sidebar {
+  SUMMARY: "Left sidebar for Section management and navigation."
+  DISPLAY {
+    - "button: All Tasks (default active)"
+    - "list: Section"
+    - "Section.name as primary"
+    - "Section.color as color-indicator"
+    - "form.create: [name, color]"
+    - "color as color-picker"
+  }
+  ACTIONS {
+    - "Select All Tasks -> filter dashboard to all"
+    - "Select Section -> filter dashboard by Section.id"
+    - "Create Section -> CALL CreateSection"
+    - "Edit Section -> CALL UpdateSection"
+    - "Delete Section -> CALL DeleteSection"
+  }
+}
+
+VIEW Dashboard {
+  SUMMARY: "Dual-view main area with a scrollable task list and a three-column Kanban board."
+  DISPLAY {
+    - "empty-state: 'Welcome! Create your first section in the sidebar to get started.' WHEN Section.count == 0"
+    - "panel.task-list: Task[]"
+    - "Task.title as primary"
+    - "Task.sectionId -> Section.color as badge"
+    - "kanban.columns: [todo, in-progress, done]"
+    - "kanban.card: Task"
+    - "Task.title as card-title"
+    - "Task.sectionId -> Section.color as left-border(4px)"
+    - "Task.deadline -> Flow.ComputeDeadlineProgress as progress-bar(color-coded)"
+    - "kanban.column-header: + button for inline creation"
+  }
+  ACTIONS {
+    - "Inline Create Task -> CALL CreateTask"
+    - "Drag Task to Column -> CALL UpdateTaskStatus"
+    - "Click Task Card -> open View.TaskDetail"
+    - "Delete Task -> CALL DeleteTask"
+  }
+}
+
+VIEW TaskDetail {
+  SUMMARY: "Modal popup for viewing and editing a single Task's details."
+  DISPLAY {
+    - "form.edit: [title, sectionId, status, deadline]"
+    - "title as text-input"
+    - "sectionId as dropdown(Section.name)"
+    - "status as dropdown(todo, in-progress, done)"
+    - "deadline as date-picker"
+    - "Task.deadline -> Flow.ComputeDeadlineProgress as progress-bar(color-coded)"
+    - "createdAt as read-only relative-date"
+  }
+  ACTIONS {
+    - "Save -> CALL UpdateTask"
+    - "Delete -> CALL DeleteTask"
+    - "Cancel -> close popup"
+  }
+}
