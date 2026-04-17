@@ -109,7 +109,7 @@ sinth synth weather
 
 ### Main Menu
 
-Running `sinth` without arguments launches an interactive menu system that provides guided access to all CLI features.
+Running `sinth` without arguments launches an interactive menu system that provides guided access to all CLI components.
 
 **Navigation:**
 - Enter a number (0-9) to select an option
@@ -151,7 +151,7 @@ Common options:
 Choice [1-6] or Enter to keep current:
 ```
 
-**Features:**
+**Components:**
 - Step-by-step guided setup
 - Common framework presets
 - Custom value input option
@@ -237,7 +237,7 @@ sinth validate
 
 Checks:
 - AIM header presence
-- Header format (feature#facet@version)
+- Header format (component#facet@version)
 - File encoding
 
 ### `sinth info <package>`
@@ -430,7 +430,7 @@ sinth synth weather  # Generate prompt with config
   - Windows: `clip` (pre-installed)
 - Or use `--no-copy` flag and copy manually
 
-## Features
+## Components
 
 ### ✅ Current
 - **Interactive menu system** - Guided workflows for all operations

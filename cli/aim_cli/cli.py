@@ -202,7 +202,7 @@ def cmd_list(args):
 
 
 def cmd_validate(args):
-    """Validate local intent files against AIM v1.5 specification"""
+    """Validate local intent files against AIM v2.0 specification"""
     if not AIM_DIR.exists():
         print_warning("No aim/ directory found")
         return
@@ -218,11 +218,11 @@ def cmd_validate(args):
         print_warning("No .intent files found")
         return
 
-    print_info("Validating intent files against AIM v1.5...")
+    print_info("Validating intent files against AIM v2.0...")
     valid_count = 0
     invalid_count = 0
 
-    # AIM v1.5 header regex from specification
+    # AIM v2.0 header regex from specification
     aim_header_pattern = re.compile(
         r'^AIM:\s+([a-z0-9]+(?:\.[a-z0-9]+)*)#(intent|schema|flow|contract|persona|view|event|mapping)@([0-9]+\.[0-9]+)$'
     )
@@ -238,12 +238,12 @@ def cmd_validate(args):
                 invalid_count += 1
                 continue
 
-            # Validate against AIM v1.5 header format
+            # Validate against AIM v2.0 header format
             header = lines[0].strip()
             match = aim_header_pattern.match(header)
 
             if not match:
-                print_error(f"{intent_file.name}: Invalid AIM v1.5 header format")
+                print_error(f"{intent_file.name}: Invalid AIM v2.0 header format")
                 print_warning(f"  Header: {header}")
                 print_info(f"  Expected: AIM: <feature>#<facet>@<x.y>")
                 print_info(f"  Valid facets: intent, schema, flow, contract, persona, view, event, mapping")

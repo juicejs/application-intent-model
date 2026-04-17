@@ -9,7 +9,7 @@ INTENT WeatherLookup {
     - "If a city is unknown or not found, show a clear not-found message."
     - "If the API call fails or times out, show a retry-friendly error message."
     - "Input must be trimmed and treated case-insensitively for lookup behavior."
-    - "The feature is read-only and does not require user authentication."
+    - "The component is read-only and does not require user authentication."
   }
 
   SCHEMA WeatherQuery {

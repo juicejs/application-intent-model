@@ -20,9 +20,10 @@ Steps:
    - top-level inline facet blocks
    - embedded facet payloads in `INTENT`
    using AIM precedence/diagnostics rules from the spec.
-5. Materialize all fetched AIM sources into local:
-   - `./aim/` for feature files
-   - `./aim/mappings/` for mapping files (if present)
+5. Materialize all fetched AIM sources into local using organizational best practices:
+   - `./aim/<component>/<component>.<facet>.intent` for component files
+   - `./aim/mappings/<component>/<component>.mapping.intent` for mapping files (if present)
+   - Ensure filenames are never generic (e.g. use `users.intent` NOT `intent.intent`).
 6. Generate production-ready code from local `./aim` in this repository's detected stack.
 7. If any required reference is unresolved, stop and report precise gaps.
 

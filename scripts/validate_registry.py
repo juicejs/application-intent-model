@@ -3,6 +3,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import Optional, Tuple, List, Union, Dict
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +26,7 @@ def fail(msg: str) -> None:
     sys.exit(1)
 
 
-def parse_header(path: Path) -> tuple[str, str, str]:
+def parse_header(path: Path) -> Tuple[str, str, str]:
     raw = path.read_text(encoding="utf-8")
     for token in LEGACY_TOKENS:
         if token in raw:
@@ -38,7 +39,7 @@ def parse_header(path: Path) -> tuple[str, str, str]:
     return m.group(1), m.group(2), m.group(3)
 
 
-def derive_identity_from_relpath(rel_path: Path) -> tuple[str, str]:
+def derive_identity_from_relpath(rel_path: Path) -> Tuple[str, str]:
     if rel_path.suffix != ".intent":
         fail(f"{rel_path}: source path must end with .intent")
 
@@ -67,9 +68,9 @@ def validate_source_file(
     path: Path,
     *,
     package_root: Path,
-    expected_feature: str | None = None,
-    expected_version: str | None = None,
-) -> tuple[str, str, str]:
+    expected_feature: Optional[str] = None,
+    expected_version: Optional[str] = None,
+) -> Tuple[str, str, str]:
     feature, facet, version = parse_header(path)
     rel_path = path.relative_to(package_root)
     path_feature, path_facet = derive_identity_from_relpath(rel_path)
@@ -101,7 +102,7 @@ def validate_entry_file(path: Path, expected_feature: str, expected_version: str
 def validate_includes(entry_path: Path, expected_feature: str, expected_version: str) -> None:
     raw = entry_path.read_text(encoding="utf-8")
     lines = raw.splitlines()
-    include_entries: list[tuple[str, str]] = []
+    include_entries: List[Tuple[str, str]] = []
     include_block_found = False
 
     i = 0
@@ -220,7 +221,7 @@ def validate_index_and_packages() -> int:
         validate_entry_file(entry_path, expected_feature=name, expected_version=version)
         validate_includes(entry_path, expected_feature=name, expected_version=version)
         intent_entry_files = []
-        seen_identities: dict[tuple[str, str], Path] = {}
+        seen_identities: Dict[Tuple[str, str], Path] = {}
         for source in sorted((REGISTRY_PACKAGES / name).rglob("*.intent")):
             source_feature, source_facet, _source_version = validate_source_file(
                 source,

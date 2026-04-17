@@ -8,22 +8,22 @@ Start simple with one intent file, then add precision only where needed.
 
 - Keep product intent readable.
 - Keep synthesis deterministic.
-- Scale from lightweight specs to high-fidelity feature definitions.
+- Scale from lightweight specs to high-fidelity component definitions.
 
 ## Core Idea
 
-Each feature has one canonical intent file:
+Each component has one canonical intent file:
 
-- `<feature>.intent`
+- `<component>.intent`
 
 Optional precision facets can be added:
 
-- `<feature>.schema.intent`
-- `<feature>.flow.intent`
-- `<feature>.contract.intent`
-- `<feature>.persona.intent`
-- `<feature>.view.intent`
-- `<feature>.event.intent`
+- `<component>.schema.intent`
+- `<component>.flow.intent`
+- `<component>.contract.intent`
+- `<component>.persona.intent`
+- `<component>.view.intent`
+- `<component>.event.intent`
 
 This enables progressive detail:
 
@@ -88,7 +88,7 @@ After deploy, verify:
 ## Quick Example
 
 ```ail
-AIM: game.snake#intent@1.5
+AIM: game.snake#intent@2.0
 
 INTENT SnakeGame {
   SUMMARY: "A single-player snake game with top-10 scores."
@@ -108,15 +108,15 @@ INTENT SnakeGame {
 ## Repository Layout
 
 - [`specification.md`](./specification.md): canonical language specification
-- [`registry/`](./registry): feature package registry
+- [`registry/`](./registry): component package registry
 - [`registry/index.json`](./registry/index.json): package catalog with intent entrypoints
-- [`registry/packages/`](./registry/packages): publishable feature packages (intent entry + optional facets)
+- [`registry/packages/`](./registry/packages): publishable component packages (intent entry + optional facets)
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md): contribution and publishing workflow
 - [`PROMPT.md`](./PROMPT.md): generic local AI synthesis prompt
 
 ## Current Demo
 
-This repo includes a `game.snake` demo feature showing:
+This repo includes a `game.snake` demo component showing:
 
 - a mixed-source intent envelope
 - inline `SCHEMA`, `FLOW`, and `PERSONA`
@@ -150,4 +150,4 @@ Use this sequence:
 
 ## Status
 
-Current spec version: **AIM v1.5**.
+Current spec version: **AIM v2.0**.

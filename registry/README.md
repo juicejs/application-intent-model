@@ -1,16 +1,16 @@
-# AIM Feature Registry
+# AIM Component Registry
 
-This directory is the publish surface for community AIM feature packages.
+This directory is the publish surface for community AIM component packages.
 
 ## Package Layout
 
 Each package lives in:
 
-- `registry/packages/<feature>/`
+- `registry/packages/<component>/`
 
 Each package must contain:
 
-1. Exactly one intent entry file: `<feature>.intent`
+1. Exactly one intent entry file: `<component>.intent`
 2. Optional additional facet files referenced by the intent file
 
 ## `registry/index.json` Schema
@@ -22,14 +22,14 @@ Required fields:
 
 Each package object requires:
 
-- `name`: feature namespace (lowercase, dot-separated segments; single-segment allowed)
+- `name`: component namespace (lowercase, dot-separated segments; single-segment allowed)
 - `version`: `x.y` matching entry file header
 - `entry`: relative path to canonical intent file
 
 ## Pull Request Publishing Flow
 
 1. Fork and create a branch.
-2. Add or update package files in `registry/packages/<feature>/`.
+2. Add or update package files in `registry/packages/<component>/`.
 3. Update `registry/index.json` with package `name`, `version`, and `entry`.
 4. Open a PR.
 5. CI runs `scripts/validate_registry.py`.
@@ -50,7 +50,7 @@ CI enforces:
 - `entry` exists and points to `.intent`
 - entry header matches `name`, `intent` facet, and `version`
 - exactly one `*.intent` file per package directory
-- optional `INCLUDES` targets exist and match feature/facet/version
+- optional `INCLUDES` targets exist and match component/facet/version
 - stale manifest files (`package.json`, `manifest.intent`) are rejected
 - legacy metadata tokens are rejected
 

@@ -1,11 +1,11 @@
 # Contributing
 
-## Feature Registry Publishing
+## Component Registry Publishing
 
-Community feature packages are published via pull requests to `registry/packages`.
+Community component packages are published via pull requests to `registry/packages`.
 
-1. Create a package directory: `registry/packages/<feature>/`.
-2. Add exactly one package entry file: `<feature>.intent`.
+1. Create a package directory: `registry/packages/<component>/`.
+2. Add exactly one package entry file: `<component>.intent`.
 3. Add optional facet files referenced by `INCLUDES` and/or inline intent payloads.
 4. Open a pull request.
 5. Update `registry/index.json` with `name`, `version`, and `entry`.

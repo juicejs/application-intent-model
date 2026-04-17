@@ -31,7 +31,7 @@ python3 cli/aim_cli/cli.py fetch weather
 - **[CLI.md](./CLI.md)** - User guide and command reference
 - **[PUBLISHING.md](./PUBLISHING.md)** - Guide for publishing to PyPI
 
-## Features
+## Components
 
 - 🎯 `sinth` - Interactive menu for all operations
 - 📦 `sinth init` - Initialize AIM project

@@ -156,7 +156,7 @@ Add `PYPI_TOKEN` secret to GitHub repo settings.
 Follow semantic versioning:
 - `0.1.0` - Initial release
 - `0.1.1` - Bug fixes
-- `0.2.0` - New features (backwards compatible)
+- `0.2.0` - New components (backwards compatible)
 - `1.0.0` - Stable release
 
 ## Checklist
@@ -164,7 +164,7 @@ Follow semantic versioning:
 Before publishing:
 - [ ] Update version in `pyproject.toml`
 - [ ] Update version in `aim_cli/__init__.py`
-- [ ] Update `CLI.md` with any new features
+- [ ] Update `CLI.md` with any new components
 - [ ] Test locally: `pip install -e .`
 - [ ] Run all commands to verify they work
 - [ ] Build: `python -m build`

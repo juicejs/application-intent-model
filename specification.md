@@ -1,4 +1,4 @@
-# Application Intent Model (AIM) v1.5
+# Application Intent Model (AIM) v2.0
 
 Application Intent Model (AIM) is an intent-first specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product/design discussion and structured enough for deterministic synthesis.
 
@@ -7,20 +7,20 @@ AIM supports progressive precision:
 - start with a single intent file
 - add detailed facets only when you need stronger guarantees
 
-This allows fast authoring for simple features and high-fidelity synthesis for complex features.
+This allows fast authoring for simple components and high-fidelity synthesis for complex components.
 
 ---
 
 ## 1. Core Model
 
-A feature is identified by a namespace such as `company.subsystem` (for example `game.snake`, `juice.tasks`).
+A component is identified by a namespace such as `company.subsystem` (for example `game.snake`, `juice.tasks`).
 
-In v1.5, each feature uses a **hybrid intent envelope** model:
+In v2.0, each component uses a **hybrid intent envelope** model:
 
-- required baseline: one intent entry file (`<feature>.intent`)
+- required baseline: one intent entry file (`<component>.intent`)
 - optional precision detail: `schema`, `flow`, `contract`, `persona`, `view`, `event` authored inline or in separate files
 
-No detail facet is required for a feature to be valid.
+No detail facet is required for a component to be valid.
 
 ---
 
@@ -29,7 +29,7 @@ No detail facet is required for a feature to be valid.
 Every source `.intent` file must start with one declaration line:
 
 ```ail
-AIM: <feature>#<facet>@<x.y>
+AIM: <component>#<facet>@<x.y>
 ```
 
 Example:
@@ -46,7 +46,7 @@ AIM: juice.games.snake#schema@2.1
 
 Rules:
 
-- `<feature>` must be lowercase namespace segments separated by dots (single segment allowed).
+- `<component>` must be lowercase namespace segments separated by dots (single segment allowed).
 - `<facet>` must be one of:
   - `intent`
   - `schema`
@@ -60,24 +60,26 @@ Rules:
 
 ### 2.2 Filename And Path Linkage
 
-Source identity may use either flat or nested layout, but physical path must match header identity:
+Source identity may use either flat or nested layout. To maintain clarity in multi-component systems, the nested layout is preferred, and the filename should always include the component name.
 
-- flat feature file: `<feature>.<facet>.intent`
-- nested feature file: `/aim/<namespace segments>/<facet>.intent`
-- flat mapping file: `/aim/mappings/<feature>.mapping.intent`
-- nested mapping file: `/aim/mappings/<namespace segments>/mapping.intent`
-- header: `AIM: <feature>#<facet>@<x.y>`
+- flat component file: `<component>.<facet>.intent`
+- nested component file: `/aim/<namespace segments>/<component>.<facet>.intent`
+- flat mapping file: `/aim/mappings/<component>.mapping.intent`
+- nested mapping file: `/aim/mappings/<namespace segments>/<component>.mapping.intent`
+- header: `AIM: <component>#<facet>@<x.y>`
 
 Examples:
 
-- `game.snake.schema.intent` must declare `AIM: game.snake#schema@1.5`.
-- `/aim/game/snake/schema.intent` must declare `AIM: game.snake#schema@1.5`.
-- `/aim/game/snake/event.intent` must declare `AIM: game.snake#event@1.5`.
-- `/aim/mappings/game/snake/mapping.intent` must declare `AIM: game.snake#mapping@1.5`.
+- `game.snake.schema.intent` must declare `AIM: game.snake#schema@2.0`.
+- `/aim/game/snake/game.snake.schema.intent` must declare `AIM: game.snake#schema@2.0`.
+- `/aim/game/snake/game.snake.event.intent` must declare `AIM: game.snake#event@2.0`.
+- `/aim/mappings/game/snake/game.snake.mapping.intent` must declare `AIM: game.snake#mapping@2.0`.
+
+**Note:** Avoid generic filenames like `intent.intent` or `schema.intent`. Always prefix with the component name.
 
 Hard error example:
 
-- `/aim/company/hr/invoice/schema.intent` with `AIM: company.billing.invoice#schema@1.5`.
+- `/aim/company/hr/invoice/schema.intent` with `AIM: company.billing.invoice#schema@2.0`.
 
 ### 2.3 Compatibility Policy
 
@@ -99,8 +101,8 @@ Legacy tokens treated as parse violations:
 
 Source discovery recursively scans folders under `/aim`.
 
-- discover feature sources recursively under `/aim`
-- do not include `/aim/mappings` in feature source discovery
+- discover component sources recursively under `/aim`
+- do not include `/aim/mappings` in component source discovery
 - discover mapping sources recursively under `/aim/mappings`
 - derive expected namespace and facet from physical path
 - treat the header as the ultimate source of truth, but hard-fail when path-derived identity does not match it
@@ -115,15 +117,15 @@ Typical layout:
   game.snake.event.intent
   game/
     snake/
-      intent.intent
-      schema.intent
-      contract.intent
-      event.intent
+      game.snake.intent
+      game.snake.schema.intent
+      game.snake.contract.intent
+      game.snake.event.intent
   mappings/
     game.snake.mapping.intent
     game/
       snake/
-        mapping.intent
+        game.snake.mapping.intent
 ```
 
 ### 3.1 Registry Package Catalog
@@ -154,11 +156,19 @@ Required behavior:
 3. materialize mapping sources into local `/aim/mappings` when applicable using either flat or nested layout
 4. synthesize from local `/aim` so users can edit and rebuild without refetching
 
+### 3.3 Multi-Component Organization
+
+For systems with more than one component, organizational clarity is mandatory:
+
+1.  **Component Sub-folders:** Each component MUST reside in its own sub-folder under `/aim/` (e.g., `/aim/users/`, `/aim/billing/`). 
+2.  **Descriptive Filenames:** Files must never be named generically (e.g., `intent.intent`). They must always follow the `<component>.<facet>.intent` pattern (e.g., `/aim/users/users.intent`).
+3.  **Root folder:** The root `/aim/` folder should only contain component sub-folders or very simple single-component files. Mixed flat and nested layouts for different components in the same project are discouraged.
+
 ---
 
-## 4. Intent Envelope (`<feature>.intent`)
+## 4. Intent Envelope (`<component>.intent`)
 
-Intent file is the canonical feature entrypoint.
+Intent file is the canonical component entrypoint.
 
 Hard minimum for validity:
 
@@ -174,9 +184,9 @@ Recommended (non-blocking):
 ### 4.1 Minimal Template
 
 ```ail
-AIM: demo.todo#intent@1.5
+AIM: demo.todo#intent@2.0
 
-INTENT TodoFeature {
+INTENT TodoComponent {
   SUMMARY: "A simple personal todo tracker."
   REQUIREMENTS {
     - "User can add, complete, and delete todos."
@@ -187,7 +197,7 @@ INTENT TodoFeature {
 ### 4.2 Extended Template
 
 ```ail
-AIM: game.snake#intent@1.5
+AIM: game.snake#intent@2.0
 
 INTENT SnakeGame {
   SUMMARY: "A single-player snake game with persistent top scores."
@@ -220,7 +230,7 @@ All embedded facet content follows the same brace-based rules: `{}` for hierarch
 Minimal embedded example:
 
 ```ail
-AIM: weather#intent@1.5
+AIM: weather#intent@2.0
 
 INTENT WeatherLookup {
   SUMMARY: "Get current weather by city."
@@ -240,7 +250,7 @@ INTENT WeatherLookup {
 Mixed-source example:
 
 ```ail
-AIM: weather#intent@1.5
+AIM: weather#intent@2.0
 
 INTENT WeatherLookup {
   SUMMARY: "Get current weather by city."
@@ -294,7 +304,7 @@ For each entry:
 - value must be a relative `.intent` path
 - target file must exist
 - target file preamble must match:
-  - same feature namespace
+  - same component namespace
   - same facet as include key
   - same version family (`x.y`) as envelope version
 
@@ -338,12 +348,12 @@ This repository includes a compact mixed-source hybrid-envelope example:
 
 For this example, an AI synthesizer should:
 
-1. parse `game.snake#intent@1.4`
+1. parse `game.snake#intent@2.0`
 2. parse `INCLUDES` links
 3. parse embedded `SCHEMA`, `FLOW`, and `PERSONA` blocks in the intent body
 4. load linked external `CONTRACT` and `VIEW` facets
 5. treat linked external facets as authority for those facet types
-6. use `INTENT` and optional `TESTS` as feature-level narrative and acceptance guidance
+6. use `INTENT` and optional `TESTS` as component-level narrative and acceptance guidance
 
 ---
 
@@ -543,7 +553,7 @@ Common `EVENT` blocks:
 - `ROUTING`: Delivery and subscriber declarations.
 
 ```ail
-AIM: shopping.checkout#event@1.5
+AIM: shopping.checkout#event@2.0
 
 EVENT OrderConfirmed {
   SUMMARY: "Broadcasted to the enterprise service bus when a user successfully checks out."
@@ -610,14 +620,14 @@ If dependency declarations are spread across files:
 ### 8.4 Mapping Files
 
 Mappings are declared in `/aim/mappings` files with `facet=mapping`.
-`TARGET` identifies the destination capability provider, whether it is another AIM feature namespace or an external implementation surface.
+`TARGET` identifies the destination capability provider, whether it is another AIM component namespace or an external implementation surface.
 
 Accepted mapping source paths:
 
 - flat: `/aim/mappings/company.billing.invoice.mapping.intent`
 - nested: `/aim/mappings/company/billing/invoice/mapping.intent`
 
-Both forms must declare `AIM: company.billing.invoice#mapping@1.5`.
+Both forms must declare `AIM: company.billing.invoice#mapping@2.0`.
 
 ```ail
 MAP AssigneeUsers {
@@ -653,7 +663,7 @@ Persona -> View -> Contract -> Flow / Schema / Event
 
 `Schema` interaction includes reads and writes.
 
-For intent-only features:
+For intent-only components:
 
 - skip strict chain enforcement
 - emit reduced-fidelity informational note
@@ -679,10 +689,11 @@ Tier impacts expected precision, generated structure depth, and strictness of tr
 - preamble not matching grammar
 - filename/path/header mismatch
 - malformed construct syntax
-- path-derived feature does not match header feature
+- path-derived component does not match header component
 - path-derived facet does not match header facet
-- duplicate source identity across flat/nested layouts for the same feature and facet
+- duplicate source identity across flat/nested layouts for the same component and facet
 - invalid nested source path shape
+- generic filenames (e.g., `intent.intent`, `schema.intent`, `mapping.intent`) are strictly forbidden; files must include the component name (e.g., `users.intent`).
 
 2. Legacy metadata tokens in source files
 - `:::AIL_METADATA`
@@ -699,7 +710,7 @@ Tier impacts expected precision, generated structure depth, and strictness of tr
 4. `INCLUDES` violations
 - invalid include key/value shape
 - missing included file
-- included file feature/facet/version-family mismatch
+- included file component/facet/version-family mismatch
 
 5. Embedded facet block violations
 - invalid embedded facet key in `INTENT` body
@@ -727,12 +738,12 @@ Tier impacts expected precision, generated structure depth, and strictness of tr
 2. Select package by `name` and fetch `entry` intent file.
 3. Resolve related sources from `INCLUDES` and package-local references.
 4. Materialize fetched sources into local `/aim` and mappings into `/aim/mappings`.
-5. Discover feature source `.intent` files recursively under local `/aim`, excluding `/aim/mappings`.
+5. Discover component source `.intent` files recursively under local `/aim`, excluding `/aim/mappings`.
 6. Discover mapping source `.intent` files recursively under local `/aim/mappings`.
-7. Derive expected feature/facet identity from each source path.
+7. Derive expected component/facet identity from each source path.
 8. Parse and validate header declarations.
 9. Hard-fail on filename/path/header mismatch or duplicate source identity.
-10. Group files by feature.
+10. Group files by component.
 11. Parse intent envelopes.
 12. Resolve `INCLUDES` links.
 13. Parse optional embedded facet DSL blocks in intent bodies.
@@ -750,20 +761,20 @@ Tier impacts expected precision, generated structure depth, and strictness of tr
 
 1. Valid header parse: `AIM: juice.games.snake#schema@2.1`.
 2. Valid header parse: `AIM: juice.games.snake#view@2.1`.
-3. Valid header parse: `AIM: shopping.checkout#event@1.5`.
-4. Valid flat source path parse: `/aim/company.billing.invoice.schema.intent` -> `AIM: company.billing.invoice#schema@1.5`.
-5. Valid nested source path parse: `/aim/company/billing/invoice/schema.intent` -> `AIM: company.billing.invoice#schema@1.5`.
-6. Valid nested source path parse: `/aim/company/billing/invoice/event.intent` -> `AIM: company.billing.invoice#event@1.5`.
-7. Valid nested mapping path parse: `/aim/mappings/company/billing/invoice/mapping.intent` -> `AIM: company.billing.invoice#mapping@1.5`.
-8. Invalid feature namespace: `AIM: Snake-App#schema@2.1` -> hard error.
+3. Valid header parse: `AIM: shopping.checkout#event@2.0`.
+4. Valid flat source path parse: `/aim/company.billing.invoice.schema.intent` -> `AIM: company.billing.invoice#schema@2.0`.
+5. Valid nested source path parse: `/aim/company/billing/invoice/schema.intent` -> `AIM: company.billing.invoice#schema@2.0`.
+6. Valid nested source path parse: `/aim/company/billing/invoice/event.intent` -> `AIM: company.billing.invoice#event@2.0`.
+7. Valid nested mapping path parse: `/aim/mappings/company/billing/invoice/mapping.intent` -> `AIM: company.billing.invoice#mapping@2.0`.
+8. Invalid component namespace: `AIM: Snake-App#schema@2.1` -> hard error.
 9. Invalid facet: `AIM: juice.games.snake#data@2.1` -> hard error.
 10. Invalid version: `AIM: juice.games.snake#schema@2.1.0` -> hard error.
 11. Filename/path/header mismatch -> hard error.
-12. Nested path/header feature mismatch -> hard error.
+12. Nested path/header component mismatch -> hard error.
 13. Nested path/header facet mismatch -> hard error.
-14. Duplicate flat + nested source for same feature/facet -> hard error.
+14. Duplicate flat + nested source for same component/facet -> hard error.
 15. Legacy metadata token in source -> hard error.
-16. Intent-only feature parses and synthesizes with reduced-fidelity informational note.
+16. Intent-only component parses and synthesizes with reduced-fidelity informational note.
 17. Valid `INCLUDES` resolves linked facets.
 18. Valid `INCLUDES` resolves linked view facet.
 19. Valid `INCLUDES` resolves linked event facet.
@@ -789,7 +800,7 @@ Tier impacts expected precision, generated structure depth, and strictness of tr
 
 Use intent-only when:
 
-- feature is simple
+- component is simple
 - requirements are still evolving
 - speed matters more than strict precision
 

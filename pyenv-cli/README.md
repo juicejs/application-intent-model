@@ -11,14 +11,14 @@ PyEnvCLI is an interactive command-line tool that streamlines Python virtual env
 1. **CLI** - Traditional command-line interface for scripting and automation
 2. **TUI** - Full-screen terminal UI for interactive management
 
-### Features
+### Components
 
 - 🐍 **Multiple Python versions** (3.8 - 3.13)
 - 📦 **Package dependency management** (requirements.txt)
 - 🐳 **Docker configuration** (optimized Dockerfiles)
 - 🖥️ **Modern Terminal UI** with keyboard shortcuts and mouse support
 
-## Features
+## Components
 
 ### Core Capabilities
 
@@ -61,7 +61,7 @@ pip install pyenv-cli
 pyenv-tui
 ```
 
-**Features:**
+**Components:**
 - ✨ Python version checking & installation
 - 🔍 Package search with common packages
 - 📦 Smart package management
@@ -193,13 +193,13 @@ PyEnvCLI uses local JSON file storage (no database required):
 
 ### Terminal UI (TUI) - Recommended
 - **Launch:** `pyenv-tui`
-- **Features:** Python installation, package search, no freezing
+- **Components:** Python installation, package search, no freezing
 - **Best for:** Interactive setup, visual environment management
 - **Documentation:** [FINAL_FIX.md](FINAL_FIX.md)
 
 ### Command-Line Interface (CLI)
 - **Launch:** `pyenv-cli <command>`
-- **Features:** Script-friendly, automation-ready
+- **Components:** Script-friendly, automation-ready
 - **Best for:** CI/CD, scripts, quick commands
 - **Documentation:** See commands below
 
@@ -267,4 +267,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-*This is a production-ready implementation generated from the AIM DSL with zero hallucination - every feature, schema, flow, and contract is directly traceable to the intent specification.*
+*This is a production-ready implementation generated from the AIM DSL with zero hallucination - every component, schema, flow, and contract is directly traceable to the intent specification.*

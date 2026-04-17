@@ -29,7 +29,7 @@ Or run directly with Python:
 python -m pyenv_cli.tui
 ```
 
-## Features
+## Components
 
 ### 🏠 Main Dashboard (Welcome Screen)
 
@@ -101,7 +101,7 @@ Add Python package dependencies to the environment.
 4. Repeat for additional packages
 5. Click "Save All" - Generates requirements.txt
 
-**Features:**
+**Components:**
 - PEP 440 version specifier support
 - Multiple packages in single session
 - Preview pending packages before saving
@@ -115,7 +115,7 @@ Generate optimized Dockerfile for the environment.
 - **Exposed Ports** - Comma-separated port numbers (e.g., `8000,5432`)
 - **Additional Commands** - Custom Dockerfile instructions (2 input fields)
 
-**Generated Dockerfile Features:**
+**Generated Dockerfile Components:**
 - Multi-stage build support
 - Dependency layer caching
 - Official Python slim images
@@ -145,7 +145,7 @@ Prepare and launch AI CLI tools with environment context.
 - Docker configuration status
 - User's custom prompt
 
-**Features:**
+**Components:**
 - Tool availability checking
 - Session tracking
 - Context preparation
@@ -239,7 +239,7 @@ pip install -e .
 
 ## Comparison: CLI vs TUI
 
-| Feature | CLI | TUI |
+| Component | CLI | TUI |
 |---------|-----|-----|
 | **Interface** | Command arguments | Interactive forms |
 | **Navigation** | Linear commands | Screen-based |
