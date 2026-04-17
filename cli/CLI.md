@@ -340,8 +340,8 @@ $ sinth synth --interactive
 🎯 AIM Synthesis Prompt Generator
 
 Select package to synthesize:
-  1. weather (v1.4)
-  2. game.snake (v1.4)
+  1. weather (v2.0)
+  2. game.snake (v2.0)
 
 Choice [1-2]: 1
 
@@ -375,7 +375,7 @@ The `aim.lock` file tracks installed packages:
 ```json
 {
   "weather": {
-    "version": "1.4",
+    "version": "2.0",
     "entry": "registry/packages/weather/weather.intent"
   }
 }

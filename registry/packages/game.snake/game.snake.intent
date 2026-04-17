@@ -1,4 +1,4 @@
-AIM: game.snake#intent@1.4
+AIM: game.snake#intent@2.0
 
 INTENT SnakeGame {
   SUMMARY: "A compact single-player snake game with a shared game board and leaderboard UI."

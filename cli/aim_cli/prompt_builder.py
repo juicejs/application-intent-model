@@ -66,7 +66,7 @@ Tech Stack:
 {context_section}
 Instructions:
 Read the intent files in ./aim/ and synthesize production-ready code
-following the AIM v1.5 specification. Implement all requirements defined
+following the AIM v2.0 specification. Implement all requirements defined
 across all facets (INTENT, SCHEMA, FLOW, CONTRACT, PERSONA, VIEW, EVENT,
 MAPPING as applicable).
 

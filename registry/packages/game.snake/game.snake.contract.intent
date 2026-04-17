@@ -1,4 +1,4 @@
-AIM: game.snake#contract@1.4
+AIM: game.snake#contract@2.0
 
 CONTRACT StartGame {
   SUMMARY: "Starts a fresh snake session."

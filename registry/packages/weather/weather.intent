@@ -1,4 +1,4 @@
-AIM: weather#intent@1.4
+AIM: weather#intent@2.0
 
 INTENT WeatherLookup {
   SUMMARY: "A simple app where a user enters a city and gets the current weather from a public API."

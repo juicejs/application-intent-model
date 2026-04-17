@@ -1,4 +1,4 @@
-AIM: pyenv-cli#intent@1.4
+AIM: pyenv-cli#intent@2.0
 
 INTENT PyEnvCLI {
   SUMMARY: "A CLI tool for Python virtual environment generation with full support for AI-assisted development, offering interactive prompts to configure Python versions, package dependencies, Dockerfiles, and integration with multiple AI CLI tools."

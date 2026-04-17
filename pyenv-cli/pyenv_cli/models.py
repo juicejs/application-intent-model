@@ -1,5 +1,5 @@
 """
-SCHEMA models synthesized from AIM v1.4 specification.
+SCHEMA models synthesized from AIM v2.0 specification.
 Maps directly to domain entities with strict validation.
 """
 

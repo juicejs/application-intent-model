@@ -1,4 +1,4 @@
-AIM: terminal.countdown#event@1.5
+AIM: terminal.countdown#event@2.0
 
 EVENT CountdownFinished {
   SUMMARY: "Published when a terminal countdown reaches zero."

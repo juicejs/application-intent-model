@@ -306,7 +306,7 @@ The TUI is built on:
 ## Credits
 
 Built with [Textual](https://textual.textualize.io/) by Will McGugan
-Part of PyEnvCLI - Synthesized from AIM v1.4 specification
+Part of PyEnvCLI - Synthesized from AIM v2.0 specification
 
 ---
 

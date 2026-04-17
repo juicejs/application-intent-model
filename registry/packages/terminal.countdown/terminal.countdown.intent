@@ -1,4 +1,4 @@
-AIM: terminal.countdown#intent@1.5
+AIM: terminal.countdown#intent@2.0
 
 INTENT CountdownTimer {
   SUMMARY: "A tiny terminal countdown that emits an event when the timer reaches zero."

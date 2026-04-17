@@ -2,7 +2,7 @@
 
 > **A CLI tool for Python virtual environment generation**
 
-Synthesized from [AIM v1.4 specification](https://intentmodel.dev) - `pyenv-cli.intent`
+Synthesized from [AIM v2.0 specification](https://intentmodel.dev) - `pyenv-cli.intent`
 
 ## Overview
 
@@ -154,7 +154,7 @@ List all configured virtual environments.
 
 ## Architecture
 
-PyEnvCLI is synthesized from the [AIM v1.4 specification](https://intentmodel.dev/specification) with strict adherence to:
+PyEnvCLI is synthesized from the [AIM v2.0 specification](https://intentmodel.dev/specification) with strict adherence to:
 
 ### SCHEMA Layer (Data Models)
 - `VirtualEnvConfig` - Environment configuration with validation
@@ -261,7 +261,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Credits
 
-**Synthesized by:** AIM v1.4 Synthesizer
+**Synthesized by:** AIM v2.0 Synthesizer
 **Specification:** [Application Intent Model](https://intentmodel.dev)
 **Intent File:** `pyenv-cli.intent`
 

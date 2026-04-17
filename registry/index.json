@@ -3,32 +3,32 @@
   "packages": [
     {
       "name": "game.snake",
-      "version": "1.4",
+      "version": "2.0",
       "entry": "registry/packages/game.snake/game.snake.intent"
     },
     {
       "name": "weather",
-      "version": "1.4",
+      "version": "2.0",
       "entry": "registry/packages/weather/weather.intent"
     },
     {
       "name": "nemicko.demo.todo",
-      "version": "1.4",
+      "version": "2.0",
       "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
     },
     {
       "name": "terminal.countdown",
-      "version": "1.5",
+      "version": "2.0",
       "entry": "registry/packages/terminal.countdown/terminal.countdown.intent"
     },
     {
       "name": "game.tango",
-      "version": "1.5",
+      "version": "2.0",
       "entry": "registry/packages/game.tango/game.tango.intent"
     },
     {
       "name": "tool.pixelart",
-      "version": "1.5",
+      "version": "2.0",
       "entry": "registry/packages/tool.pixelart/tool.pixelart.intent"
     }
   ]
