@@ -1,13 +1,13 @@
 # Application Intent Model (AIM) v2.1
 
-Application Intent Model (AIM) is an intent-first specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product and design discussion and structured enough for deterministic synthesis.
+Application Intent Model (AIM) is an intent-first specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product and design discussion and structured enough for implementation, verification, repair, and deterministic synthesis.
 
 AIM supports progressive precision:
 
 - start with a single intent envelope
 - add precision facets only where stronger guarantees are needed
 
-This keeps simple components easy to author while allowing high-fidelity synthesis for complex systems.
+This keeps simple components easy to author while allowing high-fidelity implementation and synthesis for complex systems.
 
 ---
 
@@ -22,6 +22,270 @@ Each component has:
 - zero or more optional mapping files using facet `mapping`
 
 The intent envelope is the canonical entrypoint for a component. All other detail is attached to that entrypoint directly or indirectly.
+
+### 1.1 AIM As A Coordination Layer
+
+AIM is the authoritative shared artifact between humans and coding agents.
+
+It describes intended system behavior, structure, and constraints in a form that multiple agents can read and act on consistently. AIM is not an agent protocol, agent topology, or swarm configuration language. The number of agents involved in a workflow is outside the language and may vary by project, task, or implementation strategy.
+
+The intent envelope is the primary behavioral reference for a component. Precision facets add detail and stronger guarantees, but they do not replace the authority of the intent envelope.
+
+### 1.2 How Agents Should Treat Intent
+
+One or more agents may participate in any of the following responsibilities:
+
+- interpret requirements by creating or refining intent
+- implement code and tests by reading intent and available facets
+- validate code, tests, and outputs against intent
+- repair mismatches by updating code or, when necessary, revising intent explicitly
+
+Agents should coordinate primarily through AIM artifacts rather than relying on unstated assumptions, private memory, or ad hoc chat context.
+
+Normative guidance:
+
+- implementation should not invent material behavior absent from intent
+- when detail is missing, agents should preserve the documented intent and minimize assumptions
+- when assumptions are necessary, they should be surfaced for review or converted into explicit intent updates
+- when implementation and intent disagree, the mismatch must be resolved explicitly rather than silently normalized
+- if the implementation is wrong, fix the code
+- if the intent is outdated, revise the intent before continuing implementation
+- if requirements changed, update intent before further coding or repair
+
+### 1.3 Agent Operating Roles
+
+The following roles are defined as operational guidance for systems and teams using AIM. They are not AIM language constructs and do not appear in `.intent` source files.
+
+A workflow may use one agent, many agents, or any combination of these roles. One agent may perform multiple roles, and multiple agents may share one role.
+
+#### Intent Author
+
+Purpose:
+
+- interpret requirements and translate them into AIM artifacts
+
+Reads:
+
+- product requirements
+- existing AIM files
+- relevant code and tests when refining an existing system
+
+Writes:
+
+- intent envelope
+- precision facets when needed
+- explicit clarifications of assumptions or ambiguities
+
+Primary goal:
+
+- make intended behavior explicit, reviewable, and implementation-ready
+
+Must do:
+
+- express requirements in intent rather than leaving them implicit
+- add facets only when they increase useful precision
+- surface ambiguity when requirements are incomplete or conflicting
+
+Must not do:
+
+- treat implementation accidents as authoritative requirements
+- add unnecessary implementation detail when it is not part of intended behavior
+
+Handoff output:
+
+- updated AIM artifacts
+- short explanation of clarified assumptions and open questions
+
+#### Implementer
+
+Purpose:
+
+- build code and tests from resolved intent and facets
+
+Reads:
+
+- intent envelope
+- resolved precision facets
+- mappings and dependency surfaces when relevant
+
+Writes:
+
+- code
+- tests
+- implementation notes that trace work back to intent when needed
+
+Primary goal:
+
+- implement the specified behavior faithfully
+
+Must do:
+
+- treat the resolved intent and facets as the authoritative implementation reference
+- preserve documented behavior when detail is incomplete
+- surface specification inconsistencies before inventing behavior
+
+Must not do:
+
+- invent material behavior not grounded in intent
+- silently redefine the specification through implementation choices
+
+Handoff output:
+
+- code and tests aligned to intent
+- short traceability note when useful
+
+#### Verifier
+
+Purpose:
+
+- compare implementation and outputs against resolved intent and facets
+
+Reads:
+
+- AIM artifacts
+- code
+- tests
+- observable outputs and behavior
+
+Writes:
+
+- findings
+- drift reports
+- recommendations for repair or intent revision
+
+Primary goal:
+
+- detect mismatches between intended and implemented behavior
+
+Must do:
+
+- distinguish missing behavior, incorrect behavior, and undocumented extra behavior
+- ground findings in intent and available evidence
+- identify whether the likely fix belongs in code or in intent
+
+Must not do:
+
+- evaluate primarily on personal preference
+- collapse materially different problems into vague feedback
+
+Handoff output:
+
+- concrete mismatch report with rationale and suggested direction
+
+#### Repairer
+
+Purpose:
+
+- restore alignment when intent and implementation diverge
+
+Reads:
+
+- AIM artifacts
+- verifier findings
+- code and tests
+
+Writes:
+
+- code fixes
+- targeted test fixes
+- intent revision proposals when the specification is outdated
+
+Primary goal:
+
+- restore alignment with minimal unnecessary change
+
+Must do:
+
+- fix code when implementation drift is the problem
+- request or apply intent revision when the specification is outdated
+- preserve traceability between the repair and the intent it satisfies
+
+Must not do:
+
+- silently normalize drift by changing behavior without resolving the underlying mismatch
+- expand scope beyond what is needed to restore alignment
+
+Handoff output:
+
+- repaired implementation or explicit intent revision recommendation
+- short explanation of what drift was corrected
+
+### 1.4 Example Agent Prompts
+
+The following prompts are non-normative examples. They illustrate how an AIM-based system may instruct agents to operate consistently around the specification. The exact prompt wording is implementation-defined.
+
+#### Example Prompt: Intent Author
+
+```text
+You are working from product requirements and existing AIM files.
+Your job is to produce or refine the AIM specification so the intended behavior is clear, testable, and implementation-ready.
+
+Rules:
+- Treat AIM as the authoritative specification artifact.
+- Make requirements explicit in the intent envelope and facets rather than leaving them implicit.
+- Add precision facets only when they increase useful precision.
+- Do not add implementation details unless they are part of intended behavior.
+- If requirements are unclear or conflicting, surface the ambiguity explicitly.
+
+Output:
+- updated AIM artifacts
+- a short summary of clarified assumptions
+- any unresolved ambiguity
+```
+
+#### Example Prompt: Implementer
+
+```text
+You are implementing from AIM.
+Your job is to read the resolved intent and available facets and produce code and tests that follow them closely.
+
+Rules:
+- Treat the resolved intent and facets as the authoritative implementation reference.
+- Do not invent material behavior not grounded in intent.
+- If detail is missing, minimize assumptions and preserve documented behavior.
+- If the specification appears inconsistent, surface the inconsistency before continuing.
+
+Output:
+- code changes
+- tests
+- a short note mapping the implementation back to intent
+```
+
+#### Example Prompt: Verifier
+
+```text
+You are verifying implementation against AIM.
+Your job is to compare the current code, tests, and observable behavior with the resolved intent and facets.
+
+Rules:
+- Report mismatches against intent, not personal preference.
+- Distinguish missing behavior, incorrect behavior, and undocumented extra behavior.
+- Treat drift as any material mismatch between intended and implemented behavior.
+- Be explicit about what evidence supports each finding.
+
+Output:
+- list of mismatches
+- rationale for each finding
+- recommendation for code repair or intent revision
+```
+
+#### Example Prompt: Repairer
+
+```text
+You are repairing drift between implementation and AIM.
+Your job is to restore alignment by changing code when implementation is wrong, or by recommending intent revision when the specification is outdated.
+
+Rules:
+- Prefer the smallest change that restores alignment.
+- Do not silently redefine intent through implementation.
+- If requirements changed, update intent before continuing repair.
+- Preserve traceability between the fix and the intent it satisfies.
+
+Output:
+- repair changes
+- explanation of what drift was corrected
+- note on whether the intent remains valid or needs revision
+```
 
 ---
 
@@ -343,7 +607,7 @@ Implementations may provide opt-in convenience discovery, but that behavior is o
 
 ## 7. Precision Facets
 
-Detail facets are optional precision overlays. They make synthesis more deterministic but are not required for component validity.
+Detail facets are optional precision overlays. They make implementation, verification, and synthesis more deterministic but are not required for component validity.
 
 ### 7.1 Schema Facet
 
@@ -595,7 +859,7 @@ Interpretation:
 For intent-only components:
 
 - strict chain enforcement is skipped
-- synthesis emits a reduced-fidelity informational note
+- validation and synthesis emit a reduced-fidelity informational note
 
 ---
 
@@ -607,6 +871,7 @@ For intent-only components:
 
 Tier affects:
 
+- expected implementation and verification precision
 - expected synthesis precision
 - generated structural depth
 - strictness of traceability checks
@@ -634,7 +899,7 @@ Package validity rules:
 
 ### 11.2 Local Materialization Rule
 
-Even when sources are fetched remotely, synthesis must run against local project files under `/aim`.
+Even when sources are fetched remotely, implementation, verification, repair, and synthesis must run against local project files under `/aim`.
 
 Required behavior:
 
@@ -709,7 +974,7 @@ Required behavior:
 
 ---
 
-## 13. Synthesis Model
+## 13. Execution And Synthesis Model
 
 1. Discover the intent envelope for each component.
 2. Validate the header and path identity.
@@ -723,9 +988,12 @@ Required behavior:
 6. Parse dependencies and requirement surfaces.
 7. Load mappings from `/aim/mappings` when present.
 8. Resolve required aliases.
-9. Determine synthesis tier.
-10. Synthesize artifacts with tier-appropriate precision.
-11. Apply traceability checks when the relevant facets exist.
+9. Determine implementation and synthesis tier.
+10. Use the resolved intent and facet set as the authoritative reference for implementation, verification, and repair.
+11. Compare code, tests, and produced artifacts against the resolved intent and facets.
+12. Repair mismatches by changing code when implementation drift is detected, or by revising intent when the specification is outdated.
+13. Synthesize artifacts with tier-appropriate precision when synthesis is part of the workflow.
+14. Apply traceability checks when the relevant facets exist.
 
 ---
 
@@ -776,7 +1044,7 @@ Typical reasons to split:
 - contract or schema stability matters enough to justify isolated files
 - the component has enough precision detail that one-file authoring reduces clarity
 
-This means AIM should be authored single-file first, then expanded into multi-file form only when that improves readability, maintainability, or synthesis precision.
+This means AIM should be authored single-file first, then expanded into multi-file form only when that improves readability, maintainability, implementation discipline, or synthesis precision.
 
 Use intent-only when:
 
@@ -794,7 +1062,17 @@ Add detail facets when:
 
 The intended AIM workflow is:
 
-1. start with one intent envelope
+1. start from requirements and write or refine one intent envelope
 2. add only the facets that increase useful precision
-3. keep authoring in canonical nested layout
-4. rely on explicit `INCLUDES` rather than implicit discovery
+3. implement code and tests by reading the resolved intent and available facets
+4. validate implementation and outputs against intent
+5. repair drift by changing code or revising intent explicitly
+6. keep authoring in canonical nested layout
+7. rely on explicit `INCLUDES` rather than implicit discovery
+
+Closed-loop summary:
+
+- requirements -> intent
+- intent -> implementation
+- implementation -> validation against intent
+- validation failures -> code repair or intent revision
