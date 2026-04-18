@@ -1,13 +1,13 @@
-# Application Intent Model (AIM) v2.0
+# Application Intent Model (AIM) v2.1
 
-Application Intent Model (AIM) is an intent-first specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product/design discussion and structured enough for deterministic synthesis.
+Application Intent Model (AIM) is an intent-first specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product and design discussion and structured enough for deterministic synthesis.
 
 AIM supports progressive precision:
 
-- start with a single intent file
-- add detailed facets only when you need stronger guarantees
+- start with a single intent envelope
+- add precision facets only where stronger guarantees are needed
 
-This allows fast authoring for simple components and high-fidelity synthesis for complex components.
+This keeps simple components easy to author while allowing high-fidelity synthesis for complex systems.
 
 ---
 
@@ -15,18 +15,19 @@ This allows fast authoring for simple components and high-fidelity synthesis for
 
 A component is identified by a namespace such as `company.subsystem` (for example `game.snake`, `juice.tasks`).
 
-In v2.0, each component uses a **hybrid intent envelope** model:
+Each component has:
 
-- required baseline: one intent entry file (`<component>.intent`)
-- optional precision detail: `schema`, `flow`, `contract`, `persona`, `view`, `event` authored inline or in separate files
+- one required intent envelope
+- zero or more optional precision facets: `schema`, `flow`, `contract`, `persona`, `view`, `event`
+- zero or more optional mapping files using facet `mapping`
 
-No detail facet is required for a component to be valid.
+The intent envelope is the canonical entrypoint for a component. All other detail is attached to that entrypoint directly or indirectly.
 
 ---
 
-## 2. Canonical Header Declaration
+## 2. Header And Identity
 
-Every source `.intent` file must start with one declaration line:
+Every `.intent` source file must begin with exactly one declaration line:
 
 ```ail
 AIM: <component>#<facet>@<x.y>
@@ -38,7 +39,7 @@ Example:
 AIM: juice.games.snake#schema@2.1
 ```
 
-### 2.1 Grammar
+### 2.1 Header Grammar
 
 ```regex
 ^AIM:\s+([a-z0-9]+(?:\.[a-z0-9]+)*)#(intent|schema|flow|contract|persona|view|event|mapping)@([0-9]+\.[0-9]+)$
@@ -46,145 +47,193 @@ AIM: juice.games.snake#schema@2.1
 
 Rules:
 
-- `<component>` must be lowercase namespace segments separated by dots (single segment allowed).
-- `<facet>` must be one of:
-  - `intent`
-  - `schema`
-  - `flow`
-  - `contract`
-  - `persona`
-  - `view`
-  - `event`
-  - `mapping`
-- `<version>` is short SemVer form `x.y`.
+- `<component>` must be lowercase namespace segments separated by dots
+- `<facet>` must be one of `intent|schema|flow|contract|persona|view|event|mapping`
+- `<version>` uses the exact short form `x.y`
 
-### 2.2 Filename And Path Linkage
+### 2.2 Exact Version Rule
 
-Source identity may use either flat or nested layout. To maintain clarity in multi-component systems, the nested layout is preferred, and the filename should always include the component name.
+Version matching is exact within a component.
 
-- flat component file: `<component>.<facet>.intent`
-- nested component file: `/aim/<namespace segments>/<component>.<facet>.intent`
-- flat mapping file: `/aim/mappings/<component>.mapping.intent`
-- nested mapping file: `/aim/mappings/<namespace segments>/<component>.mapping.intent`
-- header: `AIM: <component>#<facet>@<x.y>`
+- the intent envelope version is authoritative
+- every included or co-located file for the same component must use the same exact `x.y` version
+- AIM v2.1 does not define compatibility bands, major-only matching, or "version families"
+
+---
+
+## 3. Project Layout
+
+### 3.1 Canonical Write Layout
+
+Canonical authoring and materialization layout is nested.
+
+Component sources:
+
+- intent envelope: `/aim/<namespace segments>/<component>.intent`
+- facet files: `/aim/<namespace segments>/<component>.<facet>.intent`
+
+Mapping sources:
+
+- mapping file: `/aim/mappings/<namespace segments>/<component>.mapping.intent`
 
 Examples:
 
-- `game.snake.schema.intent` must declare `AIM: game.snake#schema@2.0`.
-- `/aim/game/snake/game.snake.schema.intent` must declare `AIM: game.snake#schema@2.0`.
-- `/aim/game/snake/game.snake.event.intent` must declare `AIM: game.snake#event@2.0`.
-- `/aim/mappings/game/snake/game.snake.mapping.intent` must declare `AIM: game.snake#mapping@2.0`.
+- `/aim/game/snake/game.snake.intent`
+- `/aim/game/snake/game.snake.schema.intent`
+- `/aim/game/snake/game.snake.contract.intent`
+- `/aim/mappings/game/snake/game.snake.mapping.intent`
 
-**Note:** Avoid generic filenames like `intent.intent` or `schema.intent`. Always prefix with the component name.
+Generic filenames are never valid. These are invalid:
 
-Hard error example:
+- `intent.intent`
+- `schema.intent`
+- `mapping.intent`
 
-- `/aim/company/hr/invoice/schema.intent` with `AIM: company.billing.invoice#schema@2.0`.
+### 3.2 Compatibility Read Layout
 
-### 2.3 Compatibility Policy
+Implementations may read flat legacy sources for compatibility:
 
-Migration is immediate:
+- `/aim/<component>.intent`
+- `/aim/<component>.<facet>.intent`
+- `/aim/mappings/<component>.mapping.intent`
 
-- legacy block metadata is invalid in source files
-- only the one-line `AIM: ...` preamble is valid
+Compatibility rules:
 
-Legacy tokens treated as parse violations:
+- flat layout is read-compatible only
+- tools should materialize and rewrite to canonical nested layout
+- a project must not contain both flat and nested sources for the same component and facet
 
-- `:::AIL_METADATA`
-- `FEATURE:`
-- `FACET:`
-- `VERSION:`
+### 3.3 Single-Component Vs Multi-Component Projects
+
+- single-component projects may be read from flat legacy layout
+- multi-component projects must use nested layout
+- the root `/aim` folder should contain component subfolders and, optionally, legacy single-component flat files only during migration
+
+### 3.4 Path Derivation
+
+Path-derived identity is used for validation.
+
+For canonical nested layout:
+
+- component is derived from the nested directory segments and filename
+- facet is derived from the filename suffix
+
+For flat compatibility layout:
+
+- component is derived from the filename
+- facet is derived from the filename suffix
+
+The header remains the ultimate source of truth, but any path/header mismatch is a hard error.
 
 ---
 
-## 3. Source Layout
+## 4. File Structure
 
-Source discovery recursively scans folders under `/aim`.
+### 4.1 Shared Structural Rules
 
-- discover component sources recursively under `/aim`
-- do not include `/aim/mappings` in component source discovery
-- discover mapping sources recursively under `/aim/mappings`
-- derive expected namespace and facet from physical path
-- treat the header as the ultimate source of truth, but hard-fail when path-derived identity does not match it
+All AIM files share these rules:
 
-Typical layout:
+- header line must be first
+- constructs are brace-delimited
+- lists use hyphen-led entries
+- natural-language prose should be quoted
+- no commas are required between entries
 
-```text
-/aim/
-  game.snake.intent
-  game.snake.schema.intent
-  game.snake.contract.intent
-  game.snake.event.intent
-  game/
-    snake/
-      game.snake.intent
-      game.snake.schema.intent
-      game.snake.contract.intent
-      game.snake.event.intent
-  mappings/
-    game.snake.mapping.intent
-    game/
-      snake/
-        game.snake.mapping.intent
+Minimal shared notation:
+
+```ebnf
+file          := header newline body
+header        := "AIM: " component "#" facet "@" version
+body          := construct*
+construct     := block | assignment | list_block
+block         := KEYWORD identifier? "{" body "}"
+assignment    := KEYWORD ":" value
+list_block    := KEYWORD "{" list_item+ "}"
+list_item     := "-" value
+identifier    := /[A-Za-z][A-Za-z0-9_]*/
+value         := quoted_string | bare_token_sequence
 ```
 
-### 3.1 Registry Package Catalog
+This notation is intentionally minimal. Each facet section below narrows what top-level constructs are valid.
 
-Remote package discovery is defined by `registry/index.json`.
+### 4.2 Allowed Top-Level Constructs By File Type
 
-Each package object must include:
+`facet=intent` files may contain:
 
-- `name`
-- `version`
-- `entry` (path to canonical intent file)
+- exactly one `INTENT`
+- zero or one `INCLUDES`
+- zero or one `DEPENDENCIES`
+- zero or more `REQUIREMENT`
+- zero or more top-level facet blocks of types `SCHEMA|FLOW|CONTRACT|PERSONA|VIEW|EVENT`
 
-Package validity rules:
+Standalone facet files may contain:
 
-- `entry` must exist and end with `.intent`
-- `entry` header must match `AIM: <name>#intent@<version>`
-- package directory must contain exactly one `#intent` source file across recursive scan
-- stale per-package manifests (`package.json`, `manifest.intent`) are invalid
+- one or more blocks of their declared facet type
+- zero or one `DEPENDENCIES`
+- zero or more `REQUIREMENT`
 
-### 3.2 Local Materialization Rule
+`facet=mapping` files may contain:
 
-Even when sources are fetched remotely, synthesis must run against local files in project `/aim`.
+- one or more `MAP` blocks
 
-Required behavior:
+Cross-facet mixing is invalid in standalone facet files. For example, a `#schema` file must not contain `FLOW` or `CONTRACT` blocks.
 
-1. fetch selected package entry and related facet sources
-2. materialize them into local `/aim` before synthesis using either flat or nested layout
-3. materialize mapping sources into local `/aim/mappings` when applicable using either flat or nested layout
-4. synthesize from local `/aim` so users can edit and rebuild without refetching
+### 4.3 Intent Body Grammar
 
-### 3.3 Multi-Component Organization
+Inside `INTENT <Name> { ... }`, the following are valid:
 
-For systems with more than one component, organizational clarity is mandatory:
+- exactly one `SUMMARY`
+- exactly one `REQUIREMENTS`
+- zero or one `TESTS`
+- zero or more embedded facet blocks of types `SCHEMA|FLOW|CONTRACT|PERSONA|VIEW|EVENT`
 
-1.  **Component Sub-folders:** Each component MUST reside in its own sub-folder under `/aim/` (e.g., `/aim/users/`, `/aim/billing/`). 
-2.  **Descriptive Filenames:** Files must never be named generically (e.g., `intent.intent`). They must always follow the `<component>.<facet>.intent` pattern (e.g., `/aim/users/users.intent`).
-3.  **Root folder:** The root `/aim/` folder should only contain component sub-folders or very simple single-component files. Mixed flat and nested layouts for different components in the same project are discouraged.
+Embedded facet blocks are valid only inside `INTENT`.
+
+### 4.4 Attribute And List Syntax
+
+Attribute lines use this shape:
+
+```text
+<name>: <type> <modifier>*
+```
+
+Examples:
+
+```ail
+title: string required
+humidityPct: integer optional min(0) max(100)
+ownerId: string required ref(User.id)
+```
+
+List items use this shape:
+
+```ail
+- "Natural language statement"
+- CALL ResolveUser
+- VIEW TodoDashboard
+```
 
 ---
 
-## 4. Intent Envelope (`<component>.intent`)
+## 5. Intent Envelope
 
-Intent file is the canonical component entrypoint.
+The intent file is the canonical component entrypoint.
 
 Hard minimum for validity:
 
-- valid `AIM: ...` preamble with `facet=intent`
-- one top-level named declaration: `INTENT <Name> { ... }`
-- `SUMMARY` inside intent body (one sentence)
-- `REQUIREMENTS` inside intent body (>= 1 item)
+- valid `AIM: ...` header with `facet=intent`
+- exactly one `INTENT <Name> { ... }`
+- one `SUMMARY` inside the `INTENT` body
+- one `REQUIREMENTS` block inside the `INTENT` body with at least one item
 
-Recommended (non-blocking):
+Recommended:
 
 - `TESTS`
 
-### 4.1 Minimal Template
+### 5.1 Minimal Template
 
 ```ail
-AIM: demo.todo#intent@2.0
+AIM: demo.todo#intent@2.1
 
 INTENT TodoComponent {
   SUMMARY: "A simple personal todo tracker."
@@ -194,10 +243,15 @@ INTENT TodoComponent {
 }
 ```
 
-### 4.2 Extended Template
+### 5.2 Extended Template
 
 ```ail
-AIM: game.snake#intent@2.0
+AIM: game.snake#intent@2.1
+
+INCLUDES {
+  contract: "game.snake.contract.intent"
+  view: "game.snake.view.intent"
+}
 
 INTENT SnakeGame {
   SUMMARY: "A single-player snake game with persistent top scores."
@@ -205,81 +259,29 @@ INTENT SnakeGame {
     - "Movement is tick-based."
     - "Wall and self collision end the run."
   }
-
   TESTS {
-    - "Describe acceptance scenarios."
-  }
-}
-```
-
-### 4.3 Embedded Facet Blocks In Intent
-
-Inside `INTENT <Name> { ... }`, authors may include optional embedded facet blocks using the same Relaxed AIM DSL syntax as standalone facet files.
-
-- `SCHEMA`
-- `FLOW`
-- `CONTRACT`
-- `PERSONA`
-- `VIEW`
-- `EVENT`
-
-These embedded blocks are additive and intended for lightweight one-file authoring.
-Allowed embedded facet keys are uppercase `SCHEMA`, `FLOW`, `CONTRACT`, `PERSONA`, `VIEW`, and `EVENT` only.
-All embedded facet content follows the same brace-based rules: `{}` for hierarchy (with whitespace/newlines between braces ignored by the parser), no commas, quoted natural-language strings, and hyphen-led list items.
-
-Minimal embedded example:
-
-```ail
-AIM: weather#intent@2.0
-
-INTENT WeatherLookup {
-  SUMMARY: "Get current weather by city."
-  REQUIREMENTS {
-    - "User can enter a city and fetch current weather."
+    - "A collision ends the current run."
+    - "Top scores persist across sessions."
   }
 
-  SCHEMA WeatherSnapshot {
-    ATTRIBUTES {
-      city: string required
-      temperatureC: number required
+  FLOW AdvanceTick {
+    SUMMARY: "Advances the game loop by one tick."
+    TRIGGER {
+      - "Invoked by the active game timer."
     }
-  }
-}
-```
-
-Mixed-source example:
-
-```ail
-AIM: weather#intent@2.0
-
-INTENT WeatherLookup {
-  SUMMARY: "Get current weather by city."
-  REQUIREMENTS {
-    - "User can fetch weather and retry on failure."
-  }
-
-  SCHEMA WeatherSnapshot {
-    ATTRIBUTES {
-      humidityPct: integer optional min(0) max(100)
+    STEPS {
+      - "Update head position from current direction."
+      - "Detect wall collision."
+      - "Detect self collision."
+      - "Grow snake if food was consumed."
     }
-  }
-}
-
-SCHEMA WeatherSnapshot {
-  SUMMARY: "Authoritative schema detail."
-  REQUIREMENTS {
-    - "Humidity is required."
-  }
-
-  ATTRIBUTES {
-    humidityPct: integer required min(0) max(100)
   }
 }
 ```
 
 ---
 
-## 5. `INCLUDES` for Linked External Facets
+## 6. External Facets With `INCLUDES`
 
 Intent files may link external detail files using `INCLUDES`.
 
@@ -296,300 +298,208 @@ INCLUDES {
 }
 ```
 
-### 5.1 `INCLUDES` Validation
+### 6.1 `INCLUDES` Validation
 
 For each entry:
 
 - key must be one of `schema|flow|contract|persona|view|event`
 - value must be a relative `.intent` path
+- resolution is relative to the including file's directory
+- normalized resolution must remain inside `/aim`
 - target file must exist
-- target file preamble must match:
-  - same component namespace
-  - same facet as include key
-  - same version family (`x.y`) as envelope version
+- target header must match:
+  - the same component namespace
+  - the same facet as the include key
+  - the same exact version
 
-### 5.2 Resolution Order
+### 6.2 Resolution Algorithm
 
-Effective facet source is resolved in this order:
+For each facet, resolve effective content in this order:
 
-1. external facet declared in `INCLUDES` (if present)
-2. top-level inline facet block in intent file (if present)
-3. embedded facet DSL block in `INTENT` body (if present)
-4. facet absent (allowed)
+1. external facet file referenced by `INCLUDES`
+2. top-level facet blocks in the intent file
+3. embedded facet blocks inside `INTENT`
+4. facet absent
 
-### 5.3 Authority Rule
+If a higher-precedence source exists, lower-precedence sources for that facet are ignored for synthesis and produce informational diagnostics.
 
-If multiple definitions exist for the same facet:
+### 6.3 Duplicate Rules
 
-- higher-precedence source is authoritative for synthesis detail
-- emit informational diagnostics for overridden lower-precedence sources
+These are hard errors:
 
-### 5.4 Fallback Discovery
+- duplicate effective source identities across flat and nested layout
+- duplicate construct names within the effective source for the same facet
+- multiple authoritative definitions for the same construct after precedence is applied
 
-Default behavior: no fallback auto-discovery beyond explicit `INCLUDES`.
+Multiple constructs of the same facet type are valid when their names are distinct. For example, one `SCHEMA` source may contain both `SCHEMA User` and `SCHEMA Session`.
 
-Implementations may add opt-in fallback behavior, but it is not part of core default semantics.
+### 6.4 No Implicit Discovery
 
----
+Core AIM semantics do not auto-discover sibling facets beyond explicit `INCLUDES` and the intent envelope itself.
 
-## 6. Worked Example (`game.snake`)
-
-This repository includes a compact mixed-source hybrid-envelope example:
-
-- intent envelope: `ail/game.snake.intent`
-- inline facets inside the intent envelope:
-  - `SCHEMA GameSession`
-  - `SCHEMA ScoreEntry`
-  - `FLOW AdvanceTick`
-  - `PERSONA Player`
-- linked external facets via `INCLUDES`:
-  - `ail/game.snake.contract.intent`
-  - `ail/game.snake.view.intent`
-
-For this example, an AI synthesizer should:
-
-1. parse `game.snake#intent@2.0`
-2. parse `INCLUDES` links
-3. parse embedded `SCHEMA`, `FLOW`, and `PERSONA` blocks in the intent body
-4. load linked external `CONTRACT` and `VIEW` facets
-5. treat linked external facets as authority for those facet types
-6. use `INTENT` and optional `TESTS` as component-level narrative and acceptance guidance
+Implementations may provide opt-in convenience discovery, but that behavior is outside the core language.
 
 ---
 
-## 7. Optional Detail Facets
+## 7. Precision Facets
 
-Detail facets are optional precision overlays.
-When authored inline inside an intent envelope, facet constructs use the same grammar and properties as standalone facet files.
-
-### 7.0 Source Authority And Precedence
-
-For each facet (`schema|flow|contract|persona|view|event`), effective source is:
-
-| Priority | Source | Notes |
-| --- | --- | --- |
-| 1 | External linked facet (`INCLUDES`) | Highest authority |
-| 2 | Top-level inline facet block (`SCHEMA Name {}` etc.) | Used when no external source |
-| 3 | Embedded DSL block inside `INTENT` | Lightweight fallback |
-| 4 | Absent facet | Allowed |
-
-If multiple sources exist for the same facet, the higher-priority source wins and lower-priority content is ignored for synthesis with informational diagnostics.
+Detail facets are optional precision overlays. They make synthesis more deterministic but are not required for component validity.
 
 ### 7.1 Schema Facet
 
-Purpose: data at rest.
-Syntax: `SCHEMA <Name> { ... }` blocks with nested brace-delimited sections and newline-separated entries (no commas).
+Purpose: data at rest and structural types.
+
+Syntax:
+
+```ail
+SCHEMA <Name> { ... }
+```
 
 Common blocks:
 
-- `SCHEMA`
 - `SUMMARY`
 - `ATTRIBUTES`
 - `RELATIONSHIPS`
 - `CONSTRAINTS`
 - `IMMUTABLE`
 
-Common modifiers:
+`SUMMARY` is required.
 
-- `required`, `optional`, `unique`, `generated`, `immutable`
-- `default(...)`, `min(...)`, `max(...)`, `pattern(...)`
-- `enum(...)`, `ref(...)`
+### 7.2 Contract Facet
 
-### 7.2 Flow Facet
+Purpose: externally observable execution guardrails and guarantees.
 
-Purpose: Internal mechanics and step-by-step orchestration. Flows define *how* an operation is executed under the hood, detailing the sequence of internal logic, branching, external API calls, and error handling.
-Syntax: `FLOW <Name> { ... }` blocks with nested brace-delimited sections and newline-separated entries (no commas).
+Contracts specify:
+
+- accepted input
+- authorization requirements
+- preconditions
+- postconditions and durable mutations
+- returned results
+- guaranteed emissions
+
+Syntax:
+
+```ail
+CONTRACT <Name> { ... }
+```
 
 Common blocks:
 
-- `FLOW`
+- `SUMMARY`
+- `INPUT`
+- `AUTHZ`
+- `EXPECTS`
+- `ENSURES`
+- `RETURNS`
+
+`SUMMARY` is required.
+
+### 7.3 Flow Facet
+
+Purpose: internal orchestration for satisfying a contract or internal behavior.
+
+Flows specify:
+
+- internal control sequence
+- branching and retries
+- external provider calls
+- error handling
+
+Flows do not define the external guarantees of an operation. That belongs to `CONTRACT`.
+
+Syntax:
+
+```ail
+FLOW <Name> { ... }
+```
+
+Common blocks:
+
 - `SUMMARY`
 - `TRIGGER`
 - `STEPS`
 - `ON_ERROR`
 
-Common logic keywords for STEPS:
+Common step keywords:
 
-- `EVALUATE`, `CALL`, `ITERATE`, `BRANCH`, `AWAIT`, `TRANSITION`
+- `CALL`
+- `EVALUATE`
+- `BRANCH`
+- `ITERATE`
+- `AWAIT`
+- `TRANSITION`
 
-```ail
-FLOW ExecuteTodoCompletion {
-  SUMMARY: "Orchestrates the database update and event publishing for completing a todo."
-
-  TRIGGER {
-    - "Invoked by CompleteTodo CONTRACT"
-  }
-
-  STEPS {
-    - "CALL Storage.BeginTransaction"
-    - "CALL Storage.FetchById(todoId)"
-    - "EVALUATE if already completed, early return"
-    - "UPDATE record in memory with status='COMPLETED'"
-    - "CALL Storage.Save(record)"
-    - "CALL EventBus.Publish('TodoCompleted', record)"
-    - "CALL Storage.CommitTransaction"
-  }
-
-  ON_ERROR {
-    - "CALL Storage.RollbackTransaction"
-    - "RETHROW error to CONTRACT layer"
-  }
-}
-```
-
-### 7.3 Contract Facet
-
-Purpose: Execution guardrails and guaranteed outcomes (Design by Contract). Contracts define what an operation must enforce and guarantee, rather than how it achieves it line-by-line.
-
-Syntax: CONTRACT <Name> { ... } blocks with nested brace-delimited sections and newline-separated entries (no commas).
-
-Common blocks: CONTRACT, SUMMARY, INPUT, AUTHZ, EXPECTS (pre-conditions), ENSURES (post-conditions/mutations), RETURNS.
-
-Common logic keywords for ENSURES: PERSISTS, UPDATES, DELETES, EMITS, CALLS.
-
-```ail
-CONTRACT CompleteTodo {
-  SUMMARY: "Safely marks an active todo as complete."
-
-  INPUT {
-    todoId: string required
-  }
-
-  AUTHZ {
-    - "User must be actively authenticated"
-    - "User must be the owner of the Todo record"
-  }
-
-  EXPECTS {
-    - "Todo record must exist in the database"
-    - "Todo.status must currently be 'PENDING'"
-  }
-
-  ENSURES {
-    - UPDATES "Todo.status to 'COMPLETED'"
-    - EMITS "TodoCompletedEvent to the analytics stream"
-  }
-
-  RETURNS {
-    - "The updated Todo entity"
-  }
-}
-```
+`SUMMARY` is required.
 
 ### 7.4 Persona Facet
 
-Purpose: User-visible actor definition, role constraints, and interface access mapping. Personas define *who* interacts with the system and which shared `VIEW`s they are permitted to load.
+Purpose: actor identity, role semantics, and view access.
 
-Syntax: `PERSONA <Name> { ... }` blocks as top-level constructs, using nested brace-delimited sections and newline-separated entries (no commas).
-
-Common `PERSONA` blocks:
-- `PERSONA`: The user archetype or system actor.
-- `SUMMARY`: The human-readable summary of the persona's goals.
-- `ROLE`: The authorization baseline (maps to `AUTHZ` in Contracts).
-- `ACCESS`: The specific `VIEW` blocks this persona is permitted to load.
+Syntax:
 
 ```ail
-PERSONA StandardUser {
-  ROLE {
-    - "user:standard"
-  }
-  ACCESS {
-    - VIEW TodoDashboard
-  }
-}
-
-PERSONA AdminUser {
-  ROLE {
-    - "user:admin"
-  }
-  ACCESS {
-    - VIEW TodoDashboard
-    - VIEW SystemSettings
-  }
-}
+PERSONA <Name> { ... }
 ```
+
+Common blocks:
+
+- `SUMMARY`
+- `ROLE`
+- `ACCESS`
+
+`ROLE` and `ACCESS` are required. `SUMMARY` is optional.
 
 ### 7.5 View Facet
 
-Purpose: Shared interface surfaces and interaction mapping. Views define *what* a user can see and do on a screen, page, or UI state, and may be reused across multiple Personas without duplication.
+Purpose: shared interface surfaces and user-visible actions.
 
-Syntax: `VIEW <Name> { ... }` blocks as top-level constructs, using nested brace-delimited sections and newline-separated entries (no commas).
-
-Common `VIEW` blocks:
-- `VIEW`: A distinct screen, page, or UI state shared across permitted Personas.
-- `SUMMARY`: The human-readable summary of the view.
-- `DISPLAY`: The read-only data requirements (supports natural language conditionals, e.g., "If Admin, show X").
-- `ACTIONS`: The interactive elements available in the view (triggers mapping directly to Contracts).
+Syntax:
 
 ```ail
-VIEW TodoDashboard {
-  SUMMARY: "The primary unified dashboard for managing tasks."
-  
-  DISPLAY {
-    - "A list of Todo items filtered by status='PENDING'"
-    - "A progress indicator showing completed vs total daily tasks"
-    - "If AdminUser, show the 'Assigned To' column"
-  }
-  
-  ACTIONS {
-    - "Clicking 'Add Task' -> CALL CreateTodo"
-    - "Tapping checkbox -> CALL CompleteTodo"
-    - "Clicking 'Reassign' -> CALL ReassignTodo"
-  }
-}
+VIEW <Name> { ... }
 ```
+
+Common blocks:
+
+- `SUMMARY`
+- `DISPLAY`
+- `ACTIONS`
+
+`SUMMARY` is required.
 
 ### 7.6 Event Facet
 
-Purpose: Defines asynchronous payloads, state-change broadcasts, and routing rules.
+Purpose: asynchronous payloads, emissions, and routing.
 
-Syntax: `EVENT <Name> { ... }` blocks as top-level constructs, using nested brace-delimited sections and newline-separated entries (no commas).
-
-Common `EVENT` blocks:
-- `EVENT`: The named asynchronous message or broadcast.
-- `SUMMARY`: The human-readable summary of the event's purpose.
-- `PAYLOAD`: The data shape carried by the event.
-- `EMITTED_BY`: Traceability back to the `CONTRACT` that guarantees emission.
-- `ROUTING`: Delivery and subscriber declarations.
+Syntax:
 
 ```ail
-AIM: shopping.checkout#event@2.0
-
-EVENT OrderConfirmed {
-  SUMMARY: "Broadcasted to the enterprise service bus when a user successfully checks out."
-
-  EMITTED_BY {
-    - "CONTRACT PlaceOrder ENSURES [post:3]"
-  }
-
-  PAYLOAD {
-    eventId: uuid generated
-    timestamp: datetime generated
-    orderId: string required
-    totalAmount: number required
-    customerId: string required
-  }
-
-  ROUTING {
-    - "TOPIC: enterprise.orders.confirmed"
-    - "SUBSCRIBERS: EmailService, AnalyticsEngine"
-  }
-}
+EVENT <Name> { ... }
 ```
+
+Common blocks:
+
+- `SUMMARY`
+- `PAYLOAD`
+- `EMITTED_BY`
+- `ROUTING`
+
+`SUMMARY` is required.
 
 ### 7.7 Summary Rule
 
-`SCHEMA`, `FLOW`, `CONTRACT`, `VIEW`, and `EVENT` are top-level detail constructs and must include `SUMMARY`.
+`SCHEMA`, `FLOW`, `CONTRACT`, `VIEW`, and `EVENT` must include `SUMMARY`.
 
-`PERSONA` is a separate top-level access/role construct. It may include `SUMMARY`, but `ROLE` + `ACCESS` alone are sufficient when the persona acts only as a role/access declaration.
+`PERSONA` may omit `SUMMARY` when it acts only as a role/access declaration.
 
 ---
 
-## 8. Dependencies, Requirements, and Mapping
+## 8. Dependencies, Requirements, And Mapping
 
 ### 8.1 Dependencies
 
-`DEPENDENCIES` may appear in intent files and/or detail files.
+`DEPENDENCIES` may appear in intent files and standalone facet files.
 
 ```ail
 DEPENDENCIES {
@@ -602,32 +512,45 @@ DEPENDENCIES {
 }
 ```
 
-- `IMPORT` references concrete provider surfaces.
-- `REQUIRES` declares required capabilities.
+- `IMPORT` references concrete provider surfaces
+- `REQUIRES` declares required capabilities by alias
+
+If dependency declarations are distributed across files:
+
+- resolve by union
+- conflicting declarations emit informational diagnostics
+- facet-local declarations take precedence for synthesis decisions in that facet
 
 ### 8.2 Requirement Surfaces
 
-For each required capability alias, define `REQUIREMENT` surface.
+Required capabilities may be documented with `REQUIREMENT` blocks.
 
-### 8.3 Distributed Declarations
+```ail
+REQUIREMENT AssigneeUsers {
+  SUMMARY: "Capability required to resolve user identities."
+  OPERATIONS {
+    - "ResolveUser(id) -> UserRecord"
+  }
+}
+```
 
-If dependency declarations are spread across files:
+`REQUIREMENT` blocks describe what a required alias is expected to provide. They do not bind it to an implementation.
 
-- resolve by union
-- conflicting declarations emit informational diagnostic
-- prefer detail-facet-local declarations for synthesis behavior
+### 8.3 Mapping Files
 
-### 8.4 Mapping Files
+Mappings live under `/aim/mappings` and use `facet=mapping`.
 
-Mappings are declared in `/aim/mappings` files with `facet=mapping`.
-`TARGET` identifies the destination capability provider, whether it is another AIM component namespace or an external implementation surface.
+Example path:
 
-Accepted mapping source paths:
+- `/aim/mappings/company/billing/invoice/company.billing.invoice.mapping.intent`
 
-- flat: `/aim/mappings/company.billing.invoice.mapping.intent`
-- nested: `/aim/mappings/company/billing/invoice/mapping.intent`
+Header:
 
-Both forms must declare `AIM: company.billing.invoice#mapping@2.0`.
+```ail
+AIM: company.billing.invoice#mapping@2.1
+```
+
+Example:
 
 ```ail
 MAP AssigneeUsers {
@@ -653,162 +576,225 @@ Unresolved required aliases remain hard errors.
 
 ---
 
-## 9. Binding Rule and Traceability
+## 9. Traceability
 
-When relevant detail facets exist, the chain is:
+When the relevant detail facets exist, the intended chain is:
 
 ```text
 Persona -> View -> Contract -> Flow / Schema / Event
 ```
 
-`Schema` interaction includes reads and writes.
+Interpretation:
+
+- `PERSONA.ACCESS` should reference `VIEW`
+- `VIEW.ACTIONS` should reference `CONTRACT`
+- `CONTRACT` may reference or imply `FLOW`
+- `CONTRACT` and `FLOW` may read or mutate `SCHEMA`
+- `CONTRACT.ENSURES` may guarantee `EVENT` emission
 
 For intent-only components:
 
-- skip strict chain enforcement
-- emit reduced-fidelity informational note
+- strict chain enforcement is skipped
+- synthesis emits a reduced-fidelity informational note
 
 ---
 
 ## 10. Synthesis Tiers
 
 - Tier 1: intent-only
-- Tier 2: intent + partial facets
-- Tier 3: intent + full facets
+- Tier 2: intent plus some facets
+- Tier 3: intent plus full traceable facets
 
-Tier impacts expected precision, generated structure depth, and strictness of traceability checks.
+Tier affects:
+
+- expected synthesis precision
+- generated structural depth
+- strictness of traceability checks
 
 ---
 
-## 11. Diagnostics
+## 11. Registry And Materialization
 
-### 11.1 Hard Errors
+### 11.1 Registry Package Catalog
 
-1. Header/parse violations
-- missing preamble
-- preamble not matching grammar
+Remote package discovery is defined by `registry/index.json`.
+
+Each package object must include:
+
+- `name`
+- `version`
+- `entry`
+
+Package validity rules:
+
+- `entry` must exist and end with `.intent`
+- `entry` header must match `AIM: <name>#intent@<version>`
+- a package directory must contain exactly one `#intent` source across recursive scan
+- stale per-package manifests such as `package.json` and `manifest.intent` are invalid
+
+### 11.2 Local Materialization Rule
+
+Even when sources are fetched remotely, synthesis must run against local project files under `/aim`.
+
+Required behavior:
+
+1. fetch the selected package entry and related facet sources
+2. materialize them into local `/aim` using canonical nested layout
+3. materialize mapping sources into local `/aim/mappings` using canonical nested layout
+4. synthesize from local sources so users can edit and rebuild without refetching
+
+---
+
+## 12. Diagnostics
+
+### 12.1 Hard Errors
+
+1. Header and identity violations
+- missing header
+- header not matching grammar
 - filename/path/header mismatch
-- malformed construct syntax
-- path-derived component does not match header component
-- path-derived facet does not match header facet
-- duplicate source identity across flat/nested layouts for the same component and facet
+- path-derived component not matching header component
+- path-derived facet not matching header facet
+- duplicate source identity across flat and nested layouts
 - invalid nested source path shape
-- generic filenames (e.g., `intent.intent`, `schema.intent`, `mapping.intent`) are strictly forbidden; files must include the component name (e.g., `users.intent`).
+- generic filenames such as `schema.intent`, `event.intent`, or `mapping.intent`
 
-2. Legacy metadata tokens in source files
+2. Layout violations
+- mixed flat and nested authoritative sources for the same component/facet
+- multi-component project authored in flat layout
+
+3. Intent minima missing
+- missing `INTENT`
+- multiple `INTENT` declarations in one intent file
+- missing intent name
+- missing `SUMMARY` in intent body
+- missing `REQUIREMENTS` in intent body
+
+4. `INCLUDES` violations
+- invalid include key
+- non-relative include path
+- include path escaping `/aim`
+- missing included file
+- included file component/facet/version mismatch
+
+5. Grammar violations
+- invalid embedded facet key in `INTENT`
+- invalid top-level construct for the file's declared facet
+- malformed braces
+- malformed attribute syntax
+
+6. Effective source conflicts
+- duplicate construct names within an effective facet source
+- multiple authoritative definitions for the same construct after precedence
+
+7. Unresolved required references
+- unresolved `REQUIRES` alias in `CALL Alias.Operation`
+- unresolved `REQUIRES` alias in `ref(Alias.Type)`
+- missing provider or mapping for a required alias
+
+8. Legacy metadata tokens in source files
 - `:::AIL_METADATA`
 - `FEATURE:`
 - `FACET:`
 - `VERSION:`
 
-3. Required intent minima missing
-- missing `INTENT`
-- missing intent name in `INTENT <Name> { ... }`
-- missing `SUMMARY` in intent body
-- missing `REQUIREMENTS` in intent body
-
-4. `INCLUDES` violations
-- invalid include key/value shape
-- missing included file
-- included file component/facet/version-family mismatch
-
-5. Embedded facet block violations
-- invalid embedded facet key in `INTENT` body
-- malformed embedded block syntax (including mismatched curly braces) when that block is selected as effective facet source
-
-6. Unresolved required references
-- unresolved `REQUIRES` alias in `CALL Alias.Operation`
-- unresolved `REQUIRES` alias in `ref(Alias.Type)`
-- missing provider/mapping for required aliases
-
-### 11.2 Informational Diagnostics
+### 12.2 Informational Diagnostics
 
 - missing optional `TESTS`
 - no detail facets provided
-- inline facet overridden by external facet
-- embedded facet block overridden by top-level or external facet
+- top-level facet overridden by external facet
+- embedded facet overridden by top-level or external facet
 - unresolved `IMPORT` alias
-- intent/detail narrative conflict (detail authority applied)
+- narrative/detail conflict where detail authority wins
 
 ---
 
-## 12. AI Synthesis Model
+## 13. Synthesis Model
 
-1. Load package catalog from `registry/index.json` (when using remote package selection).
-2. Select package by `name` and fetch `entry` intent file.
-3. Resolve related sources from `INCLUDES` and package-local references.
-4. Materialize fetched sources into local `/aim` and mappings into `/aim/mappings`.
-5. Discover component source `.intent` files recursively under local `/aim`, excluding `/aim/mappings`.
-6. Discover mapping source `.intent` files recursively under local `/aim/mappings`.
-7. Derive expected component/facet identity from each source path.
-8. Parse and validate header declarations.
-9. Hard-fail on filename/path/header mismatch or duplicate source identity.
-10. Group files by component.
-11. Parse intent envelopes.
-12. Resolve `INCLUDES` links.
-13. Parse optional embedded facet DSL blocks in intent bodies.
-14. Merge external/inline/embedded facets by resolution order and authority rules.
-15. Parse dependencies/requirements.
-16. Load mappings from local `/aim/mappings` when present.
-17. Resolve required aliases.
-18. Determine synthesis tier.
-19. Synthesize artifacts with tier-appropriate precision.
-20. Apply traceability checks where applicable.
+1. Discover the intent envelope for each component.
+2. Validate the header and path identity.
+3. Parse the intent envelope.
+4. Resolve `INCLUDES`.
+5. For each facet, choose effective content by precedence:
+   - external include
+   - top-level facet block in intent file
+   - embedded facet block in `INTENT`
+   - absent
+6. Parse dependencies and requirement surfaces.
+7. Load mappings from `/aim/mappings` when present.
+8. Resolve required aliases.
+9. Determine synthesis tier.
+10. Synthesize artifacts with tier-appropriate precision.
+11. Apply traceability checks when the relevant facets exist.
 
 ---
 
-## 13. Conformance Scenarios
+## 14. Conformance Scenarios
 
-1. Valid header parse: `AIM: juice.games.snake#schema@2.1`.
-2. Valid header parse: `AIM: juice.games.snake#view@2.1`.
-3. Valid header parse: `AIM: shopping.checkout#event@2.0`.
-4. Valid flat source path parse: `/aim/company.billing.invoice.schema.intent` -> `AIM: company.billing.invoice#schema@2.0`.
-5. Valid nested source path parse: `/aim/company/billing/invoice/schema.intent` -> `AIM: company.billing.invoice#schema@2.0`.
-6. Valid nested source path parse: `/aim/company/billing/invoice/event.intent` -> `AIM: company.billing.invoice#event@2.0`.
-7. Valid nested mapping path parse: `/aim/mappings/company/billing/invoice/mapping.intent` -> `AIM: company.billing.invoice#mapping@2.0`.
-8. Invalid component namespace: `AIM: Snake-App#schema@2.1` -> hard error.
-9. Invalid facet: `AIM: juice.games.snake#data@2.1` -> hard error.
-10. Invalid version: `AIM: juice.games.snake#schema@2.1.0` -> hard error.
-11. Filename/path/header mismatch -> hard error.
-12. Nested path/header component mismatch -> hard error.
-13. Nested path/header facet mismatch -> hard error.
-14. Duplicate flat + nested source for same component/facet -> hard error.
-15. Legacy metadata token in source -> hard error.
-16. Intent-only component parses and synthesizes with reduced-fidelity informational note.
-17. Valid `INCLUDES` resolves linked facets.
-18. Valid `INCLUDES` resolves linked view facet.
-19. Valid `INCLUDES` resolves linked event facet.
-20. Included file missing -> hard error.
-21. Included file facet mismatch -> hard error.
-22. Inline + external same facet -> informational override note, external used.
-23. Parse success: intent file with embedded `SCHEMA <Name> { ... }` block only.
-24. Parse success: intent file with embedded `SCHEMA/FLOW/CONTRACT/PERSONA/VIEW/EVENT` blocks only.
-25. Parse success: intent file with embedded DSL block + top-level blocks + `INCLUDES`.
-26. Precedence: linked external overrides top-level and embedded DSL blocks.
-27. Precedence: top-level overrides embedded DSL blocks when no external exists.
-28. Hard failure: invalid embedded facet key (`DATA:`).
-29. Hard failure: malformed embedded block syntax or mismatched curly braces when selected as effective source.
-30. Informational note: embedded DSL block overridden by top-level or external facet.
-31. Existing separate facet projects remain valid when linked via intent `INCLUDES`.
-32. Unresolved `REQUIRES` still hard-fails.
-33. Registry package entry resolves to existing `#intent` source matching index `name` and `version`.
-34. Remote package fetch materialized into local `/aim` enables subsequent local-only rebuild.
+Valid:
+
+1. `AIM: juice.games.snake#schema@2.1`
+2. `/aim/company/billing/invoice/company.billing.invoice.intent` with `AIM: company.billing.invoice#intent@2.1`
+3. `/aim/company/billing/invoice/company.billing.invoice.schema.intent` with `AIM: company.billing.invoice#schema@2.1`
+4. `/aim/mappings/company/billing/invoice/company.billing.invoice.mapping.intent` with `AIM: company.billing.invoice#mapping@2.1`
+5. Intent-only component parses successfully.
+6. Intent file with embedded `SCHEMA` only parses successfully.
+7. Intent file with top-level facet blocks plus `INCLUDES` parses successfully.
+8. External facet overrides top-level and embedded facet content for the same facet.
+9. Top-level facet overrides embedded facet content when no external facet exists.
+10. Remote package fetch materializes into nested local `/aim` and rebuilds locally.
+
+Invalid:
+
+1. `AIM: Snake-App#schema@2.1`
+2. `AIM: juice.games.snake#data@2.1`
+3. `AIM: juice.games.snake#schema@2.1.0`
+4. `/aim/company/billing/invoice/schema.intent`
+5. `/aim/company/billing/invoice/event.intent`
+6. `/aim/mappings/company/billing/invoice/mapping.intent`
+7. Flat and nested sources both present for `company.billing.invoice#schema`
+8. Included file version differs from envelope version
+9. Invalid embedded facet key such as `DATA`
+10. Duplicate `SCHEMA User` definitions in the effective schema source
+11. Unresolved `REQUIRES` alias
 
 ---
 
-## 14. Practical Guidance
+## 15. Practical Guidance
+
+Default authoring rule:
+
+- start with a single `<component>.intent` file
+- keep facets embedded in that intent file by default
+- split facets into separate files only when size, churn, reuse, or complexity makes the single-file form harder to understand or maintain
+
+Typical reasons to split:
+
+- the intent file becomes long enough that scanning it is materially slower
+- one facet needs independent ownership or frequent editing
+- a facet is reused or reviewed independently
+- contract or schema stability matters enough to justify isolated files
+- the component has enough precision detail that one-file authoring reduces clarity
+
+This means AIM should be authored single-file first, then expanded into multi-file form only when that improves readability, maintainability, or synthesis precision.
 
 Use intent-only when:
 
-- component is simple
+- the component is simple
 - requirements are still evolving
 - speed matters more than strict precision
 
 Add detail facets when:
 
 - schema compatibility must be explicit
-- flow transitions must be deterministic
-- contract surface must be stable
-- persona traceability across roles is required
+- externally visible operation guarantees must be stable
+- internal orchestration must be deterministic
+- persona and view traceability matters
+- event emission or routing must be explicit
 
-This is the intended AIM workflow: start light, add precision only where needed.
+The intended AIM workflow is:
+
+1. start with one intent envelope
+2. add only the facets that increase useful precision
+3. keep authoring in canonical nested layout
+4. rely on explicit `INCLUDES` rather than implicit discovery
