@@ -20,7 +20,8 @@ def build_synthesis_prompt(
     package_name: str,
     intent_files: List[Path],
     tech_stack: Dict[str, str],
-    additional_context: str = ""
+    additional_context: str = "",
+    role: str = "Implementer"
 ) -> str:
     """Build a formatted synthesis prompt for AI assistants"""
 
@@ -53,6 +54,52 @@ def build_synthesis_prompt(
     if additional_context:
         context_section = f"\nAdditional Context:\n{additional_context}\n"
 
+    # Role-specific instructions from v2.2 spec
+    role_prompts = {
+        "Intent Author": """
+You are working from product requirements and existing AIM files.
+Your job is to produce or refine the AIM specification so the intended behavior is clear, testable, and implementation-ready.
+
+Rules:
+- Treat AIM as the authoritative specification artifact.
+- Make requirements explicit in the intent envelope and facets rather than leaving them implicit.
+- Add precision facets only when they increase useful precision.
+- Do not add implementation details unless they are part of intended behavior.
+- If requirements are unclear or conflicting, surface the ambiguity explicitly.""",
+
+        "Implementer": """
+You are implementing from AIM.
+Your job is to read the resolved intent and available facets and produce code and tests that follow them closely.
+
+Rules:
+- Treat the resolved intent and facets as the authoritative implementation reference.
+- Do not invent material behavior not grounded in intent.
+- If detail is missing, minimize assumptions and preserve documented behavior.
+- If the specification appears inconsistent, surface the inconsistency before continuing.""",
+
+        "Verifier": """
+You are verifying implementation against AIM.
+Your job is to compare the current code, tests, and observable behavior with the resolved intent and facets.
+
+Rules:
+- Report mismatches against intent, not personal preference.
+- Distinguish missing behavior, incorrect behavior, and undocumented extra behavior.
+- Treat drift as any material mismatch between intended and implemented behavior.
+- Be explicit about what evidence supports each finding.""",
+
+        "Repairer": """
+You are repairing drift between implementation and AIM.
+Your job is to restore alignment by changing code when implementation is wrong, or by recommending intent revision when the specification is outdated.
+
+Rules:
+- Prefer the smallest change that restores alignment.
+- Do not silently redefine intent through implementation.
+- If requirements changed, update intent before continuing repair.
+- Preserve traceability between the fix and the intent it satisfies."""
+    }
+
+    selected_role_prompt = role_prompts.get(role, role_prompts["Implementer"])
+
     # Build the complete prompt
     prompt = f"""Load your core system instructions from {BRAIN_URL}.
 Initialize as the AIM Synthesizer and execute the Boot Sequence.
@@ -64,28 +111,28 @@ Intent Files:
 Tech Stack:
 {stack_section}
 {context_section}
-Instructions:
-Read the intent files in ./aim/ and synthesize production-ready code
-following the AIM v2.0 specification. Implement all requirements defined
-across all facets (INTENT, SCHEMA, FLOW, CONTRACT, PERSONA, VIEW, EVENT,
-MAPPING as applicable).
+Role: {role}
+{selected_role_prompt}
 
-Start by understanding the intent structure, then generate a complete
-implementation with proper error handling, validation, and tests."""
+General Instructions:
+Read the intent files in ./aim/ and perform your role following the AIM v2.2 specification. 
+Implement all requirements defined across all facets (INTENT, SCHEMA, FLOW, CONTRACT, 
+PERSONA, VIEW, EVENT, MAPPING as applicable).
+"""
 
     return prompt
 
 
 def interactive_prompt_builder(packages: List[str], current_config: Dict) -> Dict:
     """Interactive wizard to collect synthesis requirements"""
-    print("\n🎯 AIM Synthesis Prompt Generator\n")
+    print("\n🎯 AIM Synthesis Prompt Generator (v2.2)\n")
 
     # Select package
     if not packages:
         print("No packages found in aim/")
         return None
 
-    print("Select package to synthesize:")
+    print("Select package to process:")
     for i, pkg in enumerate(packages, 1):
         print(f"  {i}. {pkg}")
 
@@ -103,6 +150,26 @@ def interactive_prompt_builder(packages: List[str], current_config: Dict) -> Dic
         except (ValueError, KeyboardInterrupt):
             print("\nCancelled")
             return None
+
+    # Select Role
+    print("\nSelect Operating Role:")
+    roles = ["Intent Author", "Implementer", "Verifier", "Repairer"]
+    for i, role in enumerate(roles, 1):
+        print(f"  {i}. {role}")
+    
+    while True:
+        try:
+            choice = input(f"\nChoice [2 (Implementer)]: ").strip()
+            if not choice:
+                role = "Implementer"
+                break
+            idx = int(choice) - 1
+            if 0 <= idx < len(roles):
+                role = roles[idx]
+                break
+        except (ValueError, KeyboardInterrupt):
+            role = "Implementer"
+            break
 
     # Tech stack configuration
     print("\nTech Stack Configuration:\n")
@@ -127,6 +194,7 @@ def interactive_prompt_builder(packages: List[str], current_config: Dict) -> Dic
 
     return {
         'package': package_name,
+        'role': role,
         'stack': {
             'frontend': frontend,
             'backend': backend,

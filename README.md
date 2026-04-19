@@ -88,7 +88,7 @@ After deploy, verify:
 ## Quick Example
 
 ```ail
-AIM: game.snake#intent@2.0
+AIM: game.snake#intent@2.2
 
 INTENT SnakeGame {
   SUMMARY: "A single-player snake game with top-10 scores."
@@ -150,4 +150,4 @@ Use this sequence:
 
 ## Status
 
-Current spec version: **AIM v2.0**.
+Current spec version: **AIM v2.2**.

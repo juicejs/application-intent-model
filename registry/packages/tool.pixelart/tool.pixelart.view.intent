@@ -1,4 +1,4 @@
-AIM: tool.pixelart#view@2.0
+AIM: tool.pixelart#view@2.2
 
 VIEW CanvasEditor {
   SUMMARY: "The primary drawing surface for creating and editing pixel art."

@@ -1,4 +1,4 @@
-AIM: game.tango#intent@2.0
+AIM: game.tango#intent@2.2
 
 INTENT TangoGame {
   SUMMARY: "A logic puzzle game where players fill a grid with two symbols, ensuring equal distribution and no more than two adjacent, with special constraint cells."

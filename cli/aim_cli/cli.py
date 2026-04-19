@@ -92,13 +92,83 @@ def fetch_file(url: str) -> str:
         raise Exception(f"Failed to fetch {url}: {e}")
 
 
-def resolve_package_urls(entry_path: str) -> List[str]:
-    """Convert registry entry path to full URLs"""
+def resolve_package_url(relative_path: str) -> str:
+    """Convert registry relative path to full URL"""
     base_url = "https://intentmodel.dev"
-    # entry_path is like "registry/packages/weather/weather.intent"
+    # relative_path is like "registry/packages/weather/weather.intent"
     # Convert to "registry-files/packages/weather/weather.intent"
-    url_path = entry_path.replace("registry/", "registry-files/", 1)
-    return [f"{base_url}/{url_path}"]
+    url_path = relative_path.replace("registry/", "registry-files/", 1)
+    return f"{base_url}/{url_path}"
+
+
+def get_local_path(feature: str, facet: str) -> Path:
+    """Get the nested layout path for a component and facet"""
+    segments = feature.split('.')
+    # Nested layout: /aim/<namespace segments>/<component>.<facet>.intent
+    target_dir = AIM_DIR / Path(*segments)
+    if facet == 'intent':
+        return target_dir / f"{feature}.intent"
+    return target_dir / f"{feature}.{facet}.intent"
+
+
+def fetch_and_materialize(url: str, visited_urls=None):
+    """Recursively fetch AIM files and materialize them locally"""
+    if visited_urls is None:
+        visited_urls = set()
+
+    if url in visited_urls:
+        return
+    visited_urls.add(url)
+
+    try:
+        print_info(f"Fetching {url}")
+        content = fetch_file(url)
+
+        # Parse header to get identity
+        lines = content.splitlines()
+        if not lines or not lines[0].startswith("AIM:"):
+            print_error(f"Invalid AIM header in {url}")
+            return
+
+        # AIM: <component>#<facet>@<version>
+        match = re.match(r"^AIM:\s+([a-z0-9]+(?:\.[a-z0-9]+)*)#(intent|schema|flow|contract|persona|view|event|mapping)@([0-9]+\.[0-9]+)$", lines[0].strip())
+        if not match:
+            print_error(f"Malformed AIM header in {url}")
+            return
+
+        feature, facet, version = match.groups()
+        dest_path = get_local_path(feature, facet)
+
+        # Ensure directory exists
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write file
+        dest_path.write_text(content, encoding='utf-8')
+        print_success(f"Saved to {dest_path}")
+
+        # Parse INCLUDES for recursive fetching
+        includes_pattern = re.compile(r'^\s*(schema|flow|contract|persona|view|event)\s*:\s*"([^"]+)"\s*$')
+        in_includes = False
+        for line in lines:
+            if re.match(r"^\s*INCLUDES\s*\{\s*$", line):
+                in_includes = True
+                continue
+            if in_includes and re.match(r"^\s*}\s*$", line):
+                in_includes = False
+                continue
+
+            if in_includes:
+                m = includes_pattern.match(line)
+                if m:
+                    rel_path = m.group(2)
+                    # Resolve relative path based on the current URL
+                    # url is like https://.../packages/weather/weather.intent
+                    base_url_dir = "/".join(url.split("/")[:-1])
+                    next_url = f"{base_url_dir}/{rel_path}"
+                    fetch_and_materialize(next_url, visited_urls)
+
+    except Exception as e:
+        print_error(f"Error processing {url}: {e}")
 
 
 def cmd_init(args):
@@ -134,26 +204,11 @@ def cmd_fetch(args):
 
     print_info(f"Found package: {pkg['name']} v{pkg['version']}")
 
-    # Get package URLs
-    urls = resolve_package_urls(pkg['entry'])
+    # Get package URL
+    url = resolve_package_url(pkg['entry'])
 
-    # Fetch and save files
-    for url in urls:
-        try:
-            print_info(f"Fetching {url}")
-            content = fetch_file(url)
-
-            # Extract filename from URL
-            filename = url.split('/')[-1]
-            dest_path = AIM_DIR / filename
-
-            # Write file
-            dest_path.write_text(content, encoding='utf-8')
-            print_success(f"Saved {dest_path}")
-
-        except Exception as e:
-            print_error(str(e))
-            sys.exit(1)
+    # Fetch recursively and materialize
+    fetch_and_materialize(url)
 
     # Update lock file
     update_lock_file(pkg)
@@ -202,60 +257,107 @@ def cmd_list(args):
 
 
 def cmd_validate(args):
-    """Validate local intent files against AIM v2.0 specification"""
+    """Validate local intent files against AIM v2.2 specification"""
     if not AIM_DIR.exists():
         print_warning("No aim/ directory found")
         return
 
-    intent_files = list(AIM_DIR.glob("*.intent"))
-
-    # Also check in mappings subdirectory
-    mappings_dir = AIM_DIR / "mappings"
-    if mappings_dir.exists():
-        intent_files.extend(mappings_dir.glob("*.intent"))
+    # Discover all .intent files recursively
+    intent_files = list(AIM_DIR.rglob("*.intent"))
 
     if not intent_files:
         print_warning("No .intent files found")
         return
 
-    print_info("Validating intent files against AIM v2.0...")
+    print_info("Validating intent files against AIM v2.2...")
     valid_count = 0
     invalid_count = 0
 
-    # AIM v2.0 header regex from specification
+    # AIM v2.2 header regex
     aim_header_pattern = re.compile(
         r'^AIM:\s+([a-z0-9]+(?:\.[a-z0-9]+)*)#(intent|schema|flow|contract|persona|view|event|mapping)@([0-9]+\.[0-9]+)$'
     )
+    
+    legacy_tokens = (":::AIL_METADATA", ":::AIM_METADATA", "FEATURE:", "FACET:", "VERSION:")
 
     for intent_file in intent_files:
         try:
             content = intent_file.read_text(encoding='utf-8')
-            lines = content.split('\n')
+            lines = content.splitlines()
+
+            # Check for legacy tokens
+            for token in legacy_tokens:
+                if token in content:
+                    print_error(f"{intent_file}: legacy metadata token '{token}' is not allowed")
+                    invalid_count += 1
+                    continue
 
             # Check for AIM header
             if not lines or not lines[0].strip().startswith('AIM:'):
-                print_error(f"{intent_file.name}: Missing AIM header")
+                print_error(f"{intent_file}: Missing AIM header")
                 invalid_count += 1
                 continue
 
-            # Validate against AIM v2.0 header format
             header = lines[0].strip()
             match = aim_header_pattern.match(header)
 
             if not match:
-                print_error(f"{intent_file.name}: Invalid AIM v2.0 header format")
+                print_error(f"{intent_file}: Invalid AIM v2.2 header format")
                 print_warning(f"  Header: {header}")
-                print_info(f"  Expected: AIM: <feature>#<facet>@<x.y>")
-                print_info(f"  Valid facets: intent, schema, flow, contract, persona, view, event, mapping")
                 invalid_count += 1
                 continue
 
             feature, facet, version = match.groups()
-            print_success(f"{intent_file.name}: Valid (AIM: {feature}#{facet}@{version})")
+
+            # Verify identity against path (AIM v2.2 sanity check)
+            # Support both flat and nested layout validation
+            rel_path = intent_file.relative_to(AIM_DIR)
+            
+            # Simple path-to-identity derivation for validation
+            if len(rel_path.parts) == 1:
+                # Flat layout: <feature>.<facet>.intent
+                stem_parts = rel_path.name[:-len(".intent")].split(".")
+                if stem_parts[-1] in ("intent", "schema", "flow", "contract", "persona", "view", "event", "mapping"):
+                    path_feature = ".".join(stem_parts[:-1])
+                    path_facet = stem_parts[-1]
+                else:
+                    path_feature = ".".join(stem_parts)
+                    path_facet = "intent"
+            else:
+                # Nested layout: segments/feature.facet.intent
+                path_feature = ".".join(rel_path.parts[:-1])
+                
+                # Check for mappings/ prefix
+                is_mapping = False
+                if rel_path.parts[0] == "mappings":
+                     path_feature = ".".join(rel_path.parts[1:-1])
+                     is_mapping = True
+
+                stem = rel_path.stem
+                # stem is like "game.snake" or "game.snake.schema"
+                if stem.endswith(".intent"): # Just in case
+                     stem = stem[:-len(".intent")]
+                
+                if stem == path_feature:
+                     path_facet = "mapping" if is_mapping else "intent"
+                elif stem.startswith(path_feature + "."):
+                     path_facet = stem[len(path_feature)+1:]
+                else:
+                     # Fallback for unexpected naming
+                     path_facet = stem
+
+            if path_feature != feature or path_facet != facet:
+                print_error(f"{intent_file}: Contradictory identity")
+                print_warning(f"  Header: {feature}#{facet}")
+                print_warning(f"  Path implies: {path_feature}#{path_facet}")
+                invalid_count += 1
+                continue
+
+            print_success(f"{rel_path}: Valid ({feature}#{facet}@{version})")
             valid_count += 1
 
         except Exception as e:
-            print_error(f"{intent_file.name}: {e}")
+            print_error(f"{intent_file}: {e}")
             invalid_count += 1
 
     print()
@@ -372,7 +474,7 @@ def cmd_synth(args):
         return
 
     # Check if package specified
-    if not args.package:
+    if not args.package and not args.interactive:
         print_error("Package name required (or use --interactive)")
         print_info("Usage: aim synth <package> [options]")
         print_info("   or: aim synth --interactive")
@@ -388,15 +490,27 @@ def cmd_synth(args):
             print_error("No aim/ directory found. Run 'aim init' first.")
             sys.exit(1)
 
-        intent_files = list(AIM_DIR.glob("*.intent"))
+        # Discover all .intent files
+        intent_files = list(AIM_DIR.rglob("*.intent"))
         if not intent_files:
             print_error("No packages installed. Run 'aim fetch <package>' first.")
             sys.exit(1)
 
-        # Extract package names from filenames
-        packages = [f.stem for f in intent_files]
+        # Extract unique component names from headers or filenames
+        packages = set()
+        aim_header_pattern = re.compile(r'^AIM:\s+([a-z0-9]+(?:\.[a-z0-9]+)*)#intent@')
+        for f in intent_files:
+            content = f.read_text(encoding='utf-8')
+            first_line = content.split('\n')[0].strip()
+            match = aim_header_pattern.match(first_line)
+            if match:
+                packages.add(match.group(1))
+            else:
+                # Fallback to stem if it looks like a component
+                if '#' not in f.stem and '.' in f.stem:
+                     packages.add(f.stem)
 
-        prompt_data = interactive_prompt_builder(packages, config)
+        prompt_data = interactive_prompt_builder(sorted(list(packages)), config)
         if not prompt_data:
             print_info("Cancelled")
             return
@@ -404,8 +518,8 @@ def cmd_synth(args):
         # Non-interactive mode
         package_name = args.package
 
-        # Check if package exists
-        intent_files = list(AIM_DIR.glob(f"*{package_name}*.intent"))
+        # Check if package exists (search recursively)
+        intent_files = list(AIM_DIR.rglob(f"*{package_name}*.intent"))
         if not intent_files:
             print_error(f"Package '{package_name}' not found in aim/")
             print_info("Run 'aim list' to see installed packages")
@@ -420,19 +534,21 @@ def cmd_synth(args):
 
         prompt_data = {
             'package': package_name,
+            'role': args.role or "Implementer",
             'stack': stack,
             'context': ''
         }
 
-    # Find intent files for the package
-    intent_files = list(AIM_DIR.glob(f"*{prompt_data['package']}*.intent"))
+    # Find ALL intent files for the package recursively
+    intent_files = list(AIM_DIR.rglob(f"*{prompt_data['package']}*.intent"))
 
     # Build prompt
     prompt = build_synthesis_prompt(
         package_name=prompt_data['package'],
         intent_files=intent_files,
         tech_stack=prompt_data['stack'],
-        additional_context=prompt_data.get('context', '')
+        additional_context=prompt_data.get('context', ''),
+        role=prompt_data.get('role', 'Implementer')
     )
 
     # Output prompt
@@ -533,6 +649,9 @@ Examples:
     parser_synth.add_argument('package', nargs='?', help='Package name')
     parser_synth.add_argument('--interactive', '-i', action='store_true',
                              help='Interactive mode')
+    parser_synth.add_argument('--role', '-r',
+                             choices=['Intent Author', 'Implementer', 'Verifier', 'Repairer'],
+                             help='Operating Role')
     parser_synth.add_argument('--stack', '-s',
                              help='Tech stack (e.g., "React,Node.js,PostgreSQL")')
     parser_synth.add_argument('--no-copy', action='store_true',

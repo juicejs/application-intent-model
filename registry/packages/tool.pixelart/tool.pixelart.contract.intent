@@ -1,4 +1,4 @@
-AIM: tool.pixelart#contract@2.0
+AIM: tool.pixelart#contract@2.2
 
 CONTRACT CreateCanvas {
   SUMMARY: "Creates a new empty pixel art canvas."

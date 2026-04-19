@@ -1,4 +1,4 @@
-AIM: terminal.countdown#contract@2.0
+AIM: terminal.countdown#contract@2.2
 
 CONTRACT StartCountdown {
   SUMMARY: "Starts a countdown run and guarantees a completion event when it reaches zero."

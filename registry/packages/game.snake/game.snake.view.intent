@@ -1,4 +1,4 @@
-AIM: game.snake#view@2.0
+AIM: game.snake#view@2.2
 
 VIEW GameBoard {
   SUMMARY: "Shared game screen for starting and steering a run."

@@ -1,4 +1,4 @@
-AIM: tool.pixelart#intent@2.0
+AIM: tool.pixelart#intent@2.2
 
 INTENT PixelArtCanvas {
   SUMMARY: "A grid-based drawing app where users paint pixel art, pick colors, and export their creation as a PNG image."
