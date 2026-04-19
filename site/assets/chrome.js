@@ -37,12 +37,15 @@
   }
 })();
 
-// Bootstrap prompt copy functionality
-function copyBootstrap() {
-  const promptText = document.getElementById('bootstrap-prompt').textContent;
-  const button = event.currentTarget;
+/**
+ * Generic copy functionality for prompts
+ * @param {string} textToCopy - The literal string to copy
+ * @param {HTMLElement} button - The button element that was clicked
+ */
+function copyPrompt(textToCopy, button) {
+  if (!textToCopy) return;
 
-  navigator.clipboard.writeText(promptText).then(() => {
+  navigator.clipboard.writeText(textToCopy).then(() => {
     const originalHTML = button.innerHTML;
     button.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,6 +61,13 @@ function copyBootstrap() {
     }, 2000);
   }).catch(err => {
     console.error('Failed to copy:', err);
-    alert('Failed to copy. Please select and copy manually.');
   });
+}
+
+/**
+ * Legacy support for the main bootstrap button
+ */
+function copyBootstrap() {
+  const promptText = document.getElementById('bootstrap-prompt').innerText || document.getElementById('bootstrap-prompt').textContent;
+  copyPrompt(promptText, event.currentTarget);
 }

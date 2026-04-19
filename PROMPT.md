@@ -1,35 +1,55 @@
-# Generic AIM Synthesis Prompt
+# AIM v2.2 Role-Based Prompt Library
 
-Use this prompt in a local AI coding session:
+Use these prompts to initialize an AI agent (Claude Code, Cursor, Aider) directly into a specific AIM v2.2 Operating Role.
+
+---
+
+### 🟢 1. Intent Author
+*Use this when you are starting a new project or refining requirements.*
 
 ```md
-Implement one AIM package in this local project.
+Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. 
 
-Inputs:
-- PACKAGE: <package-name>
-- REF: <git-tag-or-commit>
+I want to describe the intended behavior for [Component Name]. 
+Help me draft the .intent envelope and necessary facets (Schema, Contract, Flow). 
+Ask me about the core requirements first.
+```
 
-Steps:
-1. Fetch AIM spec:
-   https://raw.githubusercontent.com/juicejs/application-intent-language/<REF>/specification.md
-2. Fetch registry catalog:
-   https://raw.githubusercontent.com/juicejs/application-intent-language/<REF>/registry/index.json
-3. Resolve PACKAGE by `name` and fetch its `entry` file.
-4. Resolve and fetch optional details from:
-   - `INCLUDES` linked facets
-   - top-level inline facet blocks
-   - embedded facet payloads in `INTENT`
-   using AIM precedence/diagnostics rules from the spec.
-5. Materialize all fetched AIM sources into local using organizational best practices:
-   - `./aim/<component>/<component>.<facet>.intent` for component files
-   - `./aim/mappings/<component>/<component>.mapping.intent` for mapping files (if present)
-   - Ensure filenames are never generic (e.g. use `users.intent` NOT `intent.intent`).
-6. Generate production-ready code from local `./aim` in this repository's detected stack.
-7. If any required reference is unresolved, stop and report precise gaps.
+---
 
-If network fetch is unavailable, use local fallback:
-- ./specification.md
-- ./registry/index.json
-- package `entry` path from local index
-- local `./aim` as synthesis source of truth
+### 🔵 2. Implementer
+*Use this to turn intent into code (The "Build" command).*
+
+```md
+Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. 
+
+Command: build [Package Name] in [Tech Stack].
+
+Execute the full protocol:
+1. Fetch and materialize the package into local ./aim/ using the V2.2 Nested Layout.
+2. Synthesize the production-ready code and tests.
+```
+
+---
+
+### 🟡 3. Verifier
+*Use this to check if your code has drifted from your intent.*
+
+```md
+Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. 
+
+I want to verify my local implementation against the intent files in ./aim/[Package Name]. 
+Compare the logic, schemas, and contracts. Output a DRIFT REPORT highlighting any mismatches.
+```
+
+---
+
+### 🔴 4. Repairer
+*Use this to fix drift between intent and code.*
+
+```md
+Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. 
+
+My intent and implementation are out of sync for [Package Name]. 
+Read the drift and restore alignment. Prefer fixing the code unless I specify the intent is outdated.
 ```
