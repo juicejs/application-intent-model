@@ -3,36 +3,114 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Publish AIM Package</title>
+    <title>Publish AIM Package v2.2</title>
     <link rel="stylesheet" href="../assets/site.css">
+    <!-- 100% privacy-first analytics -->
+    <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <style>
+      .publish-container {
+        background: white;
+        padding: 60px;
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        margin-top: 40px;
+      }
+      .step-list {
+        list-style: none;
+        padding: 0;
+        counter-reset: step-counter;
+      }
+      .step-item {
+        position: relative;
+        padding-left: 56px;
+        margin-bottom: 32px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+      .step-item::before {
+        counter-increment: step-counter;
+        content: counter(step-counter);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 32px;
+        height: 32px;
+        background: var(--bg-tertiary);
+        color: var(--google-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+    </style>
   </head>
   <body data-page="publish" data-base="../">
-    <section class="panel">
-      <h1>Publish A Component Package</h1>
-      <ol style="line-height: 1.7; margin-left: var(--space-xl); color: var(--text-secondary);">
-        <li style="margin-bottom: var(--space-md);">Create <code>registry/packages/&lt;component&gt;/</code>.</li>
-        <li style="margin-bottom: var(--space-md);">Add exactly one entry file: <code>&lt;component&gt;.intent</code>.</li>
-        <li style="margin-bottom: var(--space-md);">Add optional facet files referenced by the entry file.</li>
-        <li style="margin-bottom: var(--space-md);">Update <code>registry/index.json</code> with <code>name</code>, <code>version</code>, and <code>entry</code>.</li>
-        <li style="margin-bottom: var(--space-md);">Use valid AIM preambles in all files.</li>
-        <li style="margin-bottom: var(--space-md);">Open a pull request.</li>
-      </ol>
+    
+    <div class="site-shell">
+      <section style="margin-top: 48px;">
+        <h1 style="font-weight: 500; margin-bottom: 8px;">Publish Component Package</h1>
+        <p style="color: var(--text-secondary);">
+          Follow these steps to contribute your component to the AIM registry.
+        </p>
+      </section>
 
-      <p style="margin-top: var(--space-xl); margin-bottom: var(--space-sm);">Minimal registry entry:</p>
-      <pre>{
+      <div class="publish-container">
+        <div class="grid cols-2" style="gap: 60px;">
+          <div>
+            <h2 style="font-size: 1.2rem; font-weight: 500; margin-bottom: 32px;">Submission Workflow</h2>
+            <div class="step-list">
+              <div class="step-item">
+                Create a directory at <code>registry/packages/&lt;component&gt;/</code>.
+              </div>
+              <div class="step-item">
+                Add exactly one entry intent file: <code>&lt;component&gt;.intent</code>.
+              </div>
+              <div class="step-item">
+                Add optional facet files referenced by the entry file via <code>INCLUDES</code>.
+              </div>
+              <div class="step-item">
+                Update <code>registry/index.json</code> with name, version, and entry path.
+              </div>
+              <div class="step-item">
+                Ensure all files use valid AIM preambles (e.g., <code>AIM: component#facet@2.2</code>).
+              </div>
+              <div class="step-item">
+                Submit a Pull Request to the GitHub repository.
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 style="font-size: 1.2rem; font-weight: 500; margin-bottom: 32px;">Example Manifest</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Minimal entry in <code>registry/index.json</code>:</p>
+            <pre style="font-size: 0.85rem;">{
   "name": "weather",
   "version": "2.2",
   "entry": "registry/packages/weather/weather.intent"
 }</pre>
+            
+            <div style="margin-top: 40px; padding: 24px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-light);">
+              <h3 style="font-size: 0.95rem; font-weight: 500; margin-bottom: 8px;">Validation Policy</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                Every PR is automatically validated for:
+                <ul style="margin-top: 8px; margin-left: 20px;">
+                  <li>Correct directory structure</li>
+                  <li>Header-to-path identity alignment</li>
+                  <li>Version consistency</li>
+                </ul>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <p class="muted" style="margin-top: var(--space-xl);">
-        CI validates package structure and AIM header identity on every PR.
-        See <a href="../../registry-files/README.md">registry/README.md</a>.
-      </p>
-      <p class="muted">
-        Consumer workflow: fetch package entry, then materialize sources into local <code>/aim</code> before synthesis.
-      </p>
-    </section>
+      <footer class="footer" style="text-align: center; margin-top: 80px;">
+        <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
+      </footer>
+    </div>
 
     <script src="../assets/chrome.js"></script>
   </body>

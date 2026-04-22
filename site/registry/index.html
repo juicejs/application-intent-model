@@ -3,45 +3,99 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AIM Registry</title>
+    <title>AIM Registry v2.2</title>
     <link rel="stylesheet" href="../assets/site.css">
-      <!-- 100% privacy-first analytics -->
-      <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <!-- 100% privacy-first analytics -->
+    <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <style>
+      .registry-container {
+        background: white;
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        margin-top: 24px;
+        overflow: hidden;
+      }
+      .registry-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .registry-table th {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        text-align: left;
+        padding: 16px 24px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-light);
+      }
+      .registry-table td {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-light);
+        vertical-align: middle;
+      }
+      .registry-table tr:last-child td {
+        border-bottom: none;
+      }
+      .registry-table tr:hover {
+        background: var(--bg-secondary);
+      }
+      .package-name {
+        font-family: var(--font-mono);
+        color: var(--google-blue);
+        font-weight: 500;
+      }
+      .summary-text {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+      .preview-pane {
+        padding: 40px;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-light);
+      }
+    </style>
   </head>
   <body data-page="registry" data-base="../">
-    <section class="panel">
-      <h1 style="margin:0 0 var(--space-md);">Package Registry</h1>
-      <p class="muted" style="margin:0;">
-        Click a package to inspect its intent entry and open source files directly.
-        Source catalog: <a id="index-link" href="../../registry/index.json">registry/index.json</a>
-      </p>
-    </section>
+    
+    <div class="site-shell">
+      <section style="margin-top: 48px;">
+        <h1 style="font-weight: 500; margin-bottom: 8px;">Package Registry</h1>
+        <p style="color: var(--text-secondary);">
+          Discover and materialize intent-first component packages.
+          <a id="index-link" href="../../registry/index.json" style="color: var(--google-blue); text-decoration: none;">index.json</a>
+        </p>
+      </section>
 
-    <section class="layout" style="margin-top: var(--space-lg);">
-      <div class="panel">
-        <h2>Packages</h2>
-        <table id="pkg-table" aria-label="packages">
+      <div class="registry-container">
+        <table class="registry-table" aria-label="packages">
           <thead>
             <tr>
               <th>Package</th>
               <th>Version</th>
               <th>Short Summary</th>
-              <th>Copy URL</th>
-              <th>Start</th>
+              <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody id="pkg-body">
-            <tr><td colspan="5" class="muted">Loading registry...</td></tr>
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px;">Loading registry...</td></tr>
           </tbody>
         </table>
+
+        <div class="preview-pane">
+          <h2 id="preview-title" style="font-size: 1.2rem; font-weight: 500; margin-bottom: 8px;">Package Details</h2>
+          <p id="preview-meta" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">Select a package to see full details.</p>
+          <pre id="preview" style="background: white; border: 1px solid var(--border); color: var(--text-primary); font-size: 0.85rem;">No package selected.</pre>
+        </div>
       </div>
 
-      <div class="panel">
-        <h2 id="preview-title">Summary</h2>
-        <p id="preview-meta" class="muted">Select a package to inspect its intent summary.</p>
-        <pre id="preview" class="preview">No package selected.</pre>
-      </div>
-    </section>
+      <footer class="footer" style="text-align: center; margin-top: 80px;">
+        <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/">Specification</a></p>
+      </footer>
+    </div>
 
     <script src="../assets/chrome.js"></script>
     <script>
@@ -102,24 +156,17 @@
 
       async function loadIntent(pkg, indexUrl) {
         const entryHref = toEntryHref(pkg.entry, indexUrl);
-        previewTitle.textContent = `Summary: ${pkg.name}`;
-        previewMeta.innerHTML = `Version <code>${htmlEscape(pkg.version)}</code> · <a href="${entryHref}" target="_blank" rel="noopener">Open entry file</a>`;
-        preview.classList.remove("err");
+        previewTitle.textContent = `Details: ${pkg.name}`;
+        previewMeta.innerHTML = `Version ${htmlEscape(pkg.version)} &bull; <a href="${entryHref}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Source</a>`;
         preview.textContent = "Loading summary...";
 
         try {
           const res = await fetch(entryHref);
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
-          }
+          if (!res.ok) throw new Error();
           const text = await res.text();
-          const summary = extractSummary(text);
-          preview.classList.remove("err");
-          preview.textContent = summary ? summary : "No SUMMARY found in intent file.";
+          preview.textContent = text;
         } catch (_) {
-          const hint = window.location.protocol === "file:" ? " Open this site via a local HTTP server." : "";
-          preview.textContent = "Failed to load summary." + hint;
-          preview.classList.add("err");
+          preview.textContent = "Failed to load source.";
         }
       }
 
@@ -129,32 +176,36 @@
           indexLink.href = url;
           const data = await res.json();
           if (!Array.isArray(data.packages) || data.packages.length === 0) {
-            pkgBody.innerHTML = '<tr><td colspan="5" class="muted">No packages found.</td></tr>';
+            pkgBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">No packages found.</td></tr>';
             return;
           }
 
           const rows = data.packages.map((pkg, i) => {
             return `
-              <tr>
-                <td><code>${htmlEscape(pkg.name)}</code></td>
-                <td><code>${htmlEscape(pkg.version)}</code></td>
-                <td class="summary-cell" data-summary-idx="${i}"><span class="muted">Loading...</span></td>
-                <td><button class="inspect-btn" data-copy-url-idx="${i}">Copy URL</button></td>
-                <td><button class="inspect-btn copy-prompt-btn" data-pkg-idx="${i}">Copy Prompt</button></td>
+              <tr onclick="window.scrollToPackageDetails('${pkg.name}', ${i})" style="cursor: pointer;">
+                <td><span class="package-name">${htmlEscape(pkg.name)}</span></td>
+                <td><span style="color: var(--text-muted); font-size: 0.9rem;">${htmlEscape(pkg.version)}</span></td>
+                <td class="summary-text" data-summary-idx="${i}">Loading...</td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <button class="btn" style="padding: 6px 12px; font-size: 0.8rem;" data-pkg-idx="${i}">Copy build command</button>
+                </td>
               </tr>
             `;
           }).join("");
 
           pkgBody.innerHTML = rows;
 
-          // Fetch summaries for all packages
+          // Global function for detail loading
+          window.scrollToPackageDetails = (name, i) => {
+            loadIntent(data.packages[i], url);
+          };
+
+          // Fetch summaries
           data.packages.forEach(async (pkg, i) => {
             const entryHref = toEntryHref(pkg.entry, url);
             const summaryCell = pkgBody.querySelector(`[data-summary-idx="${i}"]`);
-
             try {
               const res = await fetch(entryHref);
-              if (!res.ok) throw new Error();
               const text = await res.text();
               const summary = extractSummary(text);
               summaryCell.innerHTML = summary ? htmlEscape(summary) : '<span class="muted">No summary found</span>';
@@ -163,68 +214,30 @@
             }
           });
 
-          pkgBody.querySelectorAll("button[data-copy-url-idx]").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              const idx = Number(btn.getAttribute("data-copy-url-idx"));
-              copyPackageUrl(data.packages[idx], url, e.currentTarget);
-            });
-          });
-
           pkgBody.querySelectorAll("button[data-pkg-idx]").forEach((btn) => {
             btn.addEventListener("click", (e) => {
+              e.stopPropagation();
               const idx = Number(btn.getAttribute("data-pkg-idx"));
-              copyPackagePrompt(data.packages[idx], url, e.currentTarget);
+              copyBuildCommand(data.packages[idx], btn);
             });
           });
 
           loadIntent(data.packages[0], url);
         } catch (_) {
-          const hint = window.location.protocol === "file:" ? " Open this site via a local HTTP server." : "";
-          pkgBody.innerHTML = `<tr><td colspan="5" class="err">Failed to load registry index.${hint}</td></tr>`;
+          pkgBody.innerHTML = `<tr><td colspan="4" style="color: var(--google-red); text-align: center; padding: 40px;">Failed to load registry index.</td></tr>`;
         }
       }
 
-      function copyPackageUrl(pkg, indexUrl, btn) {
-        const entryHref = toEntryHref(pkg.entry, indexUrl);
-        const fullUrl = entryHref.startsWith('http')
-          ? entryHref
-          : window.location.origin + '/' + entryHref.replace(/^\.\.\//, '');
-
-        navigator.clipboard.writeText(fullUrl).then(() => {
+      function copyBuildCommand(pkg, btn) {
+        const cmd = `build ${pkg.name} in React`;
+        navigator.clipboard.writeText(cmd).then(() => {
           const originalText = btn.textContent;
           btn.textContent = 'Copied!';
-          btn.style.background = '#0891b2';
-
+          btn.style.color = 'var(--google-green)';
           setTimeout(() => {
             btn.textContent = originalText;
-            btn.style.background = '';
+            btn.style.color = '';
           }, 2000);
-        }).catch(err => {
-          console.error('Failed to copy:', err);
-          alert('Failed to copy URL. Please try again.');
-        });
-      }
-
-      function copyPackagePrompt(pkg, indexUrl, btn) {
-        const entryHref = toEntryHref(pkg.entry, indexUrl);
-        const fullUrl = entryHref.startsWith('http')
-          ? entryHref
-          : window.location.origin + '/' + entryHref.replace(/^\.\.\//, '');
-
-        const prompt = `Apply the logic at https://intentmodel.dev/brain.md to this project. Ready? This is the ${pkg.name} package (${fullUrl}) and ask for the stack.`;
-
-        navigator.clipboard.writeText(prompt).then(() => {
-          const originalText = btn.textContent;
-          btn.textContent = 'Copied!';
-          btn.style.background = '#059669';
-
-          setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.background = '';
-          }, 2000);
-        }).catch(err => {
-          console.error('Failed to copy:', err);
-          alert('Failed to copy prompt. Please try again.');
         });
       }
 

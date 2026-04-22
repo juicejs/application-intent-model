@@ -3,23 +3,78 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AIM Specification</title>
+    <title>AIM Specification v2.2</title>
     <link rel="stylesheet" href="../assets/site.css">
-      <!-- 100% privacy-first analytics -->
-      <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <!-- 100% privacy-first analytics -->
+    <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <style>
+      .toc-container {
+        background: var(--bg-secondary);
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 48px;
+        border: 1px solid var(--border-light);
+      }
+      .toc-title {
+        font-weight: 500;
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+      }
+      .toc-list {
+        list-style: none;
+        padding: 0;
+        columns: 2;
+      }
+      @media (max-width: 600px) {
+        .toc-list { columns: 1; }
+      }
+      .toc-item {
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+      .toc-item a {
+        color: var(--google-blue);
+        text-decoration: none;
+      }
+      .toc-item a:hover {
+        text-decoration: underline;
+      }
+      .toc-item.level-3 {
+        padding-left: 16px;
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+      /* Ensure anchors have space for header if any */
+      #spec-content h1, #spec-content h2, #spec-content h3 {
+        scroll-margin-top: 24px;
+      }
+    </style>
   </head>
   <body data-page="spec" data-base="../">
-    <section class="panel" style="margin-bottom: var(--space-lg);">
-      <h1 style="margin:0 0 var(--space-md);">AIM Specification</h1>
-      <p class="muted" style="margin:0;">
-        This page renders <code>specification.md</code> directly.
-        <a id="spec-link" href="../../specification.md" target="_blank" rel="noopener">Open raw spec file</a>.
-      </p>
-    </section>
+    
+    <div class="site-shell">
+      <section style="margin-top: 48px; margin-bottom: 40px;">
+        <h1 style="font-weight: 500; margin-bottom: 8px;">Technical Specification</h1>
+        <p style="color: var(--text-secondary);">
+          Current Version: <strong>v2.2</strong> &bull; 
+          <a id="spec-link" href="../../specification.md" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">Raw Markdown</a>
+        </p>
+      </section>
 
-    <section class="panel">
-      <div id="spec-content">Loading specification...</div>
-    </section>
+      <nav id="toc" class="toc-container" style="display: none;">
+        <div class="toc-title">Table of Contents</div>
+        <ul id="toc-list" class="toc-list"></ul>
+      </nav>
+
+      <article id="spec-content">
+        <p style="color: var(--text-muted);">Loading specification...</p>
+      </article>
+
+      <footer class="footer" style="text-align: center; margin-top: 80px;">
+        <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
+      </footer>
+    </div>
 
     <script src="../assets/chrome.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -36,6 +91,36 @@
         throw new Error("No candidate path resolved.");
       }
 
+      function generateTOC(contentEl) {
+        const toc = document.getElementById("toc");
+        const tocList = document.getElementById("toc-list");
+        const headings = contentEl.querySelectorAll("h1, h2, h3");
+        
+        if (headings.length < 2) return;
+
+        headings.forEach((heading, index) => {
+          // Skip the main page title if it's the first H1
+          if (heading.tagName === "H1" && index === 0 && heading.textContent.includes("AIM")) {
+             // Optional: hide it if we want it cleaner
+          }
+
+          const id = "section-" + index;
+          heading.id = id;
+
+          const li = document.createElement("li");
+          li.className = "toc-item level-" + heading.tagName.substring(1);
+          
+          const a = document.createElement("a");
+          a.href = "#" + id;
+          a.textContent = heading.textContent;
+          
+          li.appendChild(a);
+          tocList.appendChild(li);
+        });
+
+        toc.style.display = "block";
+      }
+
       async function renderSpec() {
         const el = document.getElementById("spec-content");
         const link = document.getElementById("spec-link");
@@ -44,14 +129,16 @@
           const { url, res } = await fetchFirst(candidates);
           link.href = url;
           const md = await res.text();
+          
           if (window.marked && typeof window.marked.parse === "function") {
             el.innerHTML = window.marked.parse(md);
+            generateTOC(el);
           } else {
             el.innerHTML = `<pre>${md.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</pre>`;
           }
         } catch (_) {
           const hint = window.location.protocol === "file:" ? " Open this site via a local HTTP server." : "";
-          el.innerHTML = `<p class="err">Failed to load specification.md from local or deployed paths.${hint}</p>`;
+          el.innerHTML = `<p style="color: var(--google-red);">Failed to load specification.md from local or deployed paths.${hint}</p>`;
         }
       }
 

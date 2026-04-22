@@ -3,235 +3,222 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AIM - Intent-First Programming v2.2</title>
+    <title>AIM - Application Intent Model v2.2</title>
     <link rel="stylesheet" href="./assets/site.css">
     <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
     <style>
-      .happy-step {
-        background: #f0fdf4;
-        border: 2px solid #22c55e;
-        border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-lg);
-      }
-      .command-box {
-        background: #1e1e1e;
-        color: #4ec9b0;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        font-family: var(--font-mono);
-        font-weight: 600;
-        font-size: 1.1rem;
-        margin-top: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .command-label {
-        color: #9cdcfe;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        margin-bottom: 0.4rem;
-        display: block;
-      }
-      .role-tag {
+      .role-badge {
         display: inline-block;
         font-family: var(--font-mono);
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 600;
         color: white;
-        background: var(--cyan);
         padding: 2px 8px;
-        border-radius: 12px;
-        margin-right: 4px;
-        vertical-align: middle;
+        border-radius: 4px;
         margin-bottom: 8px;
+      }
+      .command-pill {
+        background: #f1f3f4;
+        border: 1px solid #dadce0;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--google-blue);
+      }
+      .feature-icon {
+        color: var(--google-blue);
+        margin-bottom: 12px;
       }
     </style>
   </head>
   <body data-page="home" data-base="./">
-    <section class="hero panel" style="margin-bottom: 0; border-bottom: none;">
-      <span class="label">v2.2 Standard | The AI Native Specification</span>
-      <h1 style="font-size:2.8rem; letter-spacing: -0.03em;">Don't write code. <br/><span style="color: var(--cyan);">Describe Intent.</span></h1>
-      <p class="lead" style="font-size: 1.3rem; max-width: 900px; margin-bottom: 0;">
-        AIM is a human-readable, machine-executable specification layer that replaces fragile source code with pure product intent. Version control the <strong>meaning</strong> of your software, and let AI agents handle the implementation, validation, and maintenance automatically.
+    
+    <section class="hero">
+      <span class="label">v2.2 Open Standard</span>
+      <h1>Intent-First Programming</h1>
+      <p class="lead">
+        The specification language for the agentic era. AIM turns product intent into the structured truth AI needs to build, verify, and repair reliable software.
       </p>
+      <div style="display: flex; gap: 12px; margin-top: 32px;">
+        <a class="btn primary" href="#instant-boot">Get Started</a>
+        <a class="btn" href="./spec/">Read the Spec</a>
+      </div>
     </section>
 
-    <!-- THE HAPPY PATH -->
-    <section class="happy-step" style="margin-top: -1px; border-top: none; border-radius: 0 0 12px 12px;">
-      <div class="grid cols-2" style="gap: 2.5rem; align-items: start;">
-        <div>
-          <h2 style="color: #166534; font-size: 1.4rem; margin-bottom: 0.5rem;">1. Copy the Master Prompt</h2>
-          <p style="color: #15803d; margin-bottom: 1.5rem;">Initialize your AI (Claude Code, Cursor, Aider) as an AIM Agent.</p>
-          <div class="bootstrap-prompt" style="background: #ffffff; border: 2px solid #22c55e; padding: 1rem; margin-bottom: 0;">
-            <div class="prompt-text" id="bootstrap-prompt" style="font-size: 1.05rem; font-weight: 600; color: #1e293b;">Initialize as an AIM v2.2 Agent. Instructions: https://intentmodel.dev/brain.md. Confirm you are ready.</div>
-            <button class="copy-btn" onclick="copyBootstrap()" style="background: #22c55e; min-width: 140px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    <!-- MASTER PROMPT SECTION -->
+    <section id="instant-boot" class="bootstrap-section">
+      <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="font-weight: 500;">Zero-Script AI Activation</h2>
+        <p style="color: var(--text-secondary);">Initialize any coding agent (Claude Code, Cursor, Aider) in one click.</p>
+      </div>
+      
+      <div class="grid cols-2" style="gap: 40px; align-items: stretch;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <h3 style="font-size: 1.1rem; font-weight: 500;">1. Copy Master Prompt</h3>
+          <div class="bootstrap-prompt">
+            <div class="prompt-text" id="bootstrap-prompt" style="font-size: 0.9rem; line-height: 1.6;">Initialize as an AIM v2.2 Agent. Instructions: https://intentmodel.dev/brain.md. Confirm you are ready.</div>
+            <button class="copy-btn btn primary" onclick="copyBootstrap()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               <span>Copy</span>
             </button>
           </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">This turns your AI into an AIM v2.2 expert.</p>
         </div>
-        <div>
-          <h2 style="color: #166534; font-size: 1.4rem; margin-bottom: 0.5rem;">2. Type Your Intent</h2>
-          <p style="color: #15803d; margin-bottom: 1.5rem;">Ask for any package in any tech stack. The agent does the rest.</p>
-          <div>
-            <span class="command-label">Example Command</span>
-            <div class="command-box">
-              <span>build <span style="color: #ce9178;">game.tango</span> in <span style="color: #ce9178;">React</span></span>
-              <span style="color: #6a9955; font-size: 0.8rem;">Ready ⚡</span>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <h3 style="font-size: 1.1rem; font-weight: 500;">2. Run Commands</h3>
+          <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-sm); flex: 1;">
+            <p style="margin-bottom: 12px; font-size: 0.9rem;">Ask the agent to build any package:</p>
+            <div style="font-family: var(--font-mono); font-size: 1rem; color: var(--google-blue); font-weight: 500;">
+              build <span style="color: var(--google-red);">game.tango</span> in <span style="color: var(--google-green);">React</span>
             </div>
+            <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border-light);">
+            <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">The agent will automatically materialize the folders and start coding.</p>
           </div>
-          <p style="font-size: 0.85rem; color: #166534; margin-top: 1rem; font-style: italic;">Automatic fetch, materialization, and synthesis.</p>
         </div>
       </div>
     </section>
 
-    <section class="flow-section" style="border: none; box-shadow: none; margin-bottom: 3rem;">
-      <h2 style="text-align: center; margin-bottom: 3rem;">Intent-First Lifecycle</h2>
+    <section style="padding: 60px 0;">
+      <h2 style="text-align: center; margin-bottom: 48px; font-weight: 500;">The AIM Lifecycle</h2>
       <div class="flow-container">
         <div class="flow-step">
-          <div class="flow-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="12" width="48" height="40"/><line x1="8" y1="20" x2="56" y2="20"/><line x1="16" y1="30" x2="40" y2="30"/></svg></div>
-          <h3>Author</h3>
-          <p>Describe what you want in <code>.intent</code> files.</p>
+          <div class="feature-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <h3 style="font-size: 1.1rem; font-weight: 500;">Author</h3>
+          <p style="font-size: 0.9rem;">Describe requirements in human-readable <code>.intent</code> files. High-level meaning, zero syntax.</p>
         </div>
-        <div class="flow-arrow">→</div>
         <div class="flow-step">
-          <div class="flow-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><circle cx="32" cy="32" r="20"/><path d="M32 12 V32 L42 22"/></svg></div>
-          <h3>Build</h3>
-          <p>Agent fetches and synthesizes the implementation.</p>
+          <div class="feature-icon" style="color: var(--google-red);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <h3 style="font-size: 1.1rem; font-weight: 500;">Build</h3>
+          <p style="font-size: 0.9rem;">Agents synthesize production code from the intent. No hallucination, just logic.</p>
         </div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step" style="border-top-color: var(--amber);">
-          <div class="flow-icon" style="color: var(--amber);"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 32 L28 48 L52 16"/><circle cx="32" cy="32" r="28" stroke-dasharray="4 4"/></svg></div>
-          <h3>Verify</h3>
-          <p>Agent detects drift between intent and code.</p>
+        <div class="flow-step">
+          <div class="feature-icon" style="color: var(--google-yellow);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <h3 style="font-size: 1.1rem; font-weight: 500;">Verify</h3>
+          <p style="font-size: 0.9rem;">Automated drift detection compares your intent to the code. Keep truth in sync.</p>
         </div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step" style="border-top-color: var(--green);">
-          <div class="flow-icon" style="color: var(--green);"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M32 8 L56 24 L56 44 L32 56 L8 44 L8 24 Z"/><path d="M24 32 L40 32 M32 24 L32 40"/></svg></div>
-          <h3>Repair</h3>
-          <p>Agent restores the bond between intent and code.</p>
+        <div class="flow-step">
+          <div class="feature-icon" style="color: var(--google-green);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <h3 style="font-size: 1.1rem; font-weight: 500;">Repair</h3>
+          <p style="font-size: 0.9rem;">Agents automatically restore alignment by fixing implementation or updating intent.</p>
         </div>
       </div>
     </section>
 
     <!-- OPERATING ROLES -->
-    <section class="grid cols-4" style="margin-bottom:4rem;" aria-label="roles">
-      <article class="card" style="border-top-color: var(--cyan); display: flex; flex-direction: column;">
-        <div style="flex: 1;">
-          <span class="role-tag" style="background: var(--cyan);">INTENT AUTHOR</span>
-          <p style="margin-bottom: 1rem;">Writes the meaning. Defines success in plain <code>.intent</code> files.</p>
-          <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); border: 1px solid var(--border); margin-bottom: 1rem;">
-            "Initialize as an AIM v2.2 Agent... in the Intent Author role. Ask me about requirements."
+    <section style="margin-bottom: 80px;">
+      <h2 style="text-align: center; margin-bottom: 40px; font-weight: 500;">Operating Roles</h2>
+      <div class="grid cols-4">
+        <article class="card">
+          <span class="role-badge" style="background: var(--google-blue);">AUTHOR</span>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Writes the meaning. Defines success in plain <code>.intent</code> files.</p>
+          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
+            "Initialize as an AIM Agent... in the Author role."
           </div>
-        </div>
-        <button class="copy-btn" style="font-size: 0.75rem; padding: 8px 12px; width: 100%; justify-content: center; background: var(--cyan);" 
-                onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe a new component. Ask me about the core requirements first.', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          <span>Copy Init Prompt</span>
-        </button>
-      </article>
+          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
+                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe a new component. Ask me about the core requirements first.', this)">
+            Copy Init Prompt
+          </button>
+        </article>
 
-      <article class="card" style="border-top-color: var(--cyan-dim); display: flex; flex-direction: column;">
-        <div style="flex: 1;">
-          <span class="role-tag" style="background: var(--cyan-dim);">IMPLEMENTER</span>
-          <p style="margin-bottom: 1rem;">Writes the code. Faithfully translates intent into production software.</p>
-          <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); border: 1px solid var(--border); margin-bottom: 1rem;">
-            "Initialize as an AIM v2.2 Agent... in the Implementer role. I want to build a package."
+        <article class="card">
+          <span class="role-badge" style="background: #5f6368;">IMPLEMENTER</span>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Writes the code. Faithfully translates intent into production software.</p>
+          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
+            "Initialize as an AIM Agent... in the Implementer role."
           </div>
-        </div>
-        <button class="copy-btn" style="font-size: 0.75rem; padding: 8px 12px; width: 100%; justify-content: center; background: var(--cyan-dim);" 
-                onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. I want to build a package. Tell me what information you need.', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          <span>Copy Init Prompt</span>
-        </button>
-      </article>
+          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
+                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. I want to build a package. Tell me what information you need.', this)">
+            Copy Init Prompt
+          </button>
+        </article>
 
-      <article class="card" style="border-top-color: var(--amber); display: flex; flex-direction: column;">
-        <div style="flex: 1;">
-          <span class="role-tag" style="background: var(--amber);">VERIFIER</span>
-          <p style="margin-bottom: 1rem;">Checks the truth. Ensures code hasn't drifted from behavior.</p>
-          <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); border: 1px solid var(--border); margin-bottom: 1rem;">
-            "Initialize as an AIM v2.2 Agent... in the Verifier role. Check my local code against ./aim."
+        <article class="card">
+          <span class="role-badge" style="background: var(--google-yellow);">VERIFIER</span>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Checks the truth. Ensures code hasn't drifted from behavior.</p>
+          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
+            "Initialize as an AIM Agent... in the Verifier role."
           </div>
-        </div>
-        <button class="copy-btn" style="font-size: 0.75rem; padding: 8px 12px; width: 100%; justify-content: center; background: var(--amber);" 
-                onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. I want to check my local implementation against the intent in ./aim. Give me a drift report.', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          <span>Copy Init Prompt</span>
-        </button>
-      </article>
+          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
+                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. I want to check my local implementation against the intent in ./aim. Give me a drift report.', this)">
+            Copy Init Prompt
+          </button>
+        </article>
 
-      <article class="card" style="border-top-color: var(--green); display: flex; flex-direction: column;">
-        <div style="flex: 1;">
-          <span class="role-tag" style="background: var(--green);">REPAIRER</span>
-          <p style="margin-bottom: 1rem;">Fixes the drift. Restores the bond between intent and code.</p>
-          <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); border: 1px solid var(--border); margin-bottom: 1rem;">
-            "Initialize as an AIM v2.2 Agent... in the Repairer role. Restore alignment for this package."
+        <article class="card">
+          <span class="role-badge" style="background: var(--google-green);">REPAIRER</span>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Fixes the drift. Restores the bond between intent and code.</p>
+          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
+            "Initialize as an AIM Agent... in the Repairer role."
           </div>
-        </div>
-        <button class="copy-btn" style="font-size: 0.75rem; padding: 8px 12px; width: 100%; justify-content: center; background: var(--green);" 
-                onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. My intent and implementation have diverged. Help me restore alignment.', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          <span>Copy Init Prompt</span>
-        </button>
-      </article>
+          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
+                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. My intent and implementation have diverged. Help me restore alignment.', this)">
+            Copy Init Prompt
+          </button>
+        </article>
+      </div>
     </section>
 
-    <section class="split" style="margin-bottom: 4rem;">
-      <article class="card">
-        <h2>The AIM v2.2 Vision</h2>
-        <ul class="list">
-            <li><strong>Deterministic Synthesis</strong><br/>Precision facets remove AI ambiguity.</li>
-            <li><strong>Nested Layouts</strong><br/>Scale from a single file to thousands of components.</li>
-            <li><strong>Recursive Materialization</strong><br/>Agents resolve and fetch dependencies automatically.</li>
-            <li><strong>Drift Detection</strong><br/>Verify your codebase against your intent instantly.</li>
+    <section class="split" style="margin-bottom: 80px;">
+      <div>
+        <h2 style="font-weight: 500;">Core Architecture</h2>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 24px;">
+            <strong style="display: block; font-weight: 500; color: var(--text-primary);">Shared Central Truth</strong>
+            <span style="font-size: 0.95rem;">The <code>/aim/</code> folder is the heart of your repo. It coordinates all agents and humans with one unambiguous mental model.</span>
+          </li>
+          <li style="margin-bottom: 24px;">
+            <strong style="display: block; font-weight: 500; color: var(--text-primary);">Strategic Model Usage</strong>
+            <span style="font-size: 0.95rem;">Use reasoning models (Claude 3.5 Sonnet) for Authoring and Verification, and specialized coding models for Implementation.</span>
+          </li>
+          <li style="margin-bottom: 24px;">
+            <strong style="display: block; font-weight: 500; color: var(--text-primary);">Nested namespaces</strong>
+            <span style="font-size: 0.95rem;">Materialize packages into standardized nested paths (<code>/aim/game/snake/</code>) automatically using registry-native agents.</span>
+          </li>
         </ul>
-      </article>
-      <article class="card">
-        <h2>Intent DSL Example</h2>
-        <pre><code>AIM: weather#intent@2.2
+      </div>
 
-INTENT WeatherLookup {
-  SUMMARY: "Real-time weather lookup with error handling."
+      <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border);">
+        <div style="background: var(--bg-tertiary); padding: 12px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">
+          weather.intent
+        </div>
+        <pre style="border-radius: 0; background: #fff; color: #202124; padding: 24px; font-size: 0.85rem;"><code><span style="color: var(--google-blue);">AIM:</span> weather#intent@2.2
 
-  REQUIREMENTS {
-    - "User enters a city name to view temperature."
-    - "UI displays error if city is not found."
+<span style="color: var(--google-blue);">INTENT</span> WeatherLookup {
+  <span style="color: var(--google-blue);">SUMMARY:</span> "Real-time weather lookup."
+
+  <span style="color: var(--google-blue);">REQUIREMENTS</span> {
+    - "User enters a city name."
+    - "UI displays temperature."
   }
 
-  CONTRACT FetchWeather {
-    INPUT { city: string required }
-    ENSURES {
-      - "CALLS External.WeatherAPI"
+  <span style="color: var(--google-blue);">CONTRACT</span> FetchWeather {
+    <span style="color: var(--google-blue);">INPUT</span> { city: string required }
+    <span style="color: var(--google-blue);">ENSURES</span> {
+      - "CALLS WeatherAPI"
       - "RETURNS WeatherSnapshot"
     }
   }
 }</code></pre>
-      </article>
-    </section>
-
-    <section class="cli-banner panel" style="background: #1a1a1a; color: white; border-left: 4px solid var(--amber);">
-      <div style="max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 300px;">
-          <h2 style="color: white; margin-bottom: 0.5rem;">🛠️ Sinth CLI</h2>
-          <p style="color: #999; margin-bottom: 1.5rem;">Professional automation for AIM workflows at scale.</p>
-          <code style="background: #333; color: var(--amber-bright); border-color: #444; font-size: 1rem;">pip install sinth</code>
-        </div>
-        <div style="display: flex; gap: 1rem;">
-          <a class="btn secondary" style="border-color: #444; color: white;" href="https://github.com/juicejs/application-intent-model/tree/master/cli">CLI Docs</a>
-          <a class="btn primary" style="background: var(--amber); border-color: var(--amber);" href="https://pypi.org/project/sinth/">PyPI</a>
-        </div>
       </div>
     </section>
 
-    <footer class="footer">
-      <div class="site-shell">
-        <p>AIM v2.2 - Application Intent Model | <a href="./spec/">Specification</a> | <a href="./registry/">Registry</a></p>
+    <!-- SINTH CLI FOOTER STYLE -->
+    <section style="background: var(--bg-secondary); border-radius: 24px; padding: 40px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+      <div style="flex: 1; min-width: 300px;">
+        <h2 style="margin-bottom: 8px; font-weight: 500;">Sinth CLI</h2>
+        <p style="font-size: 0.95rem;">Professional automation for AIM production workflows.</p>
       </div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <code style="background: white; border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; color: var(--text-primary);">pip install sinth</code>
+        <a class="btn primary" href="https://pypi.org/project/sinth/">View on PyPI</a>
+      </div>
+    </section>
+
+    <footer class="footer" style="text-align: center;">
+      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="./spec/">Spec</a> &bull; <a href="./registry/">Registry</a> &bull; <a href="https://github.com/juicejs/application-intent-model">GitHub</a></p>
     </footer>
 
     <script src="./assets/chrome.js"></script>
