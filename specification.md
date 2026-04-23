@@ -339,19 +339,19 @@ Nested layout is the recommended authoring and materialization layout because it
 
 Component sources:
 
-- intent envelope: `/aim/<namespace segments>/<component>.intent`
-- facet files: `/aim/<namespace segments>/<component>.<facet>.intent`
+- intent envelope: `/aim/<component>/<component>.intent`
+- facet files: `/aim/<component>/<component>.<facet>.intent`
 
 Mapping sources:
 
-- mapping file: `/aim/mappings/<namespace segments>/<component>.mapping.intent`
+- mapping file: `/aim/mappings/<component>/<component>.mapping.intent`
 
 Examples:
 
-- `/aim/game/snake/game.snake.intent`
-- `/aim/game/snake/game.snake.schema.intent`
-- `/aim/game/snake/game.snake.contract.intent`
-- `/aim/mappings/game/snake/game.snake.mapping.intent`
+- `/aim/game.snake/game.snake.intent`
+- `/aim/game.snake/game.snake.schema.intent`
+- `/aim/game.snake/game.snake.contract.intent`
+- `/aim/mappings/game.snake/game.snake.mapping.intent`
 
 Generic filenames are never valid. These are invalid:
 
@@ -967,9 +967,9 @@ Tools may emit informational notes for:
 Valid:
 
 1. `AIM: juice.games.snake#schema@2.2`
-2. `/aim/company/billing/invoice/company.billing.invoice.intent` with `AIM: company.billing.invoice#intent@2.2`
-3. `/aim/company/billing/invoice/company.billing.invoice.schema.intent` with `AIM: company.billing.invoice#schema@2.2`
-4. `/aim/mappings/company/billing/invoice/company.billing.invoice.mapping.intent` with `AIM: company.billing.invoice#mapping@2.2`
+2. `/aim/company.billing.invoice/company.billing.invoice.intent` with `AIM: company.billing.invoice#intent@2.2`
+3. `/aim/company.billing.invoice/company.billing.invoice.schema.intent` with `AIM: company.billing.invoice#schema@2.2`
+4. `/aim/mappings/company.billing.invoice/company.billing.invoice.mapping.intent` with `AIM: company.billing.invoice#mapping@2.2`
 5. `/aim/company.billing.invoice.intent` with a matching header is valid when used in a flat compatibility layout.
 6. Intent-only component parses successfully.
 7. Intent file with embedded `SCHEMA` only parses successfully.
@@ -983,9 +983,9 @@ Invalid:
 1. `AIM: Snake-App#schema@2.2`
 2. `AIM: juice.games.snake#data@2.2`
 3. `AIM: juice.games.snake#schema@2.2.0`
-4. `/aim/company/billing/invoice/schema.intent`
-5. `/aim/company/billing/invoice/event.intent`
-6. `/aim/mappings/company/billing/invoice/mapping.intent`
+4. `/aim/company.billing.invoice/schema.intent`
+5. `/aim/company.billing.invoice/event.intent`
+6. `/aim/mappings/company.billing.invoice/mapping.intent`
 7. Flat and nested sources both present for `company.billing.invoice#schema`
 8. Included file version differs from envelope version
 9. Invalid embedded facet key such as `DATA`
