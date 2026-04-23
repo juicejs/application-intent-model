@@ -237,13 +237,13 @@
       .wf-tab.active .wf-tab-num { background: rgba(255,255,255,0.25); color: white; }
       .wf-panel { display: none; max-width: 920px; margin: 0 auto; }
       .wf-panel.active { display: block; }
-      .wf-split {
+      .wf-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 20px;
         align-items: stretch;
       }
-      .wf-side {
+      .wf-card {
         border: 1px solid var(--border-light);
         border-radius: 18px;
         padding: 28px;
@@ -252,8 +252,9 @@
         display: flex;
         flex-direction: column;
       }
-      .wf-side.agent { background: #e8f0fe; border-color: #d2e3fc; }
-      .wf-side-label {
+      .wf-card.aim { background: #e8f0fe; border-color: #d2e3fc; }
+      .wf-card.result { background: var(--bg-secondary); }
+      .wf-card-label {
         font-family: var(--font-mono);
         font-size: 0.68rem;
         font-weight: 600;
@@ -262,16 +263,29 @@
         color: var(--text-secondary);
         margin-bottom: 14px;
       }
-      .wf-side.agent .wf-side-label { color: var(--google-blue); }
-      .wf-side h3 { font-size: 1.05rem; font-weight: 500; margin: 0 0 10px; }
-      .wf-side p { font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.6; }
-      .wf-side p:last-child { margin-bottom: 0; }
-      .wf-side .btn { margin-top: auto; align-self: flex-start; }
+      .wf-card.aim .wf-card-label { color: var(--google-blue); }
+      .wf-card.result .wf-card-label { color: var(--google-green); }
+      .wf-card h3 { font-size: 1.05rem; font-weight: 500; margin: 0 0 10px; }
+      .wf-card p { font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.6; }
+      .wf-card p:last-child { margin-bottom: 0; }
+      .wf-card .copy-action {
+        width: auto;
+        padding: 8px 12px;
+        margin-top: auto;
+        align-self: flex-start;
+      }
+      .wf-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: auto;
+      }
+      .wf-actions .copy-action { margin-top: 0; }
 
       @media (max-width: 768px) {
         .demo-container { padding: 28px 20px; }
         .process-step { padding: 24px; gap: 16px; }
-        .wf-split { grid-template-columns: 1fr; }
+        .wf-grid { grid-template-columns: 1fr; }
         .wf-tab { padding: 8px 12px; font-size: 0.82rem; }
       }
     </style>
@@ -355,104 +369,130 @@
     <section id="workflow" class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="section-header">
         <h2>One Clean Change at a Time</h2>
-        <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM works as a commit-scoped loop. Click each step to see what you do and what the agent produces.</p>
+        <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM works as a 4-step loop. Each step shows what you do, what AIM does, and what moves forward in the repo.</p>
       </div>
 
-      <div class="wf-tabs" role="tablist">
-        <button class="wf-tab active" onclick="setStep(0)" role="tab"><span class="wf-tab-num">0</span> Clean start</button>
-        <button class="wf-tab" onclick="setStep(1)" role="tab"><span class="wf-tab-num">1</span> Intent</button>
-        <button class="wf-tab" onclick="setStep(2)" role="tab"><span class="wf-tab-num">2</span> Code</button>
-        <button class="wf-tab" onclick="setStep(3)" role="tab"><span class="wf-tab-num">3</span> Align</button>
-        <button class="wf-tab" onclick="setStep(4)" role="tab"><span class="wf-tab-num">4</span> Commit</button>
+      <div class="wf-tabs" role="tablist" aria-label="Workflow steps">
+        <button class="wf-tab active" id="wf-tab-1" data-step="1" onclick="setStep(1)" onkeydown="onWorkflowTabKey(event, 1)" role="tab" aria-selected="true" aria-controls="wf-panel-1" tabindex="0"><span class="wf-tab-num">1</span> Author</button>
+        <button class="wf-tab" id="wf-tab-2" data-step="2" onclick="setStep(2)" onkeydown="onWorkflowTabKey(event, 2)" role="tab" aria-selected="false" aria-controls="wf-panel-2" tabindex="-1"><span class="wf-tab-num">2</span> Code</button>
+        <button class="wf-tab" id="wf-tab-3" data-step="3" onclick="setStep(3)" onkeydown="onWorkflowTabKey(event, 3)" role="tab" aria-selected="false" aria-controls="wf-panel-3" tabindex="-1"><span class="wf-tab-num">3</span> Align</button>
+        <button class="wf-tab" id="wf-tab-4" data-step="4" onclick="setStep(4)" onkeydown="onWorkflowTabKey(event, 4)" role="tab" aria-selected="false" aria-controls="wf-panel-4" tabindex="-1"><span class="wf-tab-num">4</span> Commit</button>
       </div>
 
-      <div class="wf-panel active" data-step="0">
-        <div class="wf-split">
-          <div class="wf-side">
-            <div class="wf-side-label">You</div>
-            <h3>Commit pending work and start clean</h3>
-            <p>Before running any agent, make sure the repo is in a committed, stable state — no uncommitted edits, no half-done features.</p>
+      <div class="wf-panel active" id="wf-panel-1" data-step="1" role="tabpanel" aria-labelledby="wf-tab-1">
+        <div class="wf-grid">
+          <div class="wf-card">
+            <div class="wf-card-label">You do</div>
+            <h3>Describe the feature in plain language</h3>
+            <p>Tell the authoring agent the actors, actions, rules, and invariants for the component. Stay at the product level; do not describe implementation yet.</p>
           </div>
-          <div class="wf-side agent">
-            <div class="wf-side-label">Why it matters</div>
-            <h3>One source of truth, one clear diff</h3>
-            <p>The agent sees exactly one version of the system. A clean baseline means a clean diff — and a clean diff means the agent can reason precisely about what changed and why.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="wf-panel" data-step="1">
-        <div class="wf-split">
-          <div class="wf-side">
-            <div class="wf-side-label">You</div>
-            <h3>Describe what the component should do</h3>
-            <p>Tell the intent agent the actors, actions, rules, and invariants for the feature. No implementation details yet — just product meaning.</p>
-          </div>
-          <div class="wf-side agent">
-            <div class="wf-side-label">Intent Agent</div>
-            <h3>Writes a structured intent file</h3>
-            <p>Produces a versioned <code>.intent</code> file with ACTOR, ACTION, ENSURES, and VERIFY blocks — explicit contracts the coding agent can build from without guessing.</p>
+          <div class="wf-card aim">
+            <div class="wf-card-label">AIM does</div>
+            <h3>Writes the intent layer</h3>
+            <p>The Author agent turns that description into versioned <code>.intent</code> files with explicit contracts, behaviors, and verification rules the rest of the loop can rely on.</p>
             <div style="display:none;" id="wf-prompt-author">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe a new component.</div>
             <button class="btn copy-action" onclick="copyPrompt(document.getElementById('wf-prompt-author').innerText, this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              Copy Init Prompt
+              Copy Author Prompt
             </button>
+          </div>
+          <div class="wf-card result">
+            <div class="wf-card-label">Result</div>
+            <h3>The repo gains a durable source of truth</h3>
+            <p>The change is now grounded in structured intent instead of scattered chat context, so the coding agent can build from something explicit and reusable.</p>
           </div>
         </div>
       </div>
 
-      <div class="wf-panel" data-step="2">
-        <div class="wf-split">
-          <div class="wf-side">
-            <div class="wf-side-label">You</div>
-            <h3>Hand the intent file to the coding agent</h3>
-            <p>Point the coding agent at the intent files. No further instructions needed — the intent layer has everything it needs to start building.</p>
+      <div class="wf-panel" id="wf-panel-2" data-step="2" role="tabpanel" aria-labelledby="wf-tab-2" hidden>
+        <div class="wf-grid">
+          <div class="wf-card">
+            <div class="wf-card-label">You do</div>
+            <h3>Run the coding agent on <code>/aim</code></h3>
+            <p>Point the coding agent at the intent layer and ask it to implement the feature from those files. The meaning already lives in the repo.</p>
           </div>
-          <div class="wf-side agent">
-            <div class="wf-side-label">Coding Agent</div>
-            <h3>Synthesizes code from intent</h3>
-            <p>Builds working code where every function, type, and side effect maps back to an explicit contract in the intent file — not a guess from a free-form prompt.</p>
+          <div class="wf-card aim">
+            <div class="wf-card-label">AIM does</div>
+            <h3>Synthesizes code from explicit intent</h3>
+            <p>The coding agent maps functions, types, UI, and side effects back to concrete intent blocks instead of improvising from a free-form prompt.</p>
             <div style="display:none;" id="wf-prompt-implementer">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. I want to build a package.</div>
             <button class="btn copy-action" onclick="copyPrompt(document.getElementById('wf-prompt-implementer').innerText, this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              Copy Init Prompt
+              Copy Coding Prompt
             </button>
+          </div>
+          <div class="wf-card result">
+            <div class="wf-card-label">Result</div>
+            <h3>The repo gains working implementation</h3>
+            <p>You now have code and intent moving together as one change, with a traceable path back to the contracts that defined the work.</p>
           </div>
         </div>
       </div>
 
-      <div class="wf-panel" data-step="3">
-        <div class="wf-split">
-          <div class="wf-side">
-            <div class="wf-side-label">You</div>
-            <h3>Review the drift report</h3>
-            <p>Look at what drifted between intent and implementation, approve or adjust intent, and let the repair agent restore alignment before anything leaves the branch.</p>
+      <div class="wf-panel" id="wf-panel-3" data-step="3" role="tabpanel" aria-labelledby="wf-tab-3" hidden>
+        <div class="wf-grid">
+          <div class="wf-card">
+            <div class="wf-card-label">You do</div>
+            <h3>Run alignment before the change lands</h3>
+            <p>Ask AIM to verify the implementation against the intent and, if drift exists, run repair before the change leaves the branch.</p>
           </div>
-          <div class="wf-side agent">
-            <div class="wf-side-label">Verifier + Repair Agent</div>
-            <h3>Compares code vs intent, fixes drift</h3>
-            <p>Runs a line-by-line comparison, produces a drift report, then restores alignment — updating intent or code to match, whichever is the source of truth.</p>
+          <div class="wf-card aim">
+            <div class="wf-card-label">AIM does</div>
+            <h3>Detects drift and restores alignment</h3>
+            <p>The verifier compares code and intent, produces a drift report, and the repair pass updates the right layer so the source of truth and implementation match again.</p>
             <div style="display:none;" id="wf-prompt-verifier">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. Give me a drift report.</div>
-            <button class="btn copy-action" onclick="copyPrompt(document.getElementById('wf-prompt-verifier').innerText, this)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              Copy Init Prompt
-            </button>
+            <div style="display:none;" id="wf-prompt-repairer">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. My intent and implementation have diverged. Help me restore alignment.</div>
+            <div class="wf-actions">
+              <button class="btn copy-action" onclick="copyPrompt(document.getElementById('wf-prompt-verifier').innerText, this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy Verifier Prompt
+              </button>
+              <button class="btn copy-action" onclick="copyPrompt(document.getElementById('wf-prompt-repairer').innerText, this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy Repair Prompt
+              </button>
+            </div>
+          </div>
+          <div class="wf-card result">
+            <div class="wf-card-label">Result</div>
+            <h3>Intent and code are back in sync</h3>
+            <p>The branch is ready to hand off without hidden mismatches between what the feature means and what it actually does.</p>
           </div>
         </div>
       </div>
 
-      <div class="wf-panel" data-step="4">
-        <div class="wf-split">
-          <div class="wf-side">
-            <div class="wf-side-label">You</div>
-            <h3>Commit intent and code together</h3>
-            <p>Commit the intent files and implementation as one focused change. Push when ready.</p>
+      <div class="wf-panel" id="wf-panel-4" data-step="4" role="tabpanel" aria-labelledby="wf-tab-4" hidden>
+        <div class="wf-grid">
+          <div class="wf-card">
+            <div class="wf-card-label">You do</div>
+            <h3>Commit and push the change</h3>
+            <p>Land the intent files, implementation, and alignment updates together as one focused commit.</p>
           </div>
-          <div class="wf-side agent">
-            <div class="wf-side-label">What you get</div>
-            <h3>A self-contained, reviewable commit</h3>
-            <p>Intent, code, and alignment land together in one clean handoff — ready for a human reviewer, another agent, or a future repair pass with a better model.</p>
+          <div class="wf-card aim">
+            <div class="wf-card-label">AIM does</div>
+            <h3>Stops at a clean handoff point</h3>
+            <p>No additional synthesis is needed. The loop leaves the branch in a stable state another agent or reviewer can pick up without replaying the whole session.</p>
           </div>
+          <div class="wf-card result">
+            <div class="wf-card-label">Result</div>
+            <h3>One reviewable, reusable change</h3>
+            <p>Because the loop stayed narrow, the next agent can pull this commit, load only the relevant context, and continue iterating without dragging the whole repo into the prompt.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-benefits" style="max-width: 920px; margin-left: auto; margin-right: auto;">
+        <div class="workflow-benefit">
+          <strong>Lower context load for agents</strong>
+          <span>Each run only needs the slice of intent, code, and diff related to one change instead of the whole system.</span>
+        </div>
+        <div class="workflow-benefit">
+          <strong>Clean handoff between runs</strong>
+          <span>Each commit becomes a stable checkpoint a different agent or reviewer can pick up later without reconstructing the entire conversation.</span>
+        </div>
+        <div class="workflow-benefit">
+          <strong>Better long-term iteration</strong>
+          <span>You can revisit the branch later, pull the exact state, and run another pass with a different model or another specialized agent.</span>
         </div>
       </div>
 
@@ -533,8 +573,40 @@
     <script src="./assets/chrome.js"></script>
     <script>
       function setStep(n) {
-        document.querySelectorAll('.wf-tab').forEach(function(t, i) { t.classList.toggle('active', i === n); });
-        document.querySelectorAll('.wf-panel').forEach(function(p) { p.classList.toggle('active', parseInt(p.dataset.step) === n); });
+        document.querySelectorAll('.wf-tab').forEach(function(t) {
+          var active = parseInt(t.dataset.step, 10) === n;
+          t.classList.toggle('active', active);
+          t.setAttribute('aria-selected', active ? 'true' : 'false');
+          t.setAttribute('tabindex', active ? '0' : '-1');
+        });
+        document.querySelectorAll('.wf-panel').forEach(function(p) {
+          var active = parseInt(p.dataset.step, 10) === n;
+          p.classList.toggle('active', active);
+          p.hidden = !active;
+        });
+      }
+
+      function onWorkflowTabKey(event, n) {
+        var steps = [1, 2, 3, 4];
+        var index = steps.indexOf(n);
+
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          setStep(steps[(index + 1) % steps.length]);
+          document.getElementById('wf-tab-' + steps[(index + 1) % steps.length]).focus();
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          setStep(steps[(index - 1 + steps.length) % steps.length]);
+          document.getElementById('wf-tab-' + steps[(index - 1 + steps.length) % steps.length]).focus();
+        } else if (event.key === 'Home') {
+          event.preventDefault();
+          setStep(steps[0]);
+          document.getElementById('wf-tab-' + steps[0]).focus();
+        } else if (event.key === 'End') {
+          event.preventDefault();
+          setStep(steps[steps.length - 1]);
+          document.getElementById('wf-tab-' + steps[steps.length - 1]).focus();
+        }
       }
     </script>
   </body>
