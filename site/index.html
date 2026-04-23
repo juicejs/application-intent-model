@@ -212,13 +212,73 @@
         Not another <code>spec.md</code>. AIM shifts AI software work from passing around context to operating on intent: structured, versioned artifacts agents can build from, verify against, and repair over time.
       </p>
       <div style="display: flex; gap: 12px; margin-top: 32px;">
-        <a class="btn primary" href="#workflow">See the Workflow</a>
-        <a class="btn" href="#contrast">See the Difference</a>
+        <a class="btn primary" href="#contrast">See the Difference</a>
+        <a class="btn" href="#workflow">See the Workflow</a>
       </div>
     </section>
 
-    <!-- 2. COMMIT-SCOPED WORKFLOW -->
-    <section id="workflow" class="section-padding" style="padding-top: 0;">
+    <!-- 2. SPEC.MD VS AIM -->
+    <section id="contrast" class="section-padding" style="border-top: 1px solid var(--border-light);">
+      <div class="demo-container">
+        <div class="section-header">
+          <h2>Beyond <code>spec.md</code></h2>
+          <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">A markdown file gives an agent context. AIM gives it explicit behaviors, contracts, and invariants that can survive implementation, verification, and repair.</p>
+        </div>
+        
+        <div class="grid cols-2" style="gap: 24px; max-width: 920px; margin: 0 auto;">
+          <article class="example-card">
+            <span class="example-eyebrow">Password Reset</span>
+            <h3>From a sentence to enforceable behavior</h3>
+            <div class="example-pane markdown">
+              <div class="example-pane-label">spec.md</div>
+              <div class="example-pane-body">"Users can reset their password by email."</div>
+            </div>
+            <div class="example-pane aim">
+              <div class="example-pane-label">AIM</div>
+              <div class="example-pane-body">INTENT PasswordReset {
+  ACTOR User
+  ACTION RequestReset
+  REQUIRES { "User owns the email address" }
+  ENSURES { "Reset link is sent" }
+  VERIFY { "Expired tokens cannot be reused" }
+}</div>
+            </div>
+            <p class="example-footer">Agents can build the flow and later verify ownership, token expiry, and single-use behavior.</p>
+          </article>
+
+          <article class="example-card">
+            <span class="example-eyebrow">Team Invites</span>
+            <h3>From feature request to operating contract</h3>
+            <div class="example-pane markdown">
+              <div class="example-pane-label">spec.md</div>
+              <div class="example-pane-body">"Admins can invite members to a workspace."</div>
+            </div>
+            <div class="example-pane aim">
+              <div class="example-pane-label">AIM</div>
+              <div class="example-pane-body">INTENT TeamInvites {
+  ACTOR Admin
+  ACTION InviteMember
+  ENSURES {
+    - "Invite includes a role"
+    - "Invite expires"
+    - "Audit event is recorded"
+  }
+}</div>
+            </div>
+            <p class="example-footer">Agents now have durable rules around authorization, role assignment, expiry, and auditability.</p>
+          </article>
+
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 32px; flex-wrap: wrap;">
+          <a class="btn primary" href="#workflow">See the Workflow</a>
+          <a class="btn" href="./spec/">Read the Spec</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. COMMIT-SCOPED WORKFLOW -->
+    <section id="workflow" class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="section-header">
         <h2>One Clean Change at a Time</h2>
         <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM works best as a commit-scoped workflow: start clean, author intent, synthesize code, align drift, then commit and push. Each run stays focused on one part of the system.</p>
@@ -278,86 +338,6 @@
         <div class="workflow-benefit">
           <strong>Better iteration over time</strong>
           <span>Intent, implementation, and repair stay separable, which makes it easier to revisit a branch later and run another pass with a better model or a different specialized agent.</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. SPEC.MD VS AIM -->
-    <section id="contrast" class="section-padding" style="border-top: 1px solid var(--border-light);">
-      <div class="demo-container">
-        <div class="section-header">
-          <h2>Beyond <code>spec.md</code></h2>
-          <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">A markdown file gives an agent context. AIM gives it explicit behaviors, contracts, and invariants that can survive implementation, verification, and repair.</p>
-        </div>
-        
-        <div class="grid cols-3" style="gap: 24px;">
-          <article class="example-card">
-            <span class="example-eyebrow">Password Reset</span>
-            <h3>From a sentence to enforceable behavior</h3>
-            <div class="example-pane markdown">
-              <div class="example-pane-label">spec.md</div>
-              <div class="example-pane-body">"Users can reset their password by email."</div>
-            </div>
-            <div class="example-pane aim">
-              <div class="example-pane-label">AIM</div>
-              <div class="example-pane-body">INTENT PasswordReset {
-  ACTOR User
-  ACTION RequestReset
-  REQUIRES { "User owns the email address" }
-  ENSURES { "Reset link is sent" }
-  VERIFY { "Expired tokens cannot be reused" }
-}</div>
-            </div>
-            <p class="example-footer">Agents can build the flow and later verify ownership, token expiry, and single-use behavior.</p>
-          </article>
-
-          <article class="example-card">
-            <span class="example-eyebrow">Team Invites</span>
-            <h3>From feature request to operating contract</h3>
-            <div class="example-pane markdown">
-              <div class="example-pane-label">spec.md</div>
-              <div class="example-pane-body">"Admins can invite members to a workspace."</div>
-            </div>
-            <div class="example-pane aim">
-              <div class="example-pane-label">AIM</div>
-              <div class="example-pane-body">INTENT TeamInvites {
-  ACTOR Admin
-  ACTION InviteMember
-  ENSURES {
-    - "Invite includes a role"
-    - "Invite expires"
-    - "Audit event is recorded"
-  }
-}</div>
-            </div>
-            <p class="example-footer">Agents now have durable rules around authorization, role assignment, expiry, and auditability.</p>
-          </article>
-
-          <article class="example-card">
-            <span class="example-eyebrow">Subscriptions</span>
-            <h3>From vague billing copy to verifiable side effects</h3>
-            <div class="example-pane markdown">
-              <div class="example-pane-label">spec.md</div>
-              <div class="example-pane-body">"Billing supports monthly subscriptions."</div>
-            </div>
-            <div class="example-pane aim">
-              <div class="example-pane-label">AIM</div>
-              <div class="example-pane-body">CONTRACT SubscriptionLifecycle {
-  INPUT { plan: string, customer: string }
-  ENSURES {
-    - "Payment provider is called once"
-    - "Entitlement is activated"
-    - "Failed payment leaves account unchanged"
-  }
-}</div>
-            </div>
-            <p class="example-footer">Agents can reason about external calls, state changes, and failure cases instead of guessing from prose.</p>
-          </article>
-        </div>
-
-        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 32px; flex-wrap: wrap;">
-          <a class="btn primary" href="#process">See the Workflow</a>
-          <a class="btn" href="./spec/">Read the Spec</a>
         </div>
       </div>
     </section>
