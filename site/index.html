@@ -282,11 +282,125 @@
       }
       .wf-actions .copy-action { margin-top: 0; }
 
+      .registry-showcase {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 28px;
+        align-items: start;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      .registry-intro h3 {
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin-bottom: 12px;
+      }
+      .registry-intro p {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 18px;
+      }
+      .registry-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+      .registry-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border-light);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+      }
+      .registry-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .registry-pane {
+        border: 1px solid var(--border-light);
+        border-radius: 18px;
+        overflow: hidden;
+        background: var(--surface);
+        box-shadow: var(--shadow-sm);
+      }
+      .registry-pane-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-light);
+      }
+      .registry-pane-title {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .registry-pane-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+      .registry-pane pre {
+        margin: 0;
+        border-radius: 0;
+        min-height: 100%;
+      }
+      .registry-result-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        max-width: 980px;
+        margin: 20px auto 0;
+      }
+      .registry-note {
+        border: 1px solid var(--border-light);
+        border-radius: 18px;
+        padding: 24px;
+        background: var(--surface);
+      }
+      .registry-note-label {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--google-blue);
+        margin-bottom: 12px;
+      }
+      .registry-note h3 {
+        font-size: 1.02rem;
+        font-weight: 500;
+        margin: 0 0 10px;
+      }
+      .registry-note p {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        margin: 0 0 14px;
+        line-height: 1.6;
+      }
+      .registry-tree {
+        margin: 0;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-light);
+        font-size: 0.8rem;
+      }
+
       @media (max-width: 768px) {
         .demo-container { padding: 28px 20px; }
         .process-step { padding: 24px; gap: 16px; }
         .wf-grid { grid-template-columns: 1fr; }
         .wf-tab { padding: 8px 12px; font-size: 0.82rem; }
+        .registry-showcase,
+        .registry-result-grid { grid-template-columns: 1fr; }
       }
     </style>
   </head>
@@ -543,12 +657,56 @@
     <section class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="section-header">
         <h2>Pull from the Registry</h2>
-        <p style="color: var(--text-secondary);">You can also pull reusable intents from a registry to bootstrap a project instead of starting from a blank page.</p>
+        <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">Need a head start? Pull a real package from the registry, materialize it into local <code>/aim</code>, and hand that intent to your coding agent.</p>
       </div>
-      <div style="max-width: 800px; margin: 0 auto; background: var(--bg-secondary); border-radius: 24px; padding: 40px; border: 1px solid var(--border-light);">
-        <h3 style="margin-bottom: 16px; font-weight: 500;">Native Package Registry</h3>
-        <p style="font-size: 0.95rem; margin-bottom: 24px; color: var(--text-secondary);">Fetch and materialize packages into namespaced nested paths (<code>/aim/game/snake/</code>) automatically using registry-native agents.</p>
-        <a class="btn primary" href="./registry/">Browse Registry</a>
+
+      <div class="registry-showcase">
+        <div class="registry-intro">
+          <h3>Start with a tiny, runnable package</h3>
+          <p><code>terminal.countdown</code> is the best example here: small enough to inspect in a minute, but real enough to show package fetch, local materialization, and synthesis.</p>
+          <p>The easiest path is to paste one prompt into your coding agent and let AIM fetch plus synthesize in one go.</p>
+          <div class="registry-chip-row">
+            <span class="registry-chip">terminal.countdown</span>
+            <span class="registry-chip">weather</span>
+            <span class="registry-chip">game.snake</span>
+          </div>
+          <div class="registry-actions">
+            <button class="btn primary" onclick="copyPrompt(document.getElementById('registry-agent-example').innerText, this)">Copy Agent Prompt</button>
+            <a class="btn" href="./registry/">Browse Registry</a>
+          </div>
+        </div>
+
+        <div class="registry-pane">
+          <div class="registry-pane-header">
+            <span class="registry-pane-title">Example: terminal.countdown</span>
+            <span class="registry-pane-meta">AIM Agent Prompt</span>
+          </div>
+          <pre id="registry-agent-example"><code>Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role.
+
+Command: build terminal.countdown in Python.
+
+Execute the full protocol:
+1. Fetch and materialize the package into local ./aim/ using the V2.2 Nested Layout.
+2. Synthesize the production-ready code and tests.</code></pre>
+        </div>
+      </div>
+
+      <div class="registry-result-grid">
+        <div class="registry-note">
+          <div class="registry-note-label">What Lands Locally</div>
+          <h3>The package materializes into <code>/aim</code></h3>
+          <p>Fetching from the registry gives you real local intent files you can inspect, version, and synthesize from like any other AIM source.</p>
+          <pre class="registry-tree"><code>/aim/terminal/countdown/terminal.countdown.intent
+/aim/terminal/countdown/terminal.countdown.contract.intent
+/aim/terminal/countdown/terminal.countdown.event.intent</code></pre>
+        </div>
+
+        <div class="registry-note">
+          <div class="registry-note-label">What Happens Next</div>
+          <h3>Registry package -> local intent -> synthesis</h3>
+          <p>The package moves from registry entry to local intent to implementation without inventing the feature from scratch.</p>
+          <p>This is where the registry becomes useful: not just discoverability, but reusable building blocks that drop directly into the same intent-first workflow as hand-authored AIM.</p>
+        </div>
       </div>
     </section>
 
@@ -556,13 +714,16 @@
     <section style="background: var(--bg-secondary); border-radius: 28px; padding: 48px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;">
       <div style="flex: 1; min-width: 300px;">
         <h2 style="margin-bottom: 12px; font-weight: 500;">Sinth CLI</h2>
-        <p style="color: var(--text-secondary);">Professional automation for materializing registry packages and validating local identity headers at scale.</p>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <code style="background: white; border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; color: var(--text-primary); font-size: 1rem;">pip install sinth</code>
-        <div style="display: flex; gap: 12px;">
-           <a class="btn primary" style="flex: 1;" href="https://pypi.org/project/sinth/">PyPI</a>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">Prefer a local CLI workflow? Sinth fetches registry packages into <code>/aim</code> and generates the synthesis prompt you hand to your coding agent.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn primary" onclick="copyPrompt(document.getElementById('sinth-cli-example').innerText, this)">Copy CLI Example</button>
+          <a class="btn" href="https://pypi.org/project/sinth/">PyPI</a>
         </div>
+      </div>
+      <div style="flex: 1; min-width: 320px;">
+        <pre id="sinth-cli-example"><code>pip install sinth
+sinth fetch terminal.countdown
+sinth synth terminal.countdown</code></pre>
       </div>
     </section>
 
