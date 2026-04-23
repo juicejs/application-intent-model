@@ -3,217 +3,506 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AIM - Application Intent Model v2.2</title>
+    <title>AIM - The Application Intent Model v2.2</title>
     <link rel="stylesheet" href="./assets/site.css">
-    <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
     <style>
-      .role-badge {
+      /* Layout Helpers */
+      .section-padding { padding: 80px 0; }
+      .section-header { text-align: center; margin-bottom: 48px; }
+      .section-header h2 { font-size: 2.2rem; font-weight: 500; margin-bottom: 12px; }
+      
+      /* Comparison Box */
+      .demo-container {
+        background: var(--bg-secondary);
+        border-radius: 28px;
+        padding: 48px;
+        border: 1px solid var(--border-light);
+        margin-bottom: 80px;
+      }
+      .example-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 24px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: var(--shadow-sm);
+      }
+      .example-eyebrow {
         display: inline-block;
         font-family: var(--font-mono);
-        font-size: 0.65rem;
+        font-size: 0.72rem;
+        color: var(--google-blue);
         font-weight: 600;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 4px;
+        text-transform: uppercase;
+      }
+      .example-card h3 {
+        font-size: 1.05rem;
+        font-weight: 500;
+        margin: 0;
+      }
+      .example-pane {
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        overflow: hidden;
+        background: white;
+      }
+      .example-pane-label {
+        padding: 10px 14px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border-light);
+      }
+      .example-pane-body {
+        padding: 14px 16px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+      .example-pane.markdown .example-pane-label {
+        background: #f8f9fa;
+        color: var(--text-secondary);
+      }
+      .example-pane.markdown .example-pane-body {
+        color: var(--text-primary);
+      }
+      .example-pane.aim {
+        border-color: #d2e3fc;
+      }
+      .example-pane.aim .example-pane-label {
+        background: #e8f0fe;
+        color: var(--google-blue);
+      }
+      .example-pane.aim .example-pane-body {
+        background: #202124;
+        color: #e8eaed;
+      }
+      .example-footer {
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        margin-top: auto;
+      }
+      
+      /* Unified Copy Buttons */
+      .copy-action {
+        width: 100%;
+        font-size: 0.75rem;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      /* Full Process Layout */
+      .process-step {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 24px;
+        box-shadow: var(--shadow-sm);
+      }
+      .process-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+      }
+      .process-content h3 {
+        font-size: 1.2rem;
+        font-weight: 500;
         margin-bottom: 8px;
       }
-      .command-pill {
-        background: #f1f3f4;
-        border: 1px solid #dadce0;
-        padding: 4px 10px;
-        border-radius: 16px;
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-        color: var(--google-blue);
+      .process-content p {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
       }
-      .feature-icon {
+
+      .workflow-grid {
+        display: grid;
+        gap: 18px;
+      }
+      .workflow-step {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 18px;
+        align-items: start;
+        padding: 22px 24px;
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        background: var(--surface);
+      }
+      .workflow-index {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: #e8f0fe;
         color: var(--google-blue);
-        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .workflow-step h3 {
+        font-size: 1.05rem;
+        font-weight: 500;
+        margin: 0 0 6px;
+      }
+      .workflow-step p {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        margin: 0;
+      }
+      .workflow-benefits {
+        display: grid;
+        gap: 16px;
+        margin-top: 28px;
+      }
+      .workflow-benefit {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 18px 20px;
+      }
+      .workflow-benefit strong {
+        display: block;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+      }
+      .workflow-benefit span {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+
+      @media (max-width: 768px) {
+        .demo-container { padding: 28px 20px; }
+        .process-step { padding: 24px; gap: 16px; }
+        .workflow-step {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
       }
     </style>
   </head>
   <body data-page="home" data-base="./">
     
+    <!-- 1. HERO -->
     <section class="hero">
       <span class="label">v2.2 Open Standard</span>
       <h1>Intent-First Programming</h1>
       <p class="lead">
-        The specification language for the agentic era. AIM turns product intent into the structured truth AI needs to build, verify, and repair reliable software.
+        Not another <code>spec.md</code>. AIM shifts AI software work from passing around context to operating on intent: structured, versioned artifacts agents can build from, verify against, and repair over time.
       </p>
       <div style="display: flex; gap: 12px; margin-top: 32px;">
-        <a class="btn primary" href="#instant-boot">Get Started</a>
-        <a class="btn" href="./spec/">Read the Spec</a>
+        <a class="btn primary" href="#workflow">See the Workflow</a>
+        <a class="btn" href="#contrast">See the Difference</a>
       </div>
     </section>
 
-    <!-- MASTER PROMPT SECTION -->
-    <section id="instant-boot" class="bootstrap-section">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h2 style="font-weight: 500;">Zero-Script AI Activation</h2>
-        <p style="color: var(--text-secondary);">Initialize any coding agent (Claude Code, Cursor, Aider) in one click.</p>
+    <!-- 2. COMMIT-SCOPED WORKFLOW -->
+    <section id="workflow" class="section-padding" style="padding-top: 0;">
+      <div class="section-header">
+        <h2>One Clean Change at a Time</h2>
+        <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM works best as a commit-scoped workflow: start clean, author intent, synthesize code, align drift, then commit and push. Each run stays focused on one part of the system.</p>
+      </div>
+
+      <div class="workflow-grid" style="max-width: 920px; margin: 0 auto;">
+        <div class="workflow-step">
+          <div class="workflow-index">0</div>
+          <div>
+            <h3>Start from a clean repo</h3>
+            <p>Begin from a committed baseline so the agent sees one stable source of truth and one clear diff.</p>
+          </div>
+        </div>
+
+        <div class="workflow-step">
+          <div class="workflow-index">1</div>
+          <div>
+            <h3>Run an intent agent</h3>
+            <p>Use an authoring agent to write or refine the AIM files first, so product meaning is explicit before implementation begins.</p>
+          </div>
+        </div>
+
+        <div class="workflow-step">
+          <div class="workflow-index">2</div>
+          <div>
+            <h3>Run a coding agent</h3>
+            <p>Hand that intent layer to an implementation agent that synthesizes code from explicit intent instead of guessing from free-form context.</p>
+          </div>
+        </div>
+
+        <div class="workflow-step">
+          <div class="workflow-index">3</div>
+          <div>
+            <h3>Run alignment and repair</h3>
+            <p>Use verifier and repair passes to compare the code with the intent and restore alignment before the change leaves the branch.</p>
+          </div>
+        </div>
+
+        <div class="workflow-step">
+          <div class="workflow-index">4</div>
+          <div>
+            <h3>Commit and push</h3>
+            <p>Ship one focused change. That commit becomes a clean handoff point for a human reviewer or for another agent to pick up later.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-benefits" style="max-width: 920px; margin-left: auto; margin-right: auto;">
+        <div class="workflow-benefit">
+          <strong>Lower context load for agents</strong>
+          <span>Each run only needs the slice of intent, code, and diff related to one change, which keeps the context window focused instead of flooding it with the whole system.</span>
+        </div>
+        <div class="workflow-benefit">
+          <strong>Commit-scoped handoff</strong>
+          <span>After you commit, a different agent can pull that exact state and continue the next step without replaying the whole chat history or re-learning the entire repo.</span>
+        </div>
+        <div class="workflow-benefit">
+          <strong>Better iteration over time</strong>
+          <span>Intent, implementation, and repair stay separable, which makes it easier to revisit a branch later and run another pass with a better model or a different specialized agent.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SPEC.MD VS AIM -->
+    <section id="contrast" class="section-padding" style="border-top: 1px solid var(--border-light);">
+      <div class="demo-container">
+        <div class="section-header">
+          <h2>Beyond <code>spec.md</code></h2>
+          <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">A markdown file gives an agent context. AIM gives it explicit behaviors, contracts, and invariants that can survive implementation, verification, and repair.</p>
+        </div>
+        
+        <div class="grid cols-3" style="gap: 24px;">
+          <article class="example-card">
+            <span class="example-eyebrow">Password Reset</span>
+            <h3>From a sentence to enforceable behavior</h3>
+            <div class="example-pane markdown">
+              <div class="example-pane-label">spec.md</div>
+              <div class="example-pane-body">"Users can reset their password by email."</div>
+            </div>
+            <div class="example-pane aim">
+              <div class="example-pane-label">AIM</div>
+              <div class="example-pane-body">INTENT PasswordReset {
+  ACTOR User
+  ACTION RequestReset
+  REQUIRES { "User owns the email address" }
+  ENSURES { "Reset link is sent" }
+  VERIFY { "Expired tokens cannot be reused" }
+}</div>
+            </div>
+            <p class="example-footer">Agents can build the flow and later verify ownership, token expiry, and single-use behavior.</p>
+          </article>
+
+          <article class="example-card">
+            <span class="example-eyebrow">Team Invites</span>
+            <h3>From feature request to operating contract</h3>
+            <div class="example-pane markdown">
+              <div class="example-pane-label">spec.md</div>
+              <div class="example-pane-body">"Admins can invite members to a workspace."</div>
+            </div>
+            <div class="example-pane aim">
+              <div class="example-pane-label">AIM</div>
+              <div class="example-pane-body">INTENT TeamInvites {
+  ACTOR Admin
+  ACTION InviteMember
+  ENSURES {
+    - "Invite includes a role"
+    - "Invite expires"
+    - "Audit event is recorded"
+  }
+}</div>
+            </div>
+            <p class="example-footer">Agents now have durable rules around authorization, role assignment, expiry, and auditability.</p>
+          </article>
+
+          <article class="example-card">
+            <span class="example-eyebrow">Subscriptions</span>
+            <h3>From vague billing copy to verifiable side effects</h3>
+            <div class="example-pane markdown">
+              <div class="example-pane-label">spec.md</div>
+              <div class="example-pane-body">"Billing supports monthly subscriptions."</div>
+            </div>
+            <div class="example-pane aim">
+              <div class="example-pane-label">AIM</div>
+              <div class="example-pane-body">CONTRACT SubscriptionLifecycle {
+  INPUT { plan: string, customer: string }
+  ENSURES {
+    - "Payment provider is called once"
+    - "Entitlement is activated"
+    - "Failed payment leaves account unchanged"
+  }
+}</div>
+            </div>
+            <p class="example-footer">Agents can reason about external calls, state changes, and failure cases instead of guessing from prose.</p>
+          </article>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 32px; flex-wrap: wrap;">
+          <a class="btn primary" href="#process">See the Workflow</a>
+          <a class="btn" href="./spec/">Read the Spec</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. THE AIM FULL PROCESS -->
+    <section id="process" class="section-padding" style="border-top: 1px solid var(--border-light);">
+      <div class="section-header">
+        <h2>How AIM Runs in Practice</h2>
+        <p style="color: var(--text-secondary); max-width: 700px; margin: 0 auto;">A structured workflow with four agent roles. Teams can use the whole loop, or skip verification and repair until drift actually matters.</p>
       </div>
       
-      <div class="grid cols-2" style="gap: 40px; align-items: stretch;">
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <h3 style="font-size: 1.1rem; font-weight: 500;">1. Copy Master Prompt</h3>
-          <div class="bootstrap-prompt">
-            <div class="prompt-text" id="bootstrap-prompt" style="font-size: 0.9rem; line-height: 1.6;">Initialize as an AIM v2.2 Agent. Instructions: https://intentmodel.dev/brain.md. Confirm you are ready.</div>
-            <button class="copy-btn btn primary" onclick="copyBootstrap()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              <span>Copy</span>
+      <div style="max-width: 850px; margin: 0 auto;">
+        
+        <!-- INTENT AGENT -->
+        <div class="process-step">
+          <div class="process-icon" style="background: rgba(26, 115, 232, 0.1); color: var(--google-blue);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div class="process-content" style="flex: 1;">
+            <h3>1) Intent Agent</h3>
+            <p>Works with the developer to define and refine the intent layer, without jumping ahead into implementation details.</p>
+            <div style="display: none;" id="prompt-author">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe a new component.</div>
+            <button class="btn copy-action" style="width: auto; padding: 6px 12px;" onclick="copyPrompt(document.getElementById('prompt-author').innerText, this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Init Prompt
             </button>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted);">This turns your AI into an AIM v2.2 expert.</p>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <h3 style="font-size: 1.1rem; font-weight: 500;">2. Run Commands</h3>
-          <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-sm); flex: 1;">
-            <p style="margin-bottom: 12px; font-size: 0.9rem;">Ask the agent to build any package:</p>
-            <div style="font-family: var(--font-mono); font-size: 1rem; color: var(--google-blue); font-weight: 500;">
-              build <span style="color: var(--google-red);">game.tango</span> in <span style="color: var(--google-green);">React</span>
-            </div>
-            <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border-light);">
-            <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">The agent will automatically materialize the folders and start coding.</p>
+        <!-- CODING AGENT -->
+        <div class="process-step">
+          <div class="process-icon" style="background: rgba(95, 99, 104, 0.1); color: #5f6368;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div class="process-content" style="flex: 1;">
+            <h3>2) Coding Agent</h3>
+            <p>Synthesizes working code from the intent layer, keeping implementation aligned with the product model.</p>
+            <div style="display: none;" id="prompt-implementer">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. I want to build a package.</div>
+            <button class="btn copy-action" style="width: auto; padding: 6px 12px;" onclick="copyPrompt(document.getElementById('prompt-implementer').innerText, this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Init Prompt
+            </button>
           </div>
         </div>
+
+        <!-- VERIFIER AGENT -->
+        <div class="process-step">
+          <div class="process-icon" style="background: rgba(251, 188, 4, 0.1); color: var(--google-yellow);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="process-content" style="flex: 1;">
+            <h3>3) Verifier Agent</h3>
+            <p>Checks implementation against intent, produces a drift report, and highlights when the source of truth needs to change.</p>
+            <div style="display: none;" id="prompt-verifier">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. Give me a drift report.</div>
+            <button class="btn copy-action" style="width: auto; padding: 6px 12px;" onclick="copyPrompt(document.getElementById('prompt-verifier').innerText, this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Init Prompt
+            </button>
+          </div>
+        </div>
+
+        <!-- REPAIR AGENT -->
+        <div class="process-step">
+          <div class="process-icon" style="background: rgba(52, 168, 83, 0.1); color: var(--google-green);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="process-content" style="flex: 1;">
+            <h3>4) Repair Agent</h3>
+            <p>Restores alignment by fixing implementation or revising intent after the verifier has identified the drift.</p>
+            <div style="display: none;" id="prompt-repairer">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. Restore alignment.</div>
+            <button class="btn copy-action" style="width: auto; padding: 6px 12px;" onclick="copyPrompt(document.getElementById('prompt-repairer').innerText, this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Init Prompt
+            </button>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <section style="padding: 60px 0;">
-      <h2 style="text-align: center; margin-bottom: 48px; font-weight: 500;">The AIM Lifecycle</h2>
-      <div class="flow-container">
-        <div class="flow-step">
-          <div class="feature-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-          <h3 style="font-size: 1.1rem; font-weight: 500;">Author</h3>
-          <p style="font-size: 0.9rem;">Describe requirements in human-readable <code>.intent</code> files. High-level meaning, zero syntax.</p>
+    <!-- 5. CORE ARCHITECTURE -->
+    <section class="section-padding" style="border-top: 1px solid var(--border-light);">
+      <div class="grid cols-2" style="gap: 60px; align-items: start;">
+        <div>
+          <h2 style="font-weight: 500; margin-bottom: 24px;">Built for scale.</h2>
+          <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 24px;">
+              <strong style="display: block; font-weight: 500; color: var(--google-blue);">Shared Central Truth</strong>
+              <span style="font-size: 0.95rem;">The <code>/aim/</code> folder is checked into your repo as the authoritative reference. It is the shared "brain" that coordinates all agents working on the project.</span>
+            </li>
+            <li style="margin-bottom: 24px;">
+              <strong style="display: block; font-weight: 500; color: var(--google-red);">Model Specialization</strong>
+              <span style="font-size: 0.95rem;">Use reasoning-focused models for authoring and verification, and coding-focused models for implementation.</span>
+            </li>
+            <li style="margin-bottom: 24px;">
+              <strong style="display: block; font-weight: 500; color: var(--google-green);">Native Package Registry</strong>
+              <span style="font-size: 0.95rem;">Fetch and materialize packages into namespaced nested paths (<code>/aim/game/snake/</code>) automatically using registry-native agents.</span>
+            </li>
+          </ul>
+          <a class="btn" href="./spec/">Read the Technical Spec</a>
         </div>
-        <div class="flow-step">
-          <div class="feature-icon" style="color: var(--google-red);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-          <h3 style="font-size: 1.1rem; font-weight: 500;">Build</h3>
-          <p style="font-size: 0.9rem;">Agents synthesize production code from the intent. No hallucination, just logic.</p>
-        </div>
-        <div class="flow-step">
-          <div class="feature-icon" style="color: var(--google-yellow);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-          <h3 style="font-size: 1.1rem; font-weight: 500;">Verify</h3>
-          <p style="font-size: 0.9rem;">Automated drift detection compares your intent to the code. Keep truth in sync.</p>
-        </div>
-        <div class="flow-step">
-          <div class="feature-icon" style="color: var(--google-green);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          <h3 style="font-size: 1.1rem; font-weight: 500;">Repair</h3>
-          <p style="font-size: 0.9rem;">Agents automatically restore alignment by fixing implementation or updating intent.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- OPERATING ROLES -->
-    <section style="margin-bottom: 80px;">
-      <h2 style="text-align: center; margin-bottom: 40px; font-weight: 500;">Operating Roles</h2>
-      <div class="grid cols-4">
-        <article class="card">
-          <span class="role-badge" style="background: var(--google-blue);">AUTHOR</span>
-          <p style="font-size: 0.85rem; margin-bottom: 16px;">Writes the meaning. Defines success in plain <code>.intent</code> files.</p>
-          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
-            "Initialize as an AIM Agent... in the Author role."
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="background: var(--bg-tertiary); padding: 12px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem;">
+            game.tango.intent
           </div>
-          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
-                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe a new component. Ask me about the core requirements first.', this)">
-            Copy Init Prompt
-          </button>
-        </article>
-
-        <article class="card">
-          <span class="role-badge" style="background: #5f6368;">IMPLEMENTER</span>
-          <p style="font-size: 0.85rem; margin-bottom: 16px;">Writes the code. Faithfully translates intent into production software.</p>
-          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
-            "Initialize as an AIM Agent... in the Implementer role."
-          </div>
-          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
-                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. I want to build a package. Tell me what information you need.', this)">
-            Copy Init Prompt
-          </button>
-        </article>
-
-        <article class="card">
-          <span class="role-badge" style="background: var(--google-yellow);">VERIFIER</span>
-          <p style="font-size: 0.85rem; margin-bottom: 16px;">Checks the truth. Ensures code hasn't drifted from behavior.</p>
-          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
-            "Initialize as an AIM Agent... in the Verifier role."
-          </div>
-          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
-                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. I want to check my local implementation against the intent in ./aim. Give me a drift report.', this)">
-            Copy Init Prompt
-          </button>
-        </article>
-
-        <article class="card">
-          <span class="role-badge" style="background: var(--google-green);">REPAIRER</span>
-          <p style="font-size: 0.85rem; margin-bottom: 16px;">Fixes the drift. Restores the bond between intent and code.</p>
-          <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 16px;">
-            "Initialize as an AIM Agent... in the Repairer role."
-          </div>
-          <button class="btn" style="width: 100%; font-size: 0.75rem; padding: 6px;" 
-                  onclick="copyPrompt('Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. My intent and implementation have diverged. Help me restore alignment.', this)">
-            Copy Init Prompt
-          </button>
-        </article>
-      </div>
-    </section>
-
-    <section class="split" style="margin-bottom: 80px;">
-      <div>
-        <h2 style="font-weight: 500;">Core Architecture</h2>
-        <ul style="list-style: none; padding: 0;">
-          <li style="margin-bottom: 24px;">
-            <strong style="display: block; font-weight: 500; color: var(--text-primary);">Shared Central Truth</strong>
-            <span style="font-size: 0.95rem;">The <code>/aim/</code> folder is the heart of your repo. It coordinates all agents and humans with one unambiguous mental model.</span>
-          </li>
-          <li style="margin-bottom: 24px;">
-            <strong style="display: block; font-weight: 500; color: var(--text-primary);">Strategic Model Usage</strong>
-            <span style="font-size: 0.95rem;">Use reasoning models (Claude 3.5 Sonnet) for Authoring and Verification, and specialized coding models for Implementation.</span>
-          </li>
-          <li style="margin-bottom: 24px;">
-            <strong style="display: block; font-weight: 500; color: var(--text-primary);">Nested namespaces</strong>
-            <span style="font-size: 0.95rem;">Materialize packages into standardized nested paths (<code>/aim/game/snake/</code>) automatically using registry-native agents.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border);">
-        <div style="background: var(--bg-tertiary); padding: 12px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">
-          weather.intent
-        </div>
-        <pre style="border-radius: 0; background: #fff; color: #202124; padding: 24px; font-size: 0.85rem;"><code><span style="color: var(--google-blue);">AIM:</span> weather#intent@2.2
-
-<span style="color: var(--google-blue);">INTENT</span> WeatherLookup {
-  <span style="color: var(--google-blue);">SUMMARY:</span> "Real-time weather lookup."
-
+          <pre style="border-radius: 0; background: #fff; color: #202124; padding: 24px; font-size: 0.85rem; margin: 0;"><code><span style="color: var(--google-blue);">AIM:</span> game.tango#intent@2.2
+<span style="color: var(--google-blue);">INTENT</span> TangoGame {
+  <span style="color: var(--google-blue);">SUMMARY:</span> "Logic puzzle game."
   <span style="color: var(--google-blue);">REQUIREMENTS</span> {
-    - "User enters a city name."
-    - "UI displays temperature."
+    - "Grid distribution 3/3."
+    - "No 3 adjacent symbols."
   }
-
-  <span style="color: var(--google-blue);">CONTRACT</span> FetchWeather {
-    <span style="color: var(--google-blue);">INPUT</span> { city: string required }
-    <span style="color: var(--google-blue);">ENSURES</span> {
-      - "CALLS WeatherAPI"
-      - "RETURNS WeatherSnapshot"
-    }
+  <span style="color: var(--google-blue);">SCHEMA</span> GameBoard {
+    size: integer fixed(6)
+    grid: array&lt;array&lt;string&gt;&gt;
   }
 }</code></pre>
+        </div>
       </div>
     </section>
 
-    <!-- SINTH CLI FOOTER STYLE -->
-    <section style="background: var(--bg-secondary); border-radius: 24px; padding: 40px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
-      <div style="flex: 1; min-width: 300px;">
-        <h2 style="margin-bottom: 8px; font-weight: 500;">Sinth CLI</h2>
-        <p style="font-size: 0.95rem;">Professional automation for AIM production workflows.</p>
+    <!-- 6. REGISTRY & PULLING -->
+    <section class="section-padding" style="border-top: 1px solid var(--border-light);">
+      <div class="section-header">
+        <h2>Pull from the Registry</h2>
+        <p style="color: var(--text-secondary);">You can also pull reusable intents from a registry to bootstrap a project instead of starting from a blank page.</p>
       </div>
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <code style="background: white; border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; color: var(--text-primary);">pip install sinth</code>
-        <a class="btn primary" href="https://pypi.org/project/sinth/">View on PyPI</a>
+      <div style="max-width: 800px; margin: 0 auto; background: var(--bg-secondary); border-radius: 24px; padding: 40px; border: 1px solid var(--border-light);">
+        <h3 style="margin-bottom: 16px; font-weight: 500;">Native Package Registry</h3>
+        <p style="font-size: 0.95rem; margin-bottom: 24px; color: var(--text-secondary);">Fetch and materialize packages into namespaced nested paths (<code>/aim/game/snake/</code>) automatically using registry-native agents.</p>
+        <a class="btn primary" href="./registry/">Browse Registry</a>
+      </div>
+    </section>
+
+    <!-- 7. SINTH CLI -->
+    <section style="background: var(--bg-secondary); border-radius: 28px; padding: 48px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;">
+      <div style="flex: 1; min-width: 300px;">
+        <h2 style="margin-bottom: 12px; font-weight: 500;">Sinth CLI</h2>
+        <p style="color: var(--text-secondary);">Professional automation for materializing registry packages and validating local identity headers at scale.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <code style="background: white; border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; color: var(--text-primary); font-size: 1rem;">pip install sinth</code>
+        <div style="display: flex; gap: 12px;">
+           <a class="btn primary" style="flex: 1;" href="https://pypi.org/project/sinth/">PyPI</a>
+        </div>
       </div>
     </section>
 

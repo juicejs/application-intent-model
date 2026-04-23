@@ -63,11 +63,3 @@ function copyPrompt(textToCopy, button) {
     console.error('Failed to copy:', err);
   });
 }
-
-/**
- * Legacy support for the main bootstrap button
- */
-function copyBootstrap() {
-  const promptText = document.getElementById('bootstrap-prompt').innerText || document.getElementById('bootstrap-prompt').textContent;
-  copyPrompt(promptText, event.currentTarget);
-}
