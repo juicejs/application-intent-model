@@ -409,7 +409,7 @@
     <!-- 1. HERO -->
     <section class="hero">
       <p class="hero-evolution">First prompts. Then context. Next: intent.</p>
-      <h1>Intent-First Programming</h1>
+      <h1>Intent-Driven Development</h1>
       <p class="lead">
         Not another <code>spec.md</code>. AIM shifts AI software work from passing around context to operating on intent: structured, versioned artifacts agents can build from, verify against, and repair over time.
       </p>
@@ -438,11 +438,19 @@
             <div class="example-pane aim">
               <div class="example-pane-label">AIM</div>
               <div class="example-pane-body">INTENT PasswordReset {
-  ACTOR User
-  ACTION RequestReset
-  REQUIRES { "User owns the email address" }
-  ENSURES { "Reset link is sent" }
-  VERIFY { "Expired tokens cannot be reused" }
+  SUMMARY: "Email-based reset flow."
+  REQUIREMENTS {
+    - "User can request reset."
+  }
+  CONTRACT Request {
+    SUMMARY: "Rules"
+    ENSURES {
+      "Reset link is sent"
+    }
+    VERIFY {
+      "Tokens expire after use"
+    }
+  }
 }</div>
             </div>
             <p class="example-footer">Agents can build the flow and later verify ownership, token expiry, and single-use behavior.</p>
@@ -458,12 +466,16 @@
             <div class="example-pane aim">
               <div class="example-pane-label">AIM</div>
               <div class="example-pane-body">INTENT TeamInvites {
-  ACTOR Admin
-  ACTION InviteMember
-  ENSURES {
-    - "Invite includes a role"
-    - "Invite expires"
-    - "Audit event is recorded"
+  SUMMARY: "Admin-led workspace invites."
+  REQUIREMENTS {
+    - "Admins can invite members."
+  }
+  CONTRACT Invite {
+    SUMMARY: "Rules"
+    ENSURES {
+     - "Invite expires"
+     - "Role required"
+    }
   }
 }</div>
             </div>
@@ -705,7 +717,7 @@ Execute the full protocol:
           <div class="registry-note-label">What Happens Next</div>
           <h3>Registry package -> local intent -> synthesis</h3>
           <p>The package moves from registry entry to local intent to implementation without inventing the feature from scratch.</p>
-          <p>This is where the registry becomes useful: not just discoverability, but reusable building blocks that drop directly into the same intent-first workflow as hand-authored AIM.</p>
+          <p>This is where the registry becomes useful: not just discoverability, but reusable building blocks that drop directly into the same intent-driven workflow as hand-authored AIM.</p>
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 # Application Intent Model (AIM)
 
-AIM is an intent-first specification language for describing software applications in a form that both humans and AI coding agents can use.
+AIM is an intent-driven specification language for describing software applications in a form that both humans and AI coding agents can use.
 
 Start simple with one intent file, then add precision only where needed.
 

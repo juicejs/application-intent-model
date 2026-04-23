@@ -1,6 +1,6 @@
 # Application Intent Model (AIM) v2.2
 
-Application Intent Model (AIM) is an intent-first specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product and design discussion and structured enough for implementation, verification, repair, and deterministic synthesis.
+Application Intent Model (AIM) is an intent-driven specification language for humans and AI agents. It captures product behavior in a form that is readable enough for product and design discussion and structured enough for implementation, verification, repair, and deterministic synthesis.
 
 AIM supports progressive precision:
 
