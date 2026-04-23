@@ -66,7 +66,7 @@
         <h1 style="font-weight: 500; margin-bottom: 8px;">Package Registry</h1>
         <p style="color: var(--text-secondary);">
           Discover and materialize intent-first component packages.
-          <a id="index-link" href="../../registry/index.json" style="color: var(--google-blue); text-decoration: none;">index.json</a>
+          <a id="index-link" href="../registry-files/index.json" style="color: var(--google-blue); text-decoration: none;">index.json</a>
         </p>
       </section>
 
@@ -100,10 +100,9 @@
     <script src="../assets/chrome.js"></script>
     <script>
       const indexCandidates = [
-        "../../registry/index.json",
         "../registry-files/index.json",
-        "../../registry-files/index.json",
-        "/registry-files/index.json"
+        "/registry-files/index.json",
+        "../../registry-files/index.json"
       ];
       const pkgBody = document.getElementById("pkg-body");
       const preview = document.getElementById("preview");

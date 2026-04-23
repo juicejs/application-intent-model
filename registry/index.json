@@ -4,32 +4,32 @@
     {
       "name": "game.snake",
       "version": "2.2",
-      "entry": "registry/packages/game.snake/game.snake.intent"
+      "entry": "packages/game.snake/game.snake.intent"
     },
     {
       "name": "weather",
       "version": "2.2",
-      "entry": "registry/packages/weather/weather.intent"
+      "entry": "packages/weather/weather.intent"
     },
     {
       "name": "nemicko.demo.todo",
       "version": "2.2",
-      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
+      "entry": "packages/nemicko.demo.todo/nemicko.demo.todo.intent"
     },
     {
       "name": "terminal.countdown",
       "version": "2.2",
-      "entry": "registry/packages/terminal.countdown/terminal.countdown.intent"
+      "entry": "packages/terminal.countdown/terminal.countdown.intent"
     },
     {
       "name": "game.tango",
       "version": "2.2",
-      "entry": "registry/packages/game.tango/game.tango.intent"
+      "entry": "packages/game.tango/game.tango.intent"
     },
     {
       "name": "tool.pixelart",
       "version": "2.2",
-      "entry": "registry/packages/tool.pixelart/tool.pixelart.intent"
+      "entry": "packages/tool.pixelart/tool.pixelart.intent"
     }
   ]
 }
