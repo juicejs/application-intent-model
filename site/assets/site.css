@@ -114,6 +114,20 @@ body {
   color: var(--google-blue);
 }
 
+.site-version {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
 .site-nav {
   display: flex;
   gap: var(--space-lg);

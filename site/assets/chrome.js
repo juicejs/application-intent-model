@@ -15,6 +15,7 @@
           <path d="M16 8 L16 24" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
         </svg>
         <span>Application Intent Model</span>
+        <span class="site-version">v2.2</span>
       </a>
       <nav class="site-nav" aria-label="Primary">
         <a data-nav="home" href="${base}">Home</a>
