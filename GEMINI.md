@@ -1,22 +1,29 @@
-# Application Intent Model (AIM) Extension
+# AIM v2.2 Core Mandates
 
-This extension enables the Application Intent Model (AIM) workflow within Gemini CLI. AIM is an intent-driven specification language that captures product behavior in a form that is readable for humans and structured enough for deterministic synthesis and verification by AI agents.
+These mandates are foundational. All agents working in this project MUST adhere to these rules without exception.
 
-## Core Concepts
+## 1. File Format & Extension
+- **Extension:** Every AIM artifact MUST end in `.intent`.
+- **No Substitutes:** Never produce YAML, JSON, XML, or Markdown in place of an `.intent` file.
+- **Header:** Every file must start with exactly: `AIM: <component>#<facet>@2.2`
+- **Identity:** The component and facet in the header MUST match the filename and directory path.
 
-- **Component:** Identified by a namespace (e.g., `auth.login`).
-- **Facet:** A specific dimension of the component (e.g., `intent`, `schema`, `contract`, `flow`).
-- **.intent Files:** The coordination layer. All AIM artifacts must use the `.intent` extension and start with the `AIM: <component>#<facet>@2.2` header.
+## 2. Syntax Rules
+- **Blocks:** Use UPPERCASE keywords and braces (e.g., `INTENT Name { ... }`).
+- **Assignments:** Use `KEY: value`.
+- **Lists:** Use hyphen-led entries (`- "item"`).
+- **Prose:** Always quote natural language values.
+- **No Commas:** Commas are not required between entries.
 
-## Workflow
+## 3. Operating Fail-Safes
+- **Intent Authority:** The `.intent` files are the "Source of Truth." Implementation must never invent behavior absent from intent.
+- **No Generic Names:** Filenames like `schema.intent` are invalid. Use `<component>.<facet>.intent`.
+- **Precedence:** Resolve facets in order: `INCLUDES` > Sibling Discovery > Top-level Blocks > Embedded Blocks.
+- **Verification:** Always distinguish between missing behavior, incorrect behavior, and undocumented extra behavior.
 
-1. **Author:** Define behavior in `.intent` files using `@aim-author`.
-2. **Implement:** Generate code and tests from intent using `@aim-implementer`.
-3. **Verify:** Check for drift between code and intent using `@aim-verifier`.
-4. **Repair:** Restore alignment between code and intent using `@aim-repairer`.
-
-## Non-Negotiable Rules
-
-- **Strict File Format:** All artifacts MUST be `.intent` files. NEVER use YAML, JSON, or Markdown for intent definitions.
-- **Header Mandatory:** Every `.intent` file must start with `AIM: <component>#<facet>@2.2`.
-- **Precedence:** Intent files are the authoritative source. Implementation must not invent behavior not grounded in intent.
+## 4. Role Dispatch
+- **@aim-registry**: Registry -> Local Materialization.
+- **@aim-author**: Requirements -> Intent.
+- **@aim-implementer**: Intent -> Code/Tests.
+- **@aim-verifier**: Code -> Drift Report.
+- **@aim-repairer**: Drift -> Alignment.

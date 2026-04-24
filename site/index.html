@@ -645,8 +645,51 @@ INTENT TeamInvites {
 
     </section>
 
-    <!-- 4. COMMIT-SCOPED WORKFLOW -->
-    <section id="workflow" class="section-padding" style="border-top: 1px solid var(--border-light);">
+    <!-- 4. GEMINI CLI EXTENSION -->
+    <section id="gemini-cli" class="section-padding" style="border-top: 1px solid var(--border-light);">
+      <div class="section-header">
+        <div class="badge-start" style="display: inline-block; margin-bottom: 12px; color: var(--google-blue); background: rgba(66, 133, 244, 0.1); border-color: rgba(66, 133, 244, 0.2);">New: Gemini CLI Extension</div>
+        <h2>Automate with Gemini CLI</h2>
+        <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM is now a first-class extension for <a href="https://geminicli.com" target="_blank" style="color: var(--google-blue);">Gemini CLI</a>. Instead of copying prompts, invoke specialized personas directly from your terminal.</p>
+      </div>
+
+      <div class="grid cols-2" style="max-width: 920px; margin: 0 auto; gap: 40px; align-items: center;">
+        <div class="registry-pane">
+          <div class="registry-pane-header">
+            <span class="registry-pane-title">Terminal</span>
+            <span class="registry-pane-meta">bash</span>
+          </div>
+          <pre style="background: #202124; color: #e8eaed; padding: 20px; font-size: 0.85rem; margin: 0;"><code><span style="color: #9aa0a6;"># Install the AIM extension</span>
+gemini extensions install application-intent-model
+
+<span style="color: #9aa0a6;"># Use specialized personas</span>
+gemini "@aim-author I want to build a 2FA flow"
+gemini "@aim-verifier verify weather package"
+gemini "@aim-repairer fix logic drift in auth"</code></pre>
+        </div>
+        <div>
+          <h3 style="font-weight: 500; margin-bottom: 16px;">Zero-Prompt Integration</h3>
+          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 20px;">The extension bundles the "Intent-Code Consistency" skill, allowing Gemini to automatically suggest AIM whenever it detects hallucinations or logic drift in your project.</p>
+          <ul style="list-style: none; padding: 0; font-size: 0.9rem;">
+            <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+              <span style="color: var(--google-green);">✓</span>
+              <span><strong>Native Personas:</strong> @aim-author, @aim-implementer, etc.</span>
+            </li>
+            <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+              <span style="color: var(--google-green);">✓</span>
+              <span><strong>Auto-Discovery:</strong> Gemini suggests AIM to fix drift.</span>
+            </li>
+            <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+              <span style="color: var(--google-green);">✓</span>
+              <span><strong>Local Linking:</strong> gemini extensions link .</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. COMMIT-SCOPED WORKFLOW (formerly 4) -->
+    <section id="workflow" class="section-padding" style="border-top: 1px solid var(--border-light); background: var(--bg-secondary);">
       <div class="section-header">
         <h2>One Clean Change at a Time</h2>
         <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM works as a 4-step loop. Each step shows what you do, what AIM does, and what moves forward in the repo.</p>
