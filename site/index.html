@@ -424,7 +424,48 @@
       </div>
     </section>
 
-    <!-- 2. SPEC.MD VS AIM -->
+    <!-- 2. GETTING STARTED -->
+    <section id="getting-started" class="section-padding" style="border-top: 1px solid var(--border-light); background: var(--bg-secondary);">
+      <div class="section-header">
+        <h2>Get Started in 3 Steps</h2>
+        <p style="color: var(--text-secondary); max-width: 680px; margin: 0 auto;">AIM works with whatever AI coding assistant you already use — Claude, Cursor, Copilot, or any chat-based agent. No new tools required to try it.</p>
+      </div>
+
+      <div class="workflow-grid" style="max-width: 760px; margin: 0 auto 40px;">
+        <div class="workflow-step">
+          <div class="workflow-index">1</div>
+          <div>
+            <h3>Describe what you want to build</h3>
+            <p>Pick a component or feature. It can be something new ("a password reset flow") or something you want to verify already exists ("our team invite system"). You don't need any AIM files yet — just a plain description.</p>
+          </div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-index">2</div>
+          <div>
+            <h3>Paste the Author prompt into your AI assistant</h3>
+            <p>Copy the <strong>Intent Author</strong> prompt from the <a href="#roles" style="color: var(--google-blue);">Agent Roles</a> section below and paste it into your coding assistant. The agent will ask questions and generate a <code>.intent</code> file — a structured contract for the feature.</p>
+          </div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-index">3</div>
+          <div>
+            <h3>Hand the intent file to a coding agent</h3>
+            <p>Copy the <strong>Implementer</strong> prompt, point it at the <code>.intent</code> file the author just created, and let it synthesize the code. From here you can also verify and repair using the other roles.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: white; border: 1px solid var(--border-light); border-radius: 18px; padding: 28px 32px; max-width: 760px; margin: 0 auto;">
+        <p style="font-size: 0.88rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">Or skip straight to a working example</p>
+        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 20px;">Pull a ready-made package from the registry and have it built in your stack in one prompt. Great for seeing the full loop before authoring your own intent.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a class="btn primary" href="#registry">Try a Registry Package</a>
+          <a class="btn" href="#contrast">See How It Differs from spec.md</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SPEC.MD VS AIM (formerly 2) -->
     <section id="contrast" class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="demo-container">
         <div class="section-header">
@@ -705,7 +746,7 @@ INTENT TeamInvites {
     </section>
 
     <!-- 6. REGISTRY & PULLING -->
-    <section class="section-padding" style="border-top: 1px solid var(--border-light);">
+    <section id="registry" class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="section-header">
         <h2>Pull from the Registry</h2>
         <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">Need a head start? Pull a real package from the registry, materialize it into local <code>/aim</code>, and hand that intent to your coding agent.</p>
