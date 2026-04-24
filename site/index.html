@@ -109,6 +109,55 @@
         gap: 8px;
       }
 
+      /* GitHub Pill */
+      .github-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border: 1px solid var(--border-light);
+        border-radius: 999px;
+        padding: 5px 14px;
+        background: var(--bg-secondary);
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .github-pill:hover {
+        border-color: var(--google-blue);
+        color: var(--google-blue);
+      }
+
+      /* Getting Started tip box */
+      .gs-tip {
+        background: white;
+        border: 1px solid var(--border-light);
+        border-radius: 18px;
+        padding: 28px 32px;
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .gs-tip-label {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 10px;
+      }
+
+      /* Start here badge */
+      .badge-start {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--google-green);
+        background: rgba(52, 168, 83, 0.1);
+        border: 1px solid rgba(52, 168, 83, 0.25);
+        border-radius: 999px;
+        padding: 3px 10px;
+        letter-spacing: 0.02em;
+      }
+
       /* Full Process Layout */
       .process-step {
         background: var(--surface);
@@ -404,8 +453,9 @@
         .hero-buttons { flex-direction: column; width: 100%; }
         .hero-buttons .btn { width: 100%; }
         .scale-grid { gap: 32px !important; }
-        .sinth-section { padding: 32px !important; margin-bottom: 40px !important; flex-direction: column; align-items: flex-start !important; }
-        .section-padding { padding: 40px 0; }
+.section-padding { padding: 40px 0; }
+        .gs-tip { padding: 20px; }
+        .github-pill { font-size: 0.78rem; }
       }
     </style>
   </head>
@@ -422,8 +472,8 @@
         <a class="btn primary" href="#getting-started">Get Started</a>
         <a class="btn" href="#contrast">See How It Works</a>
       </div>
-      <div style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <a href="https://github.com/juicejs/application-intent-model" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border-light); border-radius: 999px; padding: 5px 14px; background: var(--bg-secondary); transition: border-color 0.15s, color 0.15s;">
+      <div style="margin-top: 24px;">
+        <a href="https://github.com/juicejs/application-intent-model" target="_blank" rel="noopener" class="github-pill">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
           Open Standard · GitHub
         </a>
@@ -461,8 +511,8 @@
         </div>
       </div>
 
-      <div style="background: white; border: 1px solid var(--border-light); border-radius: 18px; padding: 28px 32px; max-width: 760px; margin: 0 auto;">
-        <p style="font-size: 0.88rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">Or skip straight to a working example</p>
+      <div class="gs-tip">
+        <p class="gs-tip-label">Or skip straight to a working example</p>
         <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 20px;">Pull a ready-made package from the registry and have it built in your stack in one prompt. Great for seeing the full loop before authoring your own intent.</p>
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           <a class="btn primary" href="#registry">Try a Registry Package</a>
@@ -545,7 +595,7 @@ INTENT TeamInvites {
         <div class="card" style="border-top: 4px solid var(--google-green); position: relative;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
             <div class="example-eyebrow" style="color: var(--google-green);">Role 1</div>
-            <span style="font-size: 0.72rem; font-weight: 600; color: var(--google-green); background: #e6f4ea; border: 1px solid #ceead6; border-radius: 999px; padding: 3px 10px; letter-spacing: 0.02em;">Start here</span>
+            <span class="badge-start">Start here</span>
           </div>
           <h3 style="margin-top: 8px;">Intent Author Agent</h3>
           <p style="font-size: 0.9rem; margin-bottom: 20px;">Turns requirements into structured AIM files. Use this for new features or spec refinements.</p>
@@ -806,23 +856,6 @@ Execute the full protocol:
           <p>The package moves from registry entry to local intent to implementation without inventing the feature from scratch.</p>
           <p>This is where the registry becomes useful: not just discoverability, but reusable building blocks that drop directly into the same intent-driven workflow as hand-authored AIM.</p>
         </div>
-      </div>
-    </section>
-
-    <!-- 7. SINTH CLI -->
-    <section class="sinth-section" style="background: var(--bg-secondary); border-radius: 28px; padding: 48px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;">
-      <div style="flex: 1; min-width: 300px;">
-        <h2 style="margin-bottom: 12px; font-weight: 500;">Sinth CLI</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">Prefer a local CLI workflow? Sinth fetches registry packages into <code>/aim</code> and generates the synthesis prompt you hand to your coding agent.</p>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-          <button class="btn primary" onclick="copyPrompt(document.getElementById('sinth-cli-example').innerText, this)">Copy CLI Example</button>
-          <a class="btn" href="https://pypi.org/project/sinth/">PyPI</a>
-        </div>
-      </div>
-      <div style="flex: 1; min-width: 320px;">
-        <pre id="sinth-cli-example"><code>pip install sinth
-sinth fetch terminal.countdown
-sinth synth terminal.countdown</code></pre>
       </div>
     </section>
 

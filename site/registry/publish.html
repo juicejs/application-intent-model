@@ -27,6 +27,8 @@
         margin-bottom: 32px;
         color: var(--text-secondary);
         line-height: 1.6;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
       .step-item::before {
         counter-increment: step-counter;
@@ -46,13 +48,22 @@
         font-size: 0.9rem;
       }
 
+      /* Prevent grid children from overflowing their tracks */
+      .publish-container .grid > div {
+        min-width: 0;
+      }
+
+      @media (max-width: 900px) {
+        .publish-container .grid {
+          grid-template-columns: 1fr !important;
+          gap: 32px !important;
+        }
+      }
+
       @media (max-width: 768px) {
         .publish-container {
           padding: 24px;
           margin-top: 24px;
-        }
-        .publish-container .grid {
-          gap: 32px !important;
         }
         .step-item {
           padding-left: 48px;
@@ -62,16 +73,15 @@
     </style>
   </head>
   <body data-page="publish" data-base="../">
-    
-    <div class="site-shell">
-      <section style="margin-top: 48px;">
-        <h1 style="font-weight: 500; margin-bottom: 8px;">Publish Component Package</h1>
-        <p style="color: var(--text-secondary);">
-          Follow these steps to contribute your component to the AIM registry.
-        </p>
-      </section>
 
-      <div class="publish-container">
+    <section style="margin-top: 48px;">
+      <h1 style="font-weight: 500; margin-bottom: 8px;">Publish Component Package</h1>
+      <p style="color: var(--text-secondary);">
+        Follow these steps to contribute your component to the AIM registry.
+      </p>
+    </section>
+
+    <div class="publish-container">
         <div class="grid cols-2" style="gap: 60px;">
           <div>
             <h2 style="font-size: 1.2rem; font-weight: 500; margin-bottom: 32px;">Submission Workflow</h2>
@@ -108,23 +118,20 @@
             
             <div style="margin-top: 40px; padding: 24px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-light);">
               <h3 style="font-size: 0.95rem; font-weight: 500; margin-bottom: 8px;">Validation Policy</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary);">
-                Every PR is automatically validated for:
-                <ul style="margin-top: 8px; margin-left: 20px;">
-                  <li>Correct directory structure</li>
-                  <li>Header-to-path identity alignment</li>
-                  <li>Version consistency</li>
-                </ul>
-              </p>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Every PR is automatically validated for:</p>
+              <ul style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 20px;">
+                <li>Correct directory structure</li>
+                <li>Header-to-path identity alignment</li>
+                <li>Version consistency</li>
+              </ul>
             </div>
           </div>
         </div>
-      </div>
-
-      <footer class="footer" style="text-align: center; margin-top: 80px;">
-        <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
-      </footer>
     </div>
+
+    <footer class="footer" style="text-align: center; margin-top: 80px;">
+      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
+    </footer>
 
     <script src="../assets/chrome.js"></script>
   </body>
