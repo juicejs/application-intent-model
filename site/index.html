@@ -161,9 +161,7 @@
         border-radius: 16px;
         background: #e8f0fe;
         color: var(--google-blue);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         font-family: var(--font-mono);
         font-size: 1rem;
         font-weight: 600;
@@ -444,19 +442,14 @@
             </div>
             <div class="example-pane aim">
               <div class="example-pane-label">AIM</div>
-              <div class="example-pane-body">INTENT PasswordReset {
+              <div class="example-pane-body">AIM: auth.reset#intent@2.2
+INTENT PasswordReset {
   SUMMARY: "Email-based reset flow."
-  REQUIREMENTS {
-    - "User can request reset."
-  }
+  REQUIREMENTS { - "User can request reset." }
   CONTRACT Request {
     SUMMARY: "Rules"
-    ENSURES {
-      "Reset link is sent"
-    }
-    VERIFY {
-      "Tokens expire after use"
-    }
+    ENSURES { "Reset link is sent" }
+    VERIFY { "Tokens expire after use" }
   }
 }</div>
             </div>
@@ -472,17 +465,13 @@
             </div>
             <div class="example-pane aim">
               <div class="example-pane-label">AIM</div>
-              <div class="example-pane-body">INTENT TeamInvites {
+              <div class="example-pane-body">AIM: teams.invite#intent@2.2
+INTENT TeamInvites {
   SUMMARY: "Admin-led workspace invites."
-  REQUIREMENTS {
-    - "Admins can invite members."
-  }
+  REQUIREMENTS { - "Admins can invite members." }
   CONTRACT Invite {
     SUMMARY: "Rules"
-    ENSURES {
-     - "Invite expires"
-     - "Role required"
-    }
+    ENSURES { - "Invite expires" - "Role required" }
   }
 }</div>
             </div>
@@ -498,7 +487,50 @@
       </div>
     </section>
 
-    <!-- 3. COMMIT-SCOPED WORKFLOW -->
+    <!-- 3. AI AGENT ROLES -->
+    <section id="roles" class="section-padding" style="border-top: 1px solid var(--border-light); background: var(--bg-secondary);">
+      <div class="section-header">
+        <h2>AI Agent Roles</h2>
+        <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">AIM defines four specialized roles for AI agents. Paste these prompts into your coding assistant to initialize them into the correct context.</p>
+      </div>
+
+      <div class="grid cols-2" style="max-width: 920px; margin: 0 auto; gap: 24px;">
+        <div class="card" style="border-top: 4px solid var(--google-green);">
+          <div class="example-eyebrow" style="color: var(--google-green);">Role 1</div>
+          <h3 style="margin-top: 8px;">Intent Author Agent</h3>
+          <p style="font-size: 0.9rem; margin-bottom: 20px;">Turns requirements into structured AIM files. Use this for new features or spec refinements.</p>
+          <div style="display:none;" id="role-prompt-author">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe the intended behavior for [Component Name]. Help me draft the .intent envelope and necessary facets (Schema, Contract, Flow). Ask me about the core requirements first.</div>
+          <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-author').innerText, this)">Copy Author Prompt</button>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--google-blue);">
+          <div class="example-eyebrow" style="color: var(--google-blue);">Role 2</div>
+          <h3 style="margin-top: 8px;">Implementer Agent</h3>
+          <p style="font-size: 0.9rem; margin-bottom: 20px;">Synthesizes code and tests directly from AIM source files. Use this to build the feature.</p>
+          <div style="display:none;" id="role-prompt-implementer">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. Command: build [Package Name] in [Tech Stack]. Execute the full protocol: 1. Fetch and materialize the package into local ./aim/ using the V2.2 Nested Layout. 2. Synthesize the production-ready code and tests.</div>
+          <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-implementer').innerText, this)">Copy Implementer Prompt</button>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--google-yellow);">
+          <div class="example-eyebrow" style="color: var(--google-yellow);">Role 3</div>
+          <h3 style="margin-top: 8px;">Verifier Agent</h3>
+          <p style="font-size: 0.9rem; margin-bottom: 20px;">Compares implementation against intent to detect drift. Use this to ensure quality before landing a change.</p>
+          <div style="display:none;" id="role-prompt-verifier">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. I want to verify my local implementation against the intent files in ./aim/[Package Name]. Compare the logic, schemas, and contracts. Output a DRIFT REPORT highlighting any mismatches.</div>
+          <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-verifier').innerText, this)">Copy Verifier Prompt</button>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--google-red);">
+          <div class="example-eyebrow" style="color: var(--google-red);">Role 4</div>
+          <h3 style="margin-top: 8px;">Repairer Agent</h3>
+          <p style="font-size: 0.9rem; margin-bottom: 20px;">Restores alignment when code and intent diverge. Use this to fix bugs or update specs.</p>
+          <div style="display:none;" id="role-prompt-repairer">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. My intent and implementation are out of sync for [Package Name]. Read the drift and restore alignment. Prefer fixing the code unless I specify the intent is outdated.</div>
+          <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-repairer').innerText, this)">Copy Repair Prompt</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 4. COMMIT-SCOPED WORKFLOW -->
     <section id="workflow" class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="section-header">
         <h2>One Clean Change at a Time</h2>
@@ -631,7 +663,7 @@
 
     </section>
 
-    <!-- 4. CORE ARCHITECTURE -->
+    <!-- 5. CORE ARCHITECTURE -->
     <section class="section-padding" style="border-top: 1px solid var(--border-light);">
       <div class="grid cols-2 scale-grid" style="gap: 60px; align-items: start;">
         <div>
@@ -681,13 +713,13 @@
 
       <div class="registry-showcase">
         <div class="registry-intro">
-          <h3>Start with a tiny, runnable package</h3>
-          <p><code>terminal.countdown</code> is the best example here: small enough to inspect in a minute, but real enough to show package fetch, local materialization, and synthesis.</p>
+          <h3>Start with a clean, functional package</h3>
+          <p>The <code>weather</code> package is a perfect starting point: it defines a real-world component with schema, flow, contract, and view facets all contained in one clean intent file.</p>
           <p>The easiest path is to paste one prompt into your coding agent and let AIM fetch plus synthesize in one go.</p>
           <div class="registry-chip-row">
-            <span class="registry-chip">terminal.countdown</span>
             <span class="registry-chip">weather</span>
             <span class="registry-chip">game.snake</span>
+            <span class="registry-chip">terminal.countdown</span>
           </div>
           <div class="registry-actions">
             <button class="btn primary" onclick="copyPrompt(document.getElementById('registry-agent-example').innerText, this)">Copy Agent Prompt</button>
@@ -697,12 +729,12 @@
 
         <div class="registry-pane">
           <div class="registry-pane-header">
-            <span class="registry-pane-title">Example: terminal.countdown</span>
+            <span class="registry-pane-title">Example: weather</span>
             <span class="registry-pane-meta">AIM Agent Prompt</span>
           </div>
           <pre id="registry-agent-example"><code>Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role.
 
-Command: build terminal.countdown in Python.
+Command: build weather in React.
 
 Execute the full protocol:
 1. Fetch and materialize the package into local ./aim/ using the V2.2 Nested Layout.
@@ -715,9 +747,7 @@ Execute the full protocol:
           <div class="registry-note-label">What Lands Locally</div>
           <h3>The package materializes into <code>/aim</code></h3>
           <p>Fetching from the registry gives you real local intent files you can inspect, version, and synthesize from like any other AIM source.</p>
-          <pre class="registry-tree"><code>/aim/terminal/countdown/terminal.countdown.intent
-/aim/terminal/countdown/terminal.countdown.contract.intent
-/aim/terminal/countdown/terminal.countdown.event.intent</code></pre>
+          <pre class="registry-tree"><code>/aim/weather/weather.intent</code></pre>
         </div>
 
         <div class="registry-note">
