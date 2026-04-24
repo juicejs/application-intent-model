@@ -1,0 +1,6 @@
+{
+  "name": "application-intent-model",
+  "version": "2.2.0",
+  "description": "Eliminates AI hallucinations and logic drift by providing a structured coordination layer between requirements and code. Enables deterministic code synthesis, automated verification, and precision-guided repair using the Application Intent Model (AIM).",
+  "contextFileName": "GEMINI.md"
+}
