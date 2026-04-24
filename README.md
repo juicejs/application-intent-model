@@ -1,153 +1,101 @@
-# Application Intent Model (AIM)
+qwh# Application Intent Model (AIM) v2.2
 
-AIM is an intent-driven specification language for describing software applications in a form that both humans and AI coding agents can use.
+AIM is an intent-driven specification language and coordination layer for humans and AI agents. It eliminates "logic drift" and "hallucinations" by capturing product behavior in structured `.intent` files that agents can build from, verify against, and repair over time.
 
-Start simple with one intent file, then add precision only where needed.
+---
 
-## Why AIM
+## 🚀 Native Gemini CLI Extension
 
-- Keep product intent readable.
-- Keep synthesis deterministic.
-- Scale from lightweight specs to high-fidelity component definitions.
+AIM is now a first-class extension for [Gemini CLI](https://geminicli.com). Stop copying prompts and start using specialized terminal personas.
 
-## Core Idea
-
-Each component has one canonical intent file:
-
-- `<component>.intent`
-
-Optional precision facets can be added:
-
-- `<component>.schema.intent`
-- `<component>.flow.intent`
-- `<component>.contract.intent`
-- `<component>.persona.intent`
-- `<component>.view.intent`
-- `<component>.event.intent`
-
-This enables progressive detail:
-
-- intent-only for speed
-- partial facets for medium fidelity
-- full facets for maximum precision
-
-## Sinth — the CLI for AIM
-
-**Synthesize intent into reality.**
-
-AIM includes Sinth, a Python CLI tool for fetching, managing, and synthesizing packages:
-
+### Installation
 ```bash
-pip install sinth
-
-# Interactive menu (recommended for new users)
-sinth
-
-# Or use direct commands
-sinth fetch weather
-
-# Configure your stack
-sinth config set stack.frontend "React"
-sinth config set stack.backend "Node.js"
-
-# Generate synthesis prompts
-sinth synth weather
+gemini extensions install application-intent-model
 ```
 
-Sinth automatically:
-- Fetches packages from the registry
-- Validates intent files
-- Generates formatted prompts for AI assistants
-- Copies prompts to clipboard for easy pasting
-- Provides guided configuration wizards
+### Specialized Personas
+Invoke experts directly from your terminal:
+- **✍️ @aim-author**: "I want to build a 2FA login flow."
+- **📦 @aim-registry**: "fetch weather" (materializes into local `/aim`)
+- **🛠️ @aim-implementer**: "build weather in React"
+- **🔍 @aim-verifier**: "verify auth package" (generates a Drift Report)
+- **🩹 @aim-repairer**: "fix drift in auth"
 
-See [cli/CLI.md](./cli/CLI.md) for full documentation.
+---
 
-## Read The Specification
+## Why AIM?
 
-The full protocol is documented in:
+- **Eliminate Hallucinations**: Ground your AI agents in explicit contracts, not just loose chat context.
+- **Deterministic Synthesis**: Build production-ready code that is 100% traceable to requirements.
+- **Automated Verification**: Automatically detect when your code drifts away from your intent.
+- **Progressive Precision**: Start with a simple intent envelope and add facets (Schema, Contract, Flow) only as needed.
 
-- [specification.md](./specification.md)
+---
 
-## DigitalOcean App Platform
+## Core Concepts
 
-For custom domains and explicit `.intent` serving behavior, deploy with Docker + Nginx:
+Each component has one canonical entrypoint:
+- `aim/<component>/<component>.intent`
 
-- `Dockerfile`
-- `nginx.conf`
-- `.do/app.yaml`
+As logic grows, add precision facets:
+- `schema`: Data structures and structural types.
+- `contract`: Externally observable guarantees (Input/Output).
+- `flow`: Operational sequencing and internal logic.
+- `persona`: Actor roles and view access.
+- `view`: UI surfaces and user actions.
+- `event`: Async payloads and routing.
 
-Nginx serves `*.intent` as `text/plain` and enables CORS for fetch clients.
+---
 
-After deploy, verify:
+## The Workflow
 
-1. `/registry-files/index.json`
-2. `/registry-files/packages/weather/weather.intent`
-3. `/specification.md`
+1. **Author**: Define behavior in `.intent` files (Requirements -> Intent).
+2. **Implement**: Generate code and tests from local intent (Intent -> Code).
+3. **Verify**: Compare implementation against intent (Code -> Drift Report).
+4. **Repair**: Restore alignment when drift is detected (Drift -> Alignment).
+
+---
 
 ## Quick Example
 
-```ail
-AIM: game.snake#intent@2.2
+AIM uses a block-based syntax (not YAML/JSON) for maximum readability and precision.
 
-INTENT SnakeGame {
-  SUMMARY: "A single-player snake game with top-10 scores."
+```ail
+AIM: auth.reset#intent@2.2
+
+INTENT PasswordReset {
+  SUMMARY: "Email-based password reset flow."
   REQUIREMENTS {
-    - "Movement is tick-based."
-    - "Wall and self collisions end the run."
+    - "User can request a reset link by email."
+    - "Reset link expires after one hour."
   }
 
-  SCHEMA GameSession {
-    ATTRIBUTES {
-      score: integer required min(0)
-    }
+  CONTRACT Request {
+    INPUT { email: string required }
+    ENSURES { - "Secure token generated" - "Email sent" }
   }
 }
 ```
 
+---
+
+## Technical Reference
+
+- **[specification.md](./specification.md)**: The authoritative v2.2 language spec.
+- **[PROMPT.md](./PROMPT.md)**: Role-based prompts for non-CLI assistants (Claude, Cursor, etc.).
+- **[Registry](./registry/)**: Browse reusable intent packages.
+
+---
+
 ## Repository Layout
 
-- [`specification.md`](./specification.md): canonical language specification
-- [`registry/`](./registry): component package registry
-- [`registry/index.json`](./registry/index.json): package catalog with intent entrypoints
-- [`registry/packages/`](./registry/packages): publishable component packages (intent entry + optional facets)
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md): contribution and publishing workflow
-- [`PROMPT.md`](./PROMPT.md): generic local AI synthesis prompt
+- `agents/`: Gemini CLI persona definitions.
+- `skills/`: Autonomous skills for Gemini (Intent-Code Consistency).
+- `registry/`: The component package catalog.
+- `site/`: The [intentmodel.dev](https://intentmodel.dev) website source.
 
-## Current Demo
+---
 
-This repo includes a `game.snake` demo component showing:
+Current Spec: **AIM v2.2**  
+Built by **[Juice d.o.o.](https://juice.com.hr)**
 
-- a mixed-source intent envelope
-- inline `SCHEMA`, `FLOW`, and `PERSONA`
-- linked external `CONTRACT` and `VIEW` facets
-
-It is also published as a registry package:
-
-- [`registry/packages/game.snake`](./registry/packages/game.snake)
-
-For a minimal event-focused example, use:
-
-- [`registry/packages/terminal.countdown`](./registry/packages/terminal.countdown)
-
-It keeps the shape intentionally small:
-
-- inline `SCHEMA`
-- linked external `CONTRACT`
-- linked external `EVENT`
-- terminal-first behavior with no `VIEW` or `PERSONA` layer
-
-## Local AI Fetch Flow
-
-Use this sequence:
-
-1. Fetch `specification.md`.
-2. Fetch `registry/index.json`.
-3. Select package by `name`.
-4. Fetch the package `entry` intent file and related facet files.
-5. Materialize fetched sources into local `/aim` (and `/aim/mappings` when needed).
-6. Synthesize from local `/aim` so users can edit and rebuild without refetching.
-
-## Status
-
-Current spec version: **AIM v2.2**.
