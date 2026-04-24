@@ -416,11 +416,17 @@
       <p class="hero-evolution">First prompts. Then context. Next: intent.</p>
       <h1>Intent-Driven Development</h1>
       <p class="lead">
-        Not another <code>spec.md</code>. AIM shifts AI software work from passing around context to operating on intent: structured, versioned artifacts agents can build from, verify against, and repair over time.
+        Your feature described once — as a structured <code>.intent</code> file any AI agent can read, build from, and verify against. No more re-explaining the same context in every new chat session.
       </p>
       <div class="hero-buttons" style="display: flex; gap: 12px; margin-top: 32px;">
-        <a class="btn primary" href="#contrast">See the Difference</a>
-        <a class="btn" href="#workflow">See the Workflow</a>
+        <a class="btn primary" href="#getting-started">Get Started</a>
+        <a class="btn" href="#contrast">See How It Works</a>
+      </div>
+      <div style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <a href="https://github.com/juicejs/application-intent-model" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border-light); border-radius: 999px; padding: 5px 14px; background: var(--bg-secondary); transition: border-color 0.15s, color 0.15s;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          Open Standard · GitHub
+        </a>
       </div>
     </section>
 
@@ -536,8 +542,11 @@ INTENT TeamInvites {
       </div>
 
       <div class="grid cols-2" style="max-width: 920px; margin: 0 auto; gap: 24px;">
-        <div class="card" style="border-top: 4px solid var(--google-green);">
-          <div class="example-eyebrow" style="color: var(--google-green);">Role 1</div>
+        <div class="card" style="border-top: 4px solid var(--google-green); position: relative;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <div class="example-eyebrow" style="color: var(--google-green);">Role 1</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--google-green); background: #e6f4ea; border: 1px solid #ceead6; border-radius: 999px; padding: 3px 10px; letter-spacing: 0.02em;">Start here</span>
+          </div>
           <h3 style="margin-top: 8px;">Intent Author Agent</h3>
           <p style="font-size: 0.9rem; margin-bottom: 20px;">Turns requirements into structured AIM files. Use this for new features or spec refinements.</p>
           <div style="display:none;" id="role-prompt-author">Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. I want to describe the intended behavior for [Component Name]. Help me draft the .intent envelope and necessary facets (Schema, Contract, Flow). Ask me about the core requirements first.</div>
