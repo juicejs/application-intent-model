@@ -57,6 +57,37 @@
         background: var(--bg-secondary);
         border-top: 1px solid var(--border-light);
       }
+
+      @media (max-width: 768px) {
+        .registry-table thead {
+          display: none;
+        }
+        .registry-table td {
+          display: block;
+          padding: 10px 24px;
+          border-bottom: none;
+        }
+        .registry-table td:first-child {
+          padding-top: 24px;
+          font-size: 1.2rem;
+        }
+        .registry-table td:last-child {
+          padding-bottom: 24px;
+          border-bottom: 1px solid var(--border-light);
+          text-align: left !important;
+        }
+        .registry-table td::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          margin-bottom: 4px;
+        }
+        .preview-pane {
+          padding: 24px;
+        }
+      }
     </style>
   </head>
   <body data-page="registry" data-base="../">
@@ -182,10 +213,10 @@
           const rows = data.packages.map((pkg, i) => {
             return `
               <tr onclick="window.scrollToPackageDetails('${pkg.name}', ${i})" style="cursor: pointer;">
-                <td><span class="package-name">${htmlEscape(pkg.name)}</span></td>
-                <td><span style="color: var(--text-muted); font-size: 0.9rem;">${htmlEscape(pkg.version)}</span></td>
-                <td class="summary-text" data-summary-idx="${i}">Loading...</td>
-                <td style="text-align: right; white-space: nowrap;">
+                <td data-label="Package"><span class="package-name">${htmlEscape(pkg.name)}</span></td>
+                <td data-label="Version"><span style="color: var(--text-muted); font-size: 0.9rem;">${htmlEscape(pkg.version)}</span></td>
+                <td data-label="Summary" class="summary-text" data-summary-idx="${i}">Loading...</td>
+                <td data-label="Actions" style="text-align: right; white-space: nowrap;">
                   <button class="btn" style="padding: 6px 12px; font-size: 0.8rem;" data-pkg-idx="${i}">Copy build command</button>
                 </td>
               </tr>

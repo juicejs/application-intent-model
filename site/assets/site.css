@@ -100,6 +100,15 @@ body {
   border-bottom: 1px solid var(--border-light);
 }
 
+@media (max-width: 768px) {
+  .site-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding-bottom: var(--space-md);
+  }
+}
+
 .site-brand {
   display: flex;
   align-items: center;
@@ -108,6 +117,13 @@ body {
   font-size: 1.4rem;
   text-decoration: none;
   color: var(--text-primary);
+}
+
+@media (max-width: 480px) {
+  .site-brand {
+    font-size: 1.05rem;
+    gap: var(--space-xs);
+  }
 }
 
 .site-logo {
@@ -131,6 +147,18 @@ body {
 .site-nav {
   display: flex;
   gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .site-nav {
+    gap: var(--space-md);
+    width: 100%;
+    justify-content: space-between;
+  }
+  .site-nav a {
+    font-size: 0.85rem;
+  }
 }
 
 .site-nav a {

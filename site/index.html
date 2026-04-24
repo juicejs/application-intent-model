@@ -395,12 +395,19 @@
       }
 
       @media (max-width: 768px) {
-        .demo-container { padding: 28px 20px; }
+        .demo-container { padding: 28px 20px; margin-bottom: 40px; }
         .process-step { padding: 24px; gap: 16px; }
         .wf-grid { grid-template-columns: 1fr; }
         .wf-tab { padding: 8px 12px; font-size: 0.82rem; }
         .registry-showcase,
         .registry-result-grid { grid-template-columns: 1fr; }
+        .hero { padding: 40px 0; }
+        .hero h1 { font-size: 2.2rem; }
+        .hero-buttons { flex-direction: column; width: 100%; }
+        .hero-buttons .btn { width: 100%; }
+        .scale-grid { gap: 32px !important; }
+        .sinth-section { padding: 32px !important; margin-bottom: 40px !important; flex-direction: column; align-items: flex-start !important; }
+        .section-padding { padding: 40px 0; }
       }
     </style>
   </head>
@@ -413,7 +420,7 @@
       <p class="lead">
         Not another <code>spec.md</code>. AIM shifts AI software work from passing around context to operating on intent: structured, versioned artifacts agents can build from, verify against, and repair over time.
       </p>
-      <div style="display: flex; gap: 12px; margin-top: 32px;">
+      <div class="hero-buttons" style="display: flex; gap: 12px; margin-top: 32px;">
         <a class="btn primary" href="#contrast">See the Difference</a>
         <a class="btn" href="#workflow">See the Workflow</a>
       </div>
@@ -626,7 +633,7 @@
 
     <!-- 4. CORE ARCHITECTURE -->
     <section class="section-padding" style="border-top: 1px solid var(--border-light);">
-      <div class="grid cols-2" style="gap: 60px; align-items: start;">
+      <div class="grid cols-2 scale-grid" style="gap: 60px; align-items: start;">
         <div>
           <h2 style="font-weight: 500; margin-bottom: 24px;">Built for scale.</h2>
           <ul style="list-style: none; padding: 0;">
@@ -723,7 +730,7 @@ Execute the full protocol:
     </section>
 
     <!-- 7. SINTH CLI -->
-    <section style="background: var(--bg-secondary); border-radius: 28px; padding: 48px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;">
+    <section class="sinth-section" style="background: var(--bg-secondary); border-radius: 28px; padding: 48px; margin-bottom: 80px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;">
       <div style="flex: 1; min-width: 300px;">
         <h2 style="margin-bottom: 12px; font-weight: 500;">Sinth CLI</h2>
         <p style="color: var(--text-secondary); margin-bottom: 16px;">Prefer a local CLI workflow? Sinth fetches registry packages into <code>/aim</code> and generates the synthesis prompt you hand to your coding agent.</p>
