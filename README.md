@@ -1,25 +1,6 @@
-qwh# Application Intent Model (AIM) v2.2
+# Application Intent Model (AIM) v2.2
 
 AIM is an intent-driven specification language and coordination layer for humans and AI agents. It eliminates "logic drift" and "hallucinations" by capturing product behavior in structured `.intent` files that agents can build from, verify against, and repair over time.
-
----
-
-## 🚀 Native Gemini CLI Extension
-
-AIM is now a first-class extension for [Gemini CLI](https://geminicli.com). Stop copying prompts and start using specialized terminal personas.
-
-### Installation
-```bash
-gemini extensions install application-intent-model
-```
-
-### Specialized Personas
-Invoke experts directly from your terminal:
-- **✍️ @aim-author**: "I want to build a 2FA login flow."
-- **📦 @aim-registry**: "fetch weather" (materializes into local `/aim`)
-- **🛠️ @aim-implementer**: "build weather in React"
-- **🔍 @aim-verifier**: "verify auth package" (generates a Drift Report)
-- **🩹 @aim-repairer**: "fix drift in auth"
 
 ---
 
@@ -96,6 +77,24 @@ INTENT PasswordReset {
 
 ---
 
+## 🚀 Native Gemini CLI Extension
+
+AIM is now a first-class extension for [Gemini CLI](https://geminicli.com). Stop copying prompts and start using specialized terminal personas.
+
+### Installation
+```bash
+gemini extensions install application-intent-model
+```
+
+### Specialized Personas
+Invoke experts directly from your terminal:
+- **✍️ @aim-author**: "I want to build a 2FA login flow."
+- **📦 @aim-registry**: "fetch weather" (materializes into local `/aim`)
+- **🛠️ @aim-implementer**: "build weather in React"
+- **🔍 @aim-verifier**: "verify auth package" (generates a Drift Report)
+- **🩹 @aim-repairer**: "fix drift in auth"
+
+---
+
 Current Spec: **AIM v2.2**  
 Built by **[Juice d.o.o.](https://juice.com.hr)**
-
