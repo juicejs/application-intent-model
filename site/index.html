@@ -628,46 +628,49 @@ INTENT TeamInvites {
       </div>
 
       <div class="grid cols-2" style="max-width: 920px; margin: 0 auto; gap: 24px;">
-        <div class="card" style="border-top: 4px solid var(--google-blue); position: relative;">
-          <div class="example-eyebrow" style="color: var(--google-blue);">Role 1</div>
-          <h3 style="margin-top: 8px;">Registry Agent (@aim-registry)</h3>
-          <p style="font-size: 0.9rem; margin-bottom: 20px;">Manages the discovery and local materialization of intent packages. Use this to fetch starting points.</p>
-          <div style="display:none;" id="role-prompt-registry">Initialize as an AIM v2.2 Agent in the Registry role. Command: fetch [Package Name]. Execute the protocol: 1. Resolve from registry index. 2. Fetch entry and facets. 3. Materialize to local ./aim/ in Nested Layout.</div>
-          <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-registry').innerText, this)">Copy Registry Prompt</button>
-        </div>
-
         <div class="card" style="border-top: 4px solid var(--google-green);">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <div class="example-eyebrow" style="color: var(--google-green);">Role 2</div>
+            <div class="example-eyebrow" style="color: var(--google-green);">Role 1</div>
+            <span class="badge-start">Start here</span>
           </div>
           <h3 style="margin-top: 8px;">Intent Author Agent (@aim-author)</h3>
           <p style="font-size: 0.9rem; margin-bottom: 20px;">Turns requirements into structured AIM files. Use this for new features or spec refinements.</p>
-          <div style="display:none;" id="role-prompt-author">Initialize as an AIM v2.2 Agent in the Intent Author role. I want to describe a component. Help me draft the .intent envelope and necessary facets. Ask me about the core requirements first.</div>
+          <div style="display:none;" id="role-prompt-author">Initialize as an AIM v2.2 Agent in the Intent Author role by reading your instructions at https://intentmodel.dev/brain.author.md. Read any existing .intent files for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
           <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-author').innerText, this)">Copy Author Prompt</button>
         </div>
 
         <div class="card" style="border-top: 4px solid var(--google-blue);">
-          <div class="example-eyebrow" style="color: var(--google-blue);">Role 3</div>
+          <div class="example-eyebrow" style="color: var(--google-blue);">Role 2</div>
           <h3 style="margin-top: 8px;">Implementer Agent (@aim-implementer)</h3>
           <p style="font-size: 0.9rem; margin-bottom: 20px;">Synthesizes code and tests directly from local AIM source files. Use this to build the feature.</p>
-          <div style="display:none;" id="role-prompt-implementer">Initialize as an AIM v2.2 Agent in the Implementer role. Command: build [Package Name] in [Stack]. Protocol: 1. Read local intent in ./aim/. 2. Synthesize production-ready code/tests.</div>
+          <div style="display:none;" id="role-prompt-implementer">Initialize as an AIM v2.2 Agent in the Implementer role by reading your instructions at https://intentmodel.dev/brain.implementer.md. Read the local intent in ./aim/[Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
           <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-implementer').innerText, this)">Copy Implementer Prompt</button>
         </div>
 
         <div class="card" style="border-top: 4px solid var(--google-yellow);">
-          <div class="example-eyebrow" style="color: var(--google-yellow);">Role 4</div>
+          <div class="example-eyebrow" style="color: var(--google-yellow);">Role 3</div>
           <h3 style="margin-top: 8px;">Verifier Agent (@aim-verifier)</h3>
           <p style="font-size: 0.9rem; margin-bottom: 20px;">Compares implementation against intent to detect drift. Use this to ensure quality before landing a change.</p>
-          <div style="display:none;" id="role-prompt-verifier">Initialize as an AIM v2.2 Agent in the Verifier role. Verify my local implementation against the intent files in ./aim/[Package]. Output a DRIFT REPORT.</div>
+          <div style="display:none;" id="role-prompt-verifier">Initialize as an AIM v2.2 Agent in the Verifier role by reading your instructions at https://intentmodel.dev/brain.verifier.md. Map the intent in ./aim/ to the current implementation. Once ready, confirm you have successfully parsed the v2.2 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
           <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-verifier').innerText, this)">Copy Verifier Prompt</button>
         </div>
 
         <div class="card" style="border-top: 4px solid var(--google-red);">
-          <div class="example-eyebrow" style="color: var(--google-red);">Role 5</div>
+          <div class="example-eyebrow" style="color: var(--google-red);">Role 4</div>
           <h3 style="margin-top: 8px;">Repairer Agent (@aim-repairer)</h3>
           <p style="font-size: 0.9rem; margin-bottom: 20px;">Restores alignment when code and intent diverge. Use this to fix bugs or update specs.</p>
-          <div style="display:none;" id="role-prompt-repairer">Initialize as an AIM v2.2 Agent in the Repairer role. Read the drift report for [Package] and restore alignment. Prefer fixing code unless intent is outdated.</div>
+          <div style="display:none;" id="role-prompt-repairer">Initialize as an AIM v2.2 Agent in the Repairer role by reading your instructions at https://intentmodel.dev/brain.repairer.md. Read the intent and code for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and identified the drift context you are prepared to repair. Do not apply fixes yet.</div>
           <button class="btn copy-action" onclick="copyPrompt(document.getElementById('role-prompt-repairer').innerText, this)">Copy Repair Prompt</button>
+        </div>
+
+        <div class="card" style="grid-column: span 2; border-top: 1px solid var(--border-light); background: var(--bg-tertiary); padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 32px;">
+          <div style="flex: 1;">
+            <div class="example-eyebrow" style="color: var(--text-muted); margin-bottom: 8px;">Utility Role</div>
+            <h3 style="margin: 0 0 4px; font-size: 1rem;">Registry Agent (@aim-registry)</h3>
+            <p style="font-size: 0.85rem; margin: 0; color: var(--text-secondary);">Manages discovery and local materialization of intent packages from the registry.</p>
+          </div>
+          <div style="display:none;" id="role-prompt-registry">Initialize as an AIM v2.2 Agent in the Registry role by reading your instructions at https://intentmodel.dev/brain.md. Read the local ./aim/ directory and the registry index to understand the current state. Once ready, confirm you have successfully parsed the v2.2 specification and identified the local materialization state. Do not fetch or materialize yet.</div>
+          <button class="btn copy-action" style="width: auto; white-space: nowrap;" onclick="copyPrompt(document.getElementById('role-prompt-registry').innerText, this)">Copy Registry Prompt</button>
         </div>
       </div>
 

@@ -1,71 +1,58 @@
 # AIM v2.2 Role-Based Prompt Library
 
-Use these prompts to initialize an AI agent (Claude Code, Cursor, Aider) directly into a specific AIM v2.2 Operating Role.
+Use these prompts to initialize an AI agent (Claude Code, Cursor, Aider) directly into a specific AIM v2.2 Operating Role. These prompts establish the "Brain" and read local context without performing actions yet.
 
 ---
 
-### 📦 1. Registry Agent
-*Use this to fetch and materialize packages from the registry.*
-
-```md
-Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Registry role. 
-
-Command: fetch [Package Name]
-
-Execute the protocol:
-1. Resolve the package from the registry.
-2. Fetch the entry intent and all included facets.
-3. Materialize into local ./aim/ using the V2.2 Nested Layout.
-```
-
----
-
-### ✍️ 2. Intent Author
+### ✍️ 1. Intent Author
 *Use this when you are starting a new project or refining requirements.*
 
 ```md
-Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Intent Author role. 
+Initialize as an AIM v2.2 Agent in the Intent Author role by reading your instructions at https://intentmodel.dev/brain.author.md. 
 
-I want to describe the intended behavior for [Component Name]. 
-Help me draft the .intent envelope and necessary facets (Schema, Contract, Flow). 
-Ask me about the core requirements first.
+Read any existing .intent files in ./aim/ for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the existing intent context (or noted its absence). Do not draft any new intent yet—wait for me to describe the requirements.
 ```
 
 ---
 
-### 🛠️ 3. Implementer
-*Use this to turn intent into code (The "Build" command).*
+### 🛠️ 2. Implementer
+*Use this to prepare an agent for code synthesis.*
 
 ```md
-Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Implementer role. 
+Initialize as an AIM v2.2 Agent in the Implementer role by reading your instructions at https://intentmodel.dev/brain.implementer.md. 
 
-Command: build [Package Name] in [Tech Stack].
-
-Execute the protocol:
-1. Read the local intent files in ./aim/[Package Name].
-2. Synthesize the production-ready code and tests.
+Read the local .intent files in ./aim/[Component Name] to understand the specified behavior. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the requirements you are prepared to build. Do not synthesize any code or tests yet—wait for my 'build' command.
 ```
 
 ---
 
-### 🔍 4. Verifier
-*Use this to check if your code has drifted from your intent.*
+### 🔍 3. Verifier
+*Use this to prepare for drift detection.*
 
 ```md
-Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Verifier role. 
+Initialize as an AIM v2.2 Agent in the Verifier role by reading your instructions at https://intentmodel.dev/brain.verifier.md. 
 
-I want to verify my local implementation against the intent files in ./aim/[Package Name]. 
-Compare the logic, schemas, and contracts. Output a DRIFT REPORT highlighting any mismatches.
+Read the intent files in ./aim/[Component Name] and scan the current implementation in the codebase. Once ready, confirm you have successfully parsed the v2.2 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.
 ```
 
 ---
 
-### 🩹 5. Repairer
-*Use this to fix drift between intent and code.*
+### 🩹 4. Repairer
+*Use this to prepare for restoring alignment.*
 
 ```md
-Initialize as an AIM v2.2 Agent (https://intentmodel.dev/brain.md) in the Repairer role. 
+Initialize as an AIM v2.2 Agent in the Repairer role by reading your instructions at https://intentmodel.dev/brain.repairer.md. 
 
-My intent and implementation are out of sync for [Package Name]. 
-Read the drift report and restore alignment. Prefer fixing the code unless I specify the intent is outdated.
+Read the intent and code for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and identified the drift context you are prepared to repair. Do not apply any fixes yet—wait for me to specify the repair priority.
+```
+
+---
+
+### 📦 5. Registry Agent (Utility)
+*Use this to fetch and materialize packages from the registry.*
+
+```md
+Initialize as an AIM v2.2 Agent in the Registry role by reading your instructions at https://intentmodel.dev/brain.md. 
+
+Read the local ./aim/ directory and the registry index (https://intentmodel.dev/registry-files/index.json) to understand the current project state. Once ready, confirm you have successfully parsed the v2.2 specification and identified the local materialization state. Do not fetch or materialize anything yet.
 ```
