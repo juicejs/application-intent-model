@@ -489,6 +489,120 @@ code {
   text-decoration: underline;
 }
 
+/* ═══════════════════════════════════════════════════════
+   Page Header (inner pages)
+   ═══════════════════════════════════════════════════════ */
+
+.page-header {
+  padding: 56px 0 48px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 48px;
+}
+
+.page-header h1 {
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.page-header p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.page-header a {
+  color: var(--google-blue);
+  text-decoration: none;
+}
+
+.page-header a:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Code Window Component
+   ═══════════════════════════════════════════════════════ */
+
+.code-window {
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.code-window-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #2a2d2e;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.code-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+.code-window-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #9aa0a6;
+  margin-left: 4px;
+}
+
+.code-window pre {
+  margin: 0;
+  border-radius: 0;
+  padding: 24px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  background: #202124;
+  color: #e8eaed;
+}
+
+.code-window pre .k { color: #8ab4f8; }
+.code-window pre .s { color: #81c995; }
+.code-window pre .c { color: #9aa0a6; }
+
+/* ═══════════════════════════════════════════════════════
+   Step Number Circle
+   ═══════════════════════════════════════════════════════ */
+
+.step-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e8f0fe;
+  color: var(--google-blue);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Inner page content card
+   ═══════════════════════════════════════════════════════ */
+
+.content-card {
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 48px;
+  margin-bottom: 48px;
+}
+
+@media (max-width: 768px) {
+  .content-card { padding: 24px; }
+  .page-header { padding: 40px 0 32px; margin-bottom: 32px; }
+}
+
 /* Footer */
 .footer {
   padding: var(--space-xl) 0;

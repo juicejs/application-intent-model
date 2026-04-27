@@ -365,6 +365,105 @@
         flex-wrap: wrap;
       }
 
+      /* ── Full workflow timeline ── */
+      .workflow-timeline {
+        max-width: 720px;
+        margin: 0 auto 28px;
+      }
+
+      .wt-item {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .wt-track {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .wt-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e8f0fe;
+        color: var(--google-blue);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .wt-line {
+        flex: 1;
+        width: 2px;
+        background: var(--border-light);
+        margin: 6px 0;
+        min-height: 16px;
+      }
+
+      .wt-item:last-child .wt-line { display: none; }
+
+      .wt-card {
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .wt-item:last-child .wt-card { margin-bottom: 0; }
+
+      .wt-card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .workflow-agent-tag {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--google-blue);
+        background: #e8f0fe;
+        border-radius: 6px;
+        padding: 3px 9px;
+      }
+
+      .wt-card h3 {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin: 0;
+      }
+
+      .wt-card p {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.75;
+        margin: 0;
+      }
+
+      .workflow-tip {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 16px 24px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.88rem;
+        line-height: 1.65;
+      }
+
+      .workflow-tip p { margin: 0; color: var(--text-secondary); }
+
       /* ── Gemini CLI badge + list ── */
       .gemini-badge {
         display: inline-block;
@@ -644,7 +743,79 @@
       </div>
     </section>
 
-    <!-- 4. COPY THE PROMPTS -->
+    <!-- 4. FULL WORKFLOW -->
+    <section id="getting-started" class="lp-section">
+      <div class="lp-heading">
+        <h2>Get started in 4 steps</h2>
+        <p>Each step uses one specialized agent. Paste the prompt into Claude, Cursor, Copilot, or any chat-based assistant and follow its guidance. No new tools required.</p>
+      </div>
+
+      <div class="workflow-timeline">
+        <div class="wt-item">
+          <div class="wt-track">
+            <div class="wt-circle">1</div>
+            <div class="wt-line"></div>
+          </div>
+          <div class="wt-card">
+            <div class="wt-card-top">
+              <span class="workflow-agent-tag">@aim-author</span>
+              <span class="badge-start">Start here</span>
+            </div>
+            <h3>Describe your feature, get a structured spec</h3>
+            <p>Tell the Author agent what you want to build in plain English — the actors, rules, and edge cases. It asks clarifying questions, then generates a <code>.intent</code> file and saves it to your repo. This file is the contract everything else builds from.</p>
+          </div>
+        </div>
+
+        <div class="wt-item">
+          <div class="wt-track">
+            <div class="wt-circle">2</div>
+            <div class="wt-line"></div>
+          </div>
+          <div class="wt-card">
+            <div class="wt-card-top">
+              <span class="workflow-agent-tag">@aim-implementer</span>
+            </div>
+            <h3>Point the Implementer at your intent file</h3>
+            <p>The Implementer reads the <code>.intent</code> file and synthesizes production-ready code and tests. Working from an explicit contract — not a vague prompt — it knows what to build, what the edge cases are, and what "done" looks like.</p>
+          </div>
+        </div>
+
+        <div class="wt-item">
+          <div class="wt-track">
+            <div class="wt-circle">3</div>
+            <div class="wt-line"></div>
+          </div>
+          <div class="wt-card">
+            <div class="wt-card-top">
+              <span class="workflow-agent-tag">@aim-verifier</span>
+            </div>
+            <h3>Verify alignment before you merge</h3>
+            <p>Run the Verifier to compare your implementation against the intent. It produces a drift report: which requirements are met, which CONTRACT invariants are satisfied, and which — if any — have been broken or missed.</p>
+          </div>
+        </div>
+
+        <div class="wt-item">
+          <div class="wt-track">
+            <div class="wt-circle">4</div>
+            <div class="wt-line"></div>
+          </div>
+          <div class="wt-card">
+            <div class="wt-card-top">
+              <span class="workflow-agent-tag">@aim-repairer</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">When needed</span>
+            </div>
+            <h3>Repair drift before it becomes a bug</h3>
+            <p>If the Verifier finds drift, the Repairer fixes it — updating the code to match the intent, or updating the intent to reflect a deliberate change. The branch lands clean, with code and spec in sync.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-tip">
+        <p><strong>Shortcut:</strong> Pull a ready-made package from the registry and skip straight to step 2. Great for seeing the full loop before authoring your own intent. <a href="#registry" style="color: var(--google-blue); text-decoration: none;">Try a registry package →</a></p>
+      </div>
+    </section>
+
+    <!-- 6. COPY THE PROMPTS -->
     <section id="start" class="lp-section">
       <div class="lp-heading">
         <h2>Copy a prompt to get started</h2>
@@ -703,7 +874,7 @@
       </div>
     </section>
 
-    <!-- 5. GEMINI CLI -->
+    <!-- 7. GEMINI CLI -->
     <section id="gemini-cli" class="lp-section">
       <div class="lp-heading">
         <span class="gemini-badge">Gemini CLI Extension</span>
@@ -758,7 +929,7 @@ gemini "@aim-repairer \
       </div>
     </section>
 
-    <!-- 6. REGISTRY -->
+    <!-- 8. REGISTRY -->
     <section id="registry" class="lp-section">
       <div class="lp-heading">
         <h2>Or pull a ready-made package</h2>

@@ -25,9 +25,8 @@
       .registry-container {
         background: white;
         border: 1px solid var(--border-light);
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        margin-top: 24px;
+        border-radius: 16px;
+        margin-top: 0;
         overflow: hidden;
       }
       .registry-table {
@@ -67,9 +66,25 @@
         line-height: 1.4;
       }
       .preview-pane {
-        padding: 40px;
+        padding: 28px 32px;
         background: var(--bg-secondary);
         border-top: 1px solid var(--border-light);
+      }
+
+      .preview-pane h2 {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        font-family: var(--font-mono);
+      }
+
+      .preview-pane #preview-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 20px;
       }
 
       @media (max-width: 768px) {
@@ -110,13 +125,11 @@
   </head>
   <body data-page="registry" data-base="../">
 
-    <section style="margin-top: 48px;">
-        <h1 style="font-weight: 500; margin-bottom: 8px;">Package Registry</h1>
-        <p style="color: var(--text-secondary);">
-          Discover and materialize intent-driven component packages.
-          <a id="index-link" href="../registry-files/index.json" style="color: var(--google-blue); text-decoration: none;">index.json</a>
-        </p>
-      </section>
+    <section class="page-header">
+      <p class="label">Open Registry</p>
+      <h1>Package Registry</h1>
+      <p>Discover and materialize intent-driven component packages. &bull; <a id="index-link" href="../registry-files/index.json">index.json</a></p>
+    </section>
 
       <div class="registry-container">
         <table class="registry-table" aria-label="packages">
@@ -134,13 +147,21 @@
         </table>
 
         <div class="preview-pane">
-          <h2 id="preview-title" style="font-size: 1.2rem; font-weight: 500; margin-bottom: 8px;">Package Details</h2>
-          <p id="preview-meta" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">Select a package to see full details.</p>
-          <pre id="preview" style="background: white; border: 1px solid var(--border); color: var(--text-primary); font-size: 0.85rem;">No package selected.</pre>
+          <h2 id="preview-title">Package Details</h2>
+          <p id="preview-meta">Select a package to see full details.</p>
+          <div class="code-window" style="box-shadow: none;">
+            <div class="code-window-bar">
+              <span class="code-dot"></span>
+              <span class="code-dot"></span>
+              <span class="code-dot"></span>
+              <span class="code-window-title" id="preview-filename">No package selected</span>
+            </div>
+            <pre id="preview" style="min-height: 160px;">No package selected.</pre>
+          </div>
         </div>
       </div>
 
-    <footer class="footer" style="text-align: center; margin-top: 80px;">
+    <footer class="footer" style="text-align: center; margin-top: 48px;">
       <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/">Specification</a></p>
     </footer>
 
@@ -202,9 +223,11 @@
 
       async function loadIntent(pkg, indexUrl) {
         const entryHref = toEntryHref(pkg.entry, indexUrl);
-        previewTitle.textContent = `Details: ${pkg.name}`;
-        previewMeta.innerHTML = `Version ${htmlEscape(pkg.version)} &bull; <a href="${entryHref}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Source</a>`;
-        preview.textContent = "Loading summary...";
+        previewTitle.textContent = pkg.name;
+        previewMeta.innerHTML = `v${htmlEscape(pkg.version)} &bull; <a href="${entryHref}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Source</a>`;
+        const filenameEl = document.getElementById("preview-filename");
+        if (filenameEl) filenameEl.textContent = pkg.entry.split("/").pop();
+        preview.textContent = "Loading...";
 
         try {
           const res = await fetch(entryHref);
