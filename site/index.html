@@ -128,6 +128,13 @@
         padding: 12px 28px;
       }
 
+      .hero-pills {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
       .hero-pill {
         display: inline-flex;
         align-items: center;
@@ -139,13 +146,18 @@
         border-radius: 999px;
         padding: 5px 14px;
         background: var(--bg-secondary);
-        margin-top: 20px;
-        transition: border-color 0.15s, color 0.15s;
+        transition: border-color 0.15s, color 0.15s, background 0.15s;
       }
 
       .hero-pill:hover {
         border-color: #24292f;
         color: #24292f;
+      }
+
+      .hero-pill--gemini:hover {
+        border-color: var(--google-blue);
+        color: var(--google-blue);
+        background: rgba(66, 133, 244, 0.05);
       }
 
       /* ── How it works ── */
@@ -353,13 +365,145 @@
         flex-wrap: wrap;
       }
 
+      /* ── Gemini CLI badge + list ── */
+      .gemini-badge {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--google-blue);
+        background: rgba(66, 133, 244, 0.08);
+        border: 1px solid rgba(66, 133, 244, 0.2);
+        border-radius: 999px;
+        padding: 3px 12px;
+        margin-bottom: 16px;
+      }
+
+      .gemini-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .gemini-list li {
+        display: flex;
+        gap: 10px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .gemini-check {
+        color: var(--google-green);
+        flex-shrink: 0;
+        font-weight: 600;
+      }
+
+      /* ── Evolution section ── */
+      .evolution-grid {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+      }
+
+      .evolution-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 40px;
+        font-size: 1.2rem;
+        color: var(--border);
+        margin-top: 0;
+        align-self: center;
+        padding-bottom: 60px;
+      }
+
+      .evolution-card {
+        flex: 1;
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .evolution-card--intent {
+        border-color: #d2e3fc;
+        background: #f8fbff;
+      }
+
+      .evolution-era {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+      }
+
+      .evolution-card--intent .evolution-era {
+        color: var(--google-blue);
+      }
+
+      .evolution-example {
+        flex: 1;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .evolution-plain {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        padding: 16px;
+      }
+
+      .evolution-quote {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        font-style: italic;
+        line-height: 1.7;
+      }
+
+      .evolution-code pre {
+        margin: 0;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        padding: 16px;
+        line-height: 1.65;
+      }
+
+      .evolution-outcome {
+        border-top: 1px solid var(--border-light);
+        padding-top: 14px;
+      }
+
+      .evolution-outcome strong {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+
+      .evolution-outcome span {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+      }
+
       /* ── Mobile ── */
       @media (max-width: 840px) {
         .lp-section { padding: 60px 0; }
         .lp-hero { padding: 56px 0 48px; }
         .hero-split { grid-template-columns: 1fr; gap: 40px; }
         .hero-text .lead { max-width: 100%; }
-        .steps-grid { grid-template-columns: 1fr; gap: 14px; }
+        .evolution-grid { flex-direction: column; gap: 16px; }
+        .evolution-arrow { width: auto; padding: 0; font-size: 1rem; transform: rotate(90deg); }
         .compare-grid { grid-template-columns: 1fr; }
         .roles-grid { grid-template-columns: 1fr; }
         .registry-split { grid-template-columns: 1fr; }
@@ -374,16 +518,23 @@
     <section class="hero lp-hero">
       <div class="hero-split">
         <div class="hero-text">
-          <h1>Write your feature once.<br>Your AI never forgets it.</h1>
-          <p class="lead">AIM gives your AI coding assistant a structured spec it can always read and build from — so you stop re-explaining the same feature in every new chat.</p>
+          <p class="label">Prompts. Context. Now: intent.</p>
+          <h1>Intent-Driven Development</h1>
+          <p class="lead">Each step made AI output more reliable. Intent is the next one — structured files that give agents explicit contracts to build against instead of ambiguity to guess through. Fewer hallucinations. Predictable output.</p>
           <div class="hero-ctas">
             <a class="btn primary" href="#start">Get the prompt</a>
-            <a class="btn" href="#how-it-works">How it works</a>
+            <a class="btn" href="#evolution">Why intent?</a>
           </div>
-          <a href="https://github.com/juicejs/application-intent-model" target="_blank" rel="noopener" class="hero-pill">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
-            Open Standard · GitHub
-          </a>
+          <div class="hero-pills">
+            <a href="https://github.com/juicejs/application-intent-model" target="_blank" rel="noopener" class="hero-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </a>
+            <a href="https://geminicli.com/extensions/application-intent-model" target="_blank" rel="noopener" class="hero-pill hero-pill--gemini">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              Gemini CLI
+            </a>
+          </div>
         </div>
         <div class="hero-visual">
           <div class="code-window">
@@ -413,49 +564,72 @@
       </div>
     </section>
 
-    <!-- 2. HOW IT WORKS -->
-    <section id="how-it-works" class="lp-section">
+    <!-- 2. THE EVOLUTION -->
+    <section id="evolution" class="lp-section">
       <div class="lp-heading">
-        <h2>How it works</h2>
-        <p>Works with whatever AI coding assistant you already use — Claude, Cursor, Copilot, or any chat-based agent. No new tools required.</p>
+        <h2>Why intent?</h2>
+        <p>Every generation of AI tooling reduced the gap between what you mean and what the AI builds. Intent closes it.</p>
       </div>
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-num">1</div>
-          <h3>Describe your feature</h3>
-          <p>Tell your AI what you want to build in plain English — the actors, the rules, the edge cases. No special format needed yet.</p>
+      <div class="evolution-grid">
+        <div class="evolution-card">
+          <div class="evolution-era">Era 1 — Prompt</div>
+          <div class="evolution-example evolution-plain">
+            <span class="evolution-quote">"Build me a password reset flow."</span>
+          </div>
+          <div class="evolution-outcome">
+            <strong>AI fills in the blanks.</strong>
+            <span>Behavior varies with model, phrasing, and temperature. Hallucinations creep in wherever the spec is silent.</span>
+          </div>
         </div>
-        <div class="step-card">
-          <div class="step-num">2</div>
-          <h3>AI writes the spec</h3>
-          <p>The Author agent turns your description into a structured <code>.intent</code> file and saves it to your repo — a permanent source of truth.</p>
+
+        <div class="evolution-arrow">→</div>
+
+        <div class="evolution-card">
+          <div class="evolution-era">Era 2 — Context</div>
+          <div class="evolution-example evolution-plain">
+            <span class="evolution-quote">"Here are my requirements doc, schema, and existing code. Now build the reset flow."</span>
+          </div>
+          <div class="evolution-outcome">
+            <strong>AI infers from context.</strong>
+            <span>More consistent — but it still interprets. Different runs produce different results. No way to verify alignment.</span>
+          </div>
         </div>
-        <div class="step-card">
-          <div class="step-num">3</div>
-          <h3>Any agent builds from it</h3>
-          <p>Point Claude, Cursor, or any coding assistant at the file. It reads the spec and builds — no more re-explaining the same context.</p>
+
+        <div class="evolution-arrow">→</div>
+
+        <div class="evolution-card evolution-card--intent">
+          <div class="evolution-era">Era 3 — Intent</div>
+          <div class="evolution-example evolution-code">
+            <pre><code><span class="k">CONTRACT</span> Reset {
+  <span class="k">ENSURES</span> { <span class="s">"Link is sent"</span> }
+  <span class="k">VERIFY</span>  { <span class="s">"Single-use only"</span> }
+}</code></pre>
+          </div>
+          <div class="evolution-outcome">
+            <strong>AI verifies against a contract.</strong>
+            <span>Explicit invariants leave no room to guess. Same spec → same output across agents, models, and sessions.</span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 3. THE DIFFERENCE -->
+    <!-- 3. INFERENCE VS CONTRACT -->
     <section id="example" class="lp-section">
       <div class="lp-heading">
-        <h2>The difference</h2>
-        <p>Without AIM, you paste requirements into every new chat and lose them when the session ends. With AIM, they live in your repo.</p>
+        <h2>Inference vs. contract</h2>
+        <p>When AI has no contract, it guesses what "correct" means. A <code>.intent</code> file defines it — so the agent can verify its own output.</p>
       </div>
       <div class="compare-grid">
         <div class="compare-card compare-before">
-          <div class="compare-label">Without AIM — pasted into every chat</div>
-          <div class="compare-quote">"Users reset their password by email. The link should expire after 24 hours. Tokens are single-use only. Log resets for auditing. The success page should redirect to login. Oh and admins..."</div>
-          <p class="compare-note">Repeated in every session. Lost when the chat closes. Inconsistent across agents.</p>
+          <div class="compare-label">AI infers — no contract</div>
+          <div class="compare-quote">"Users reset their password by email. The link should expire. Tokens are single-use. Log resets for auditing..."</div>
+          <p class="compare-note">AI decides what "correct" means. Every run interprets the spec differently. No way to verify alignment after the fact.</p>
         </div>
         <div class="compare-card compare-after">
-          <div class="compare-label">With AIM — stored in your repo</div>
+          <div class="compare-label">AI verifies — explicit contract</div>
           <pre><code><span class="k">INTENT</span> PasswordReset {
   <span class="k">SUMMARY:</span> <span class="s">"Email-based reset flow."</span>
   <span class="k">REQUIREMENTS</span> {
-    - <span class="s">"User can request reset."</span>
     - <span class="s">"Token expires after 24h."</span>
     - <span class="s">"Single-use only."</span>
     - <span class="s">"Log all resets."</span>
@@ -465,7 +639,7 @@
     <span class="k">VERIFY</span>  { <span class="s">"Single-use enforced"</span> }
   }
 }</code></pre>
-          <p class="compare-note">Written once. Every AI agent reads the same source of truth.</p>
+          <p class="compare-note">"Correct" is defined. AI checks its output against the contract. Same spec → same behavior across every agent and session.</p>
         </div>
       </div>
     </section>
@@ -529,7 +703,62 @@
       </div>
     </section>
 
-    <!-- 5. REGISTRY -->
+    <!-- 5. GEMINI CLI -->
+    <section id="gemini-cli" class="lp-section">
+      <div class="lp-heading">
+        <span class="gemini-badge">Gemini CLI Extension</span>
+        <h2>Skip the copy-paste entirely</h2>
+        <p>AIM is a first-class extension for <a href="https://geminicli.com" target="_blank" style="color: var(--google-blue); text-decoration: none;">Gemini CLI</a>. Instead of copying prompts into a chat window, invoke specialized personas directly from your terminal.</p>
+      </div>
+
+      <div class="registry-split">
+        <div class="registry-left">
+          <h3>Zero-prompt integration</h3>
+          <p>The extension bundles the Intent-Code Consistency skill, letting Gemini automatically suggest AIM when it detects hallucinations or logic drift in your project.</p>
+          <ul class="gemini-list">
+            <li>
+              <span class="gemini-check">✓</span>
+              <span><strong>Native personas</strong> — <code>@aim-author</code>, <code>@aim-implementer</code>, <code>@aim-verifier</code>, <code>@aim-repairer</code></span>
+            </li>
+            <li>
+              <span class="gemini-check">✓</span>
+              <span><strong>Auto-discovery</strong> — Gemini suggests AIM when it detects drift or hallucinations</span>
+            </li>
+            <li>
+              <span class="gemini-check">✓</span>
+              <span><strong>Local linking</strong> — <code>gemini extensions link .</code> for project-scoped use</span>
+            </li>
+          </ul>
+          <a class="btn" href="https://geminicli.com/extensions/application-intent-model" target="_blank" rel="noopener">View on Gemini CLI →</a>
+        </div>
+
+        <div class="registry-right">
+          <div class="code-window">
+            <div class="code-window-bar">
+              <span class="code-dot"></span>
+              <span class="code-dot"></span>
+              <span class="code-dot"></span>
+              <span class="code-window-title">Terminal</span>
+            </div>
+            <pre><code><span class="c"># Install the AIM extension</span>
+gemini extensions install \
+  application-intent-model
+
+<span class="c"># Invoke personas directly</span>
+gemini "@aim-author I want to \
+  build a 2FA flow"
+
+gemini "@aim-verifier \
+  verify weather package"
+
+gemini "@aim-repairer \
+  fix logic drift in auth"</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. REGISTRY -->
     <section id="registry" class="lp-section">
       <div class="lp-heading">
         <h2>Or pull a ready-made package</h2>

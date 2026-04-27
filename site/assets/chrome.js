@@ -9,9 +9,9 @@
     <header class="site-header">
       <a class="site-brand" href="${base}">
         <svg class="site-logo" width="30" height="30" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 28 L16 4 L27 28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="10" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="16" cy="4" r="3" fill="currentColor"/>
+          <rect x="1.5" y="1.5" width="29" height="29" rx="7" stroke="currentColor" stroke-width="2"/>
+          <line x1="8" y1="8.5" x2="8" y2="23.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M13 23.5 L13 8.5 L19 16 L25 8.5 L25 23.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
         <span>Application Intent Model</span>
         <span class="site-version">v2.2</span>
