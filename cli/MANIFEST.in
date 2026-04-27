@@ -1,4 +1,0 @@
-include README.md
-include CLI.md
-include LICENSE
-include pyproject.toml
