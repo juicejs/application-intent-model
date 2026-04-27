@@ -1,0 +1,53 @@
+AIM: recipe.book#intent@1.5
+
+INTENT RecipeBook {
+  SUMMARY: "A personal recipe collection app for organizing, browsing, and managing favorite recipes."
+
+  REQUIREMENTS {
+    - "Users can create new recipes with ingredients, steps, and metadata."
+    - "Users can view a recipe with its full ingredient list and step-by-step instructions."
+    - "Users can edit existing recipes to update any field."
+    - "Users can delete recipes, which removes all associated ingredients and steps."
+    - "Users can search recipes by name or filter by tag."
+    - "Users can mark recipes as favorites for quick access."
+    - "Users can import a recipe by pasting a URL from an external recipe site."
+    - "Users can view a list of their favorite recipes."
+    - "Users can filter recipes by category (e.g. lunch, dessert, pasta)."
+    - "Recipe data is persisted to a local file on disk (no external database)."
+  }
+
+  TESTS {
+    - "Creating a recipe with an empty title is rejected."
+    - "Creating a recipe with zero ingredients is rejected."
+    - "Creating a recipe with zero steps is rejected."
+    - "Deleting a recipe also removes its associated ingredients and steps."
+    - "Toggling favorite on a non-existent recipe returns an error."
+    - "Duplicate recipe titles within the same collection are allowed."
+    - "Importing from an invalid or unreachable URL returns a user-friendly error."
+    - "Importing from a page with no recognizable recipe data returns an extraction failure message."
+  }
+
+  FLOW ExtractRecipeFromUrl {
+    SUMMARY: "Fetches a web page and extracts structured recipe data for import."
+    TRIGGER {
+      - "Invoked by ImportRecipe contract"
+    }
+    STEPS {
+      - "FETCH HTML content from the provided URL"
+      - "SEARCH for structured recipe data via JSON-LD or Microdata markup"
+      - "BRANCH to raw HTML parsing when no structured data is found"
+      - "MAP extracted fields to Recipe, Ingredient, and Step schemas"
+      - "CALL CreateRecipe with the mapped data and sourceUrl"
+    }
+    ON_ERROR {
+      - "RETURN user-friendly extraction failure message when recipe data cannot be identified"
+      - "RETURN connection error message when the URL is unreachable"
+    }
+  }
+}
+
+INCLUDES {
+  schema: "recipe.book.schema.intent"
+  contract: "recipe.book.contract.intent"
+  view: "recipe.book.view.intent"
+}
