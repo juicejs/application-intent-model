@@ -47,7 +47,7 @@
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 48px;
-  --space-2xl: 80px;
+  --space-2xl: 96px;
 
   /* Animation */
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -65,7 +65,7 @@
 
 body {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.5;
   color: var(--text-primary);
   background: var(--bg-primary);
@@ -188,8 +188,8 @@ h1, h2, h3 {
 }
 
 h1 {
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
-  line-height: 1.2;
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  line-height: 1.15;
 }
 
 h2 {
