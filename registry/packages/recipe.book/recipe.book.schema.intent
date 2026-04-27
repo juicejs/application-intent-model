@@ -1,0 +1,41 @@
+AIM: recipe.book#schema@1.5
+
+SCHEMA Recipe {
+  SUMMARY: "The core entity representing a single recipe in the collection."
+  ATTRIBUTES {
+    id: uuid required generated immutable
+    title: string required max(150)
+    description: string optional max(500)
+    servings: integer required min(1) default(1)
+    prepTime: integer required min(0)
+    cookTime: integer required min(0)
+    difficulty: string required enum('EASY', 'MEDIUM', 'HARD') default('MEDIUM')
+    category: string optional max(50)
+    tags: json optional
+    imageUrl: string optional
+    sourceUrl: string optional
+    isFavorite: boolean required default(false)
+    createdAt: timestamp generated immutable
+  }
+}
+
+SCHEMA Ingredient {
+  SUMMARY: "A single ingredient entry belonging to a recipe."
+  ATTRIBUTES {
+    id: uuid required generated immutable
+    name: string required max(100)
+    quantity: string required
+    unit: string optional max(30)
+    recipeId: uuid required ref(Recipe.id)
+  }
+}
+
+SCHEMA Step {
+  SUMMARY: "A single instruction step belonging to a recipe, ordered by index."
+  ATTRIBUTES {
+    id: uuid required generated immutable
+    orderIndex: integer required min(0)
+    instruction: string required max(1000)
+    recipeId: uuid required ref(Recipe.id)
+  }
+}

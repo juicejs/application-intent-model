@@ -1,0 +1,149 @@
+AIM: recipe.book#contract@1.5
+
+CONTRACT CreateRecipe {
+  SUMMARY: "Creates a new recipe with its ingredients and steps."
+  INPUT {
+    title: string required
+    description: string optional
+    servings: integer optional
+    prepTime: integer required
+    cookTime: integer required
+    difficulty: string optional
+    category: string optional
+    tags: json optional
+    imageUrl: string optional
+    ingredients: json required
+    steps: json required
+  }
+  EXPECTS {
+    - "Title must not be empty or purely whitespace"
+    - "At least one ingredient must be provided"
+    - "At least one step must be provided"
+    - "prepTime and cookTime must be non-negative integers"
+  }
+  ENSURES {
+    - PERSISTS "New Recipe with provided metadata"
+    - PERSISTS "Ingredient records linked to the new Recipe"
+    - PERSISTS "Step records linked to the new Recipe with sequential orderIndex"
+  }
+  RETURNS {
+    - "The created Recipe with its ingredients and steps"
+  }
+}
+
+CONTRACT GetRecipe {
+  SUMMARY: "Retrieves a single recipe with all its ingredients and steps."
+  INPUT {
+    recipeId: uuid required
+  }
+  EXPECTS {
+    - "Recipe record must exist"
+  }
+  ENSURES {
+    - CALLS "Recipe read model with joined ingredients and steps"
+  }
+  RETURNS {
+    - "The full Recipe including ordered ingredients and steps"
+  }
+}
+
+CONTRACT UpdateRecipe {
+  SUMMARY: "Updates an existing recipe and optionally replaces its ingredients or steps."
+  INPUT {
+    recipeId: uuid required
+    title: string optional
+    description: string optional
+    servings: integer optional
+    prepTime: integer optional
+    cookTime: integer optional
+    difficulty: string optional
+    category: string optional
+    tags: json optional
+    imageUrl: string optional
+    ingredients: json optional
+    steps: json optional
+  }
+  EXPECTS {
+    - "Recipe record must exist"
+    - "If title is provided, it must not be empty or purely whitespace"
+    - "If ingredients are provided, at least one must be included"
+    - "If steps are provided, at least one must be included"
+  }
+  ENSURES {
+    - UPDATES "Recipe fields that are provided in the input"
+    - UPDATES "Ingredient records when ingredients are provided (full replacement)"
+    - UPDATES "Step records when steps are provided (full replacement)"
+  }
+  RETURNS {
+    - "The updated Recipe with its ingredients and steps"
+  }
+}
+
+CONTRACT DeleteRecipe {
+  SUMMARY: "Permanently removes a recipe and all its associated data."
+  INPUT {
+    recipeId: uuid required
+  }
+  EXPECTS {
+    - "Recipe record must exist"
+  }
+  ENSURES {
+    - DELETES "All Ingredient records linked to the Recipe"
+    - DELETES "All Step records linked to the Recipe"
+    - DELETES "The Recipe record"
+  }
+  RETURNS {
+    - "Confirmation of deletion"
+  }
+}
+
+CONTRACT ToggleFavorite {
+  SUMMARY: "Toggles the favorite status of a recipe."
+  INPUT {
+    recipeId: uuid required
+  }
+  EXPECTS {
+    - "Recipe record must exist"
+  }
+  ENSURES {
+    - UPDATES "Recipe.isFavorite to the opposite of its current value"
+  }
+  RETURNS {
+    - "The updated Recipe"
+  }
+}
+
+CONTRACT ImportRecipe {
+  SUMMARY: "Imports a recipe from an external URL by extracting structured data from the page."
+  INPUT {
+    url: string required
+  }
+  EXPECTS {
+    - "URL must be valid and reachable"
+  }
+  ENSURES {
+    - CALLS "ExtractRecipeFromUrl flow to parse recipe data from the page"
+    - PERSISTS "New Recipe with extracted metadata and sourceUrl set to the input URL"
+    - PERSISTS "Ingredient records linked to the new Recipe"
+    - PERSISTS "Step records linked to the new Recipe with sequential orderIndex"
+  }
+  RETURNS {
+    - "The created Recipe with its ingredients and steps"
+  }
+}
+
+CONTRACT ListRecipes {
+  SUMMARY: "Returns a filtered and optionally sorted list of recipes."
+  INPUT {
+    searchTerm: string optional
+    tag: string optional
+    category: string optional
+    favoritesOnly: boolean optional
+  }
+  ENSURES {
+    - CALLS "Recipe read model with applied filters"
+  }
+  RETURNS {
+    - "List of Recipe summaries matching the filters"
+  }
+}
