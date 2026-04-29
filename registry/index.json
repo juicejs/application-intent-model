@@ -4,37 +4,74 @@
     {
       "name": "game.snake",
       "version": "2.2",
-      "entry": "registry/packages/game.snake/game.snake.intent"
-    },
-    {
-      "name": "weather",
-      "version": "2.2",
-      "entry": "registry/packages/weather/weather.intent"
-    },
-    {
-      "name": "nemicko.demo.todo",
-      "version": "2.2",
-      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
-    },
-    {
-      "name": "terminal.countdown",
-      "version": "2.2",
-      "entry": "registry/packages/terminal.countdown/terminal.countdown.intent"
+      "entry": "registry/packages/game.snake/game.snake.intent",
+      "files": [
+        "registry/packages/game.snake/game.snake.contract.intent",
+        "registry/packages/game.snake/game.snake.intent",
+        "registry/packages/game.snake/game.snake.view.intent"
+      ],
+      "image": null
     },
     {
       "name": "game.tango",
       "version": "2.2",
-      "entry": "registry/packages/game.tango/game.tango.intent"
+      "entry": "registry/packages/game.tango/game.tango.intent",
+      "files": [
+        "registry/packages/game.tango/game.tango.intent"
+      ],
+      "image": null
     },
     {
-      "name": "tool.pixelart",
+      "name": "nemicko.demo.todo",
       "version": "2.2",
-      "entry": "registry/packages/tool.pixelart/tool.pixelart.intent"
+      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent",
+      "files": [
+        "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
+      ],
+      "image": null
     },
     {
       "name": "recipe.book",
       "version": "2.2",
-      "entry": "registry/packages/recipe.book/recipe.book.intent"
+      "entry": "registry/packages/recipe.book/recipe.book.intent",
+      "files": [
+        "registry/packages/recipe.book/recipe.book.contract.intent",
+        "registry/packages/recipe.book/recipe.book.intent",
+        "registry/packages/recipe.book/recipe.book.schema.intent",
+        "registry/packages/recipe.book/recipe.book.view.intent"
+      ],
+      "image": "registry/packages/recipe.book/cover.png"
+    },
+    {
+      "name": "terminal.countdown",
+      "version": "2.2",
+      "entry": "registry/packages/terminal.countdown/terminal.countdown.intent",
+      "files": [
+        "registry/packages/terminal.countdown/terminal.countdown.contract.intent",
+        "registry/packages/terminal.countdown/terminal.countdown.event.intent",
+        "registry/packages/terminal.countdown/terminal.countdown.intent"
+      ],
+      "image": null
+    },
+    {
+      "name": "tool.pixelart",
+      "version": "2.2",
+      "entry": "registry/packages/tool.pixelart/tool.pixelart.intent",
+      "files": [
+        "registry/packages/tool.pixelart/tool.pixelart.contract.intent",
+        "registry/packages/tool.pixelart/tool.pixelart.intent",
+        "registry/packages/tool.pixelart/tool.pixelart.view.intent"
+      ],
+      "image": null
+    },
+    {
+      "name": "weather",
+      "version": "2.2",
+      "entry": "registry/packages/weather/weather.intent",
+      "files": [
+        "registry/packages/weather/weather.intent"
+      ],
+      "image": null
     }
   ]
 }

@@ -67,12 +67,20 @@
         line-height: 1.4;
       }
       .preview-pane {
-        padding: 28px 32px;
-        background: var(--bg-secondary);
+        padding: 0;
+        background: white;
         border-top: 1px solid var(--border-light);
+        display: flex;
+        flex-direction: column;
       }
 
-      .preview-pane h2 {
+      .preview-header {
+        padding: 24px 32px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .preview-header h2 {
         font-size: 0.78rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -82,10 +90,118 @@
         font-family: var(--font-mono);
       }
 
-      .preview-pane #preview-meta {
+      .preview-header #preview-meta {
         font-size: 0.85rem;
         color: var(--text-muted);
-        margin-bottom: 20px;
+        margin-bottom: 0;
+      }
+
+      .preview-body {
+        display: flex;
+        min-height: 500px;
+      }
+
+      .file-browser {
+        width: 280px;
+        border-right: 1px solid var(--border-light);
+        background: var(--bg-secondary);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .package-image-container {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-light);
+        text-align: center;
+        background: white;
+      }
+
+      .package-image {
+        max-width: 100%;
+        max-height: 180px;
+        border-radius: 8px;
+        box-shadow: var(--shadow-sm);
+        display: none;
+      }
+
+      .file-list {
+        list-style: none;
+        padding: 12px 0;
+        margin: 0;
+        overflow-y: auto;
+      }
+
+      .file-item {
+        padding: 8px 24px;
+        font-size: 0.85rem;
+        font-family: var(--font-mono);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-item:hover {
+        background: var(--bg-tertiary);
+        color: var(--primary);
+      }
+
+      .file-item.active {
+        background: white;
+        color: var(--primary);
+        font-weight: 500;
+        border-left: 3px solid var(--primary);
+        padding-left: 21px;
+      }
+
+      .code-viewer {
+        flex: 1;
+        background: #202124;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .code-viewer .code-window {
+        height: 100%;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .code-viewer pre {
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+        overflow: auto;
+      }
+
+      @media (max-width: 992px) {
+        .preview-body {
+          flex-direction: column;
+        }
+        .file-browser {
+          width: 100%;
+          border-right: none;
+          border-bottom: 1px solid var(--border-light);
+        }
+        .file-list {
+          display: flex;
+          padding: 8px;
+          gap: 8px;
+        }
+        .file-item {
+          padding: 6px 12px;
+          border-radius: 4px;
+          border: 1px solid var(--border);
+        }
+        .file-item.active {
+          border-left: 1px solid var(--primary);
+          padding-left: 12px;
+          background: var(--primary);
+          color: white;
+        }
       }
 
       @media (max-width: 768px) {
@@ -118,7 +234,7 @@
           color: var(--text-muted);
           margin-bottom: 4px;
         }
-        .preview-pane {
+        .preview-header {
           padding: 24px;
         }
       }
@@ -148,16 +264,30 @@
         </table>
 
         <div class="preview-pane">
-          <h2 id="preview-title">Package Details</h2>
-          <p id="preview-meta">Select a package to see full details.</p>
-          <div class="code-window" style="box-shadow: none;">
-            <div class="code-window-bar">
-              <span class="code-dot"></span>
-              <span class="code-dot"></span>
-              <span class="code-dot"></span>
-              <span class="code-window-title" id="preview-filename">No package selected</span>
+          <div class="preview-header">
+            <h2 id="preview-title">Package Details</h2>
+            <p id="preview-meta">Select a package to see full details.</p>
+          </div>
+          <div class="preview-body">
+            <div class="file-browser">
+              <div class="package-image-container">
+                <img id="pkg-img" src="" alt="Package Cover" class="package-image">
+              </div>
+              <ul class="file-list" id="file-list">
+                <!-- Files populated by JS -->
+              </ul>
             </div>
-            <pre id="preview" style="min-height: 160px;">No package selected.</pre>
+            <div class="code-viewer">
+              <div class="code-window">
+                <div class="code-window-bar">
+                  <span class="code-dot"></span>
+                  <span class="code-dot"></span>
+                  <span class="code-dot"></span>
+                  <span class="code-window-title" id="preview-filename">No package selected</span>
+                </div>
+                <pre id="preview">No package selected.</pre>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -178,6 +308,9 @@
       const previewTitle = document.getElementById("preview-title");
       const previewMeta = document.getElementById("preview-meta");
       const indexLink = document.getElementById("index-link");
+      const fileList = document.getElementById("file-list");
+      const pkgImg = document.getElementById("pkg-img");
+      const previewFilename = document.getElementById("preview-filename");
 
       async function fetchFirst(urls) {
         for (const url of urls) {
@@ -191,16 +324,16 @@
         throw new Error("No candidate path resolved.");
       }
 
-      function toEntryHref(entry, indexUrl) {
+      function resolvePath(rel, indexUrl) {
         if (indexUrl.includes("registry-files/index.json")) {
           const base = indexUrl.replace(/index\.json$/, "");
-          return base + String(entry).replace(/^registry\//, "");
+          return base + String(rel).replace(/^registry\//, "");
         }
         if (indexUrl.includes("registry/index.json")) {
           const base = indexUrl.replace(/registry\/index\.json$/, "");
-          return base + String(entry);
+          return base + String(rel);
         }
-        return String(entry);
+        return String(rel);
       }
 
       function htmlEscape(str) {
@@ -222,22 +355,56 @@
         return null;
       }
 
-      async function loadIntent(pkg, indexUrl) {
-        const entryHref = toEntryHref(pkg.entry, indexUrl);
-        previewTitle.textContent = pkg.name;
-        previewMeta.innerHTML = `v${htmlEscape(pkg.version)} &bull; <a href="${entryHref}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Source</a>`;
-        const filenameEl = document.getElementById("preview-filename");
-        if (filenameEl) filenameEl.textContent = pkg.entry.split("/").pop();
+      async function loadFileContent(filePath, indexUrl) {
+        const fullUrl = resolvePath(filePath, indexUrl);
+        previewFilename.textContent = filePath.split("/").pop();
         preview.textContent = "Loading...";
 
         try {
-          const res = await fetch(entryHref);
+          const res = await fetch(fullUrl);
           if (!res.ok) throw new Error();
           const text = await res.text();
           preview.textContent = text;
         } catch (_) {
           preview.textContent = "Failed to load source.";
         }
+      }
+
+      async function selectPackage(pkg, indexUrl) {
+        previewTitle.textContent = pkg.name;
+        previewMeta.innerHTML = `v${htmlEscape(pkg.version)} &bull; <a href="${resolvePath(pkg.entry, indexUrl)}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Entry Source</a>`;
+        
+        // Handle image
+        if (pkg.image) {
+          pkgImg.src = resolvePath(pkg.image, indexUrl);
+          pkgImg.style.display = "inline-block";
+        } else {
+          pkgImg.style.display = "none";
+        }
+
+        // Handle file browser
+        fileList.innerHTML = "";
+        if (pkg.files && pkg.files.length > 0) {
+          pkg.files.forEach(file => {
+            const li = document.createElement("li");
+            li.className = "file-item";
+            if (file === pkg.entry) li.classList.add("active");
+            
+            // Display only the filename or relative path within package
+            const displayPath = file.split(pkg.name + "/").pop();
+            li.textContent = displayPath;
+            
+            li.onclick = () => {
+              fileList.querySelectorAll(".file-item").forEach(el => el.classList.remove("active"));
+              li.classList.add("active");
+              loadFileContent(file, indexUrl);
+            };
+            fileList.appendChild(li);
+          });
+        }
+
+        // Load entry file by default
+        loadFileContent(pkg.entry, indexUrl);
       }
 
       async function loadRegistry() {
@@ -267,12 +434,12 @@
 
           // Global function for detail loading
           window.scrollToPackageDetails = (name, i) => {
-            loadIntent(data.packages[i], url);
+            selectPackage(data.packages[i], url);
           };
 
           // Fetch summaries
           data.packages.forEach(async (pkg, i) => {
-            const entryHref = toEntryHref(pkg.entry, url);
+            const entryHref = resolvePath(pkg.entry, url);
             const summaryCell = pkgBody.querySelector(`[data-summary-idx="${i}"]`);
             try {
               const res = await fetch(entryHref);
@@ -292,7 +459,7 @@
             });
           });
 
-          loadIntent(data.packages[0], url);
+          selectPackage(data.packages[0], url);
         } catch (_) {
           pkgBody.innerHTML = `<tr><td colspan="4" style="color: var(--google-red); text-align: center; padding: 40px;">Failed to load registry index.</td></tr>`;
         }
@@ -313,5 +480,6 @@
 
       loadRegistry();
     </script>
+
   </body>
 </html>
