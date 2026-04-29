@@ -1,0 +1,44 @@
+AIM: funny.chess#schema@2.2
+
+SCHEMA GameState {
+  SUMMARY: "The core state of the funny chess game."
+  ATTRIBUTES {
+    board: "Array<Square> required"
+    turn: "string required ('white' | 'black')"
+    moveHistory: "Array<FunnyMove> required"
+    isGameOver: "boolean required"
+    winner: "string optional"
+    wackyEventActive: "boolean required"
+  }
+}
+
+SCHEMA Piece {
+  SUMMARY: "A chess piece with personality attributes."
+  ATTRIBUTES {
+    type: "string required ('king' | 'queen' | 'rook' | 'bishop' | 'knight' | 'pawn')"
+    color: "string required ('white' | 'black')"
+    personality: "string required"
+    mood: "string required ('grumpy' | 'excited' | 'lazy' | 'dramatic')"
+    id: "string required"
+  }
+}
+
+SCHEMA Square {
+  SUMMARY: "A single square on the board."
+  ATTRIBUTES {
+    position: "string required (e.g., 'a1')"
+    piece: "Piece optional"
+  }
+}
+
+SCHEMA FunnyMove {
+  SUMMARY: "A recorded move with humorous metadata."
+  ATTRIBUTES {
+    from: "string required"
+    to: "string required"
+    pieceType: "string required"
+    commentary: "string required"
+    wasCapture: "boolean required"
+    effectType: "string optional"
+  }
+}

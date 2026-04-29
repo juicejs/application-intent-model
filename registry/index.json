@@ -72,6 +72,16 @@
         "registry/packages/weather/weather.intent"
       ],
       "image": null
+    },
+    {
+      "name": "recipe.book",
+      "version": "2.2",
+      "entry": "registry/packages/recipe.book/recipe.book.intent"
+    },
+    {
+      "name": "funny.chess",
+      "version": "2.2",
+      "entry": "registry/packages/chess/funny.chess.intent"
     }
   ]
 }
