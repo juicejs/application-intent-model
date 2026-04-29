@@ -10,8 +10,8 @@ Each package lives in:
 
 Each package must contain:
 
-1. Exactly one intent entry file: `<component>.intent`
-2. Optional additional facet files referenced by the intent file
+1. Exactly one `#intent` facet file: `<component>.intent`
+2. Optional additional facet files (e.g., `.schema.intent`, `.contract.intent`) referenced by the entry file
 
 ## `registry/index.json` Schema
 
@@ -24,13 +24,13 @@ Each package object requires:
 
 - `name`: component namespace (lowercase, dot-separated segments; single-segment allowed)
 - `version`: `x.y` matching entry file header
-- `entry`: relative path to canonical intent file
+- `entry`: path to canonical intent file relative to project root (e.g., `registry/packages/name/name.intent`)
 
 ## Pull Request Publishing Flow
 
 1. Fork and create a branch.
 2. Add or update package files in `registry/packages/<component>/`.
-3. Update `registry/index.json` with package `name`, `version`, and `entry`.
+3. Update `registry/index.json` by adding your package to the `packages` array.
 4. Open a PR.
 5. CI runs `scripts/validate_registry.py`.
 6. Maintainers review and merge.
@@ -49,7 +49,7 @@ CI enforces:
 - package/index consistency (one index record per package directory)
 - `entry` exists and points to `.intent`
 - entry header matches `name`, `intent` facet, and `version`
-- exactly one `*.intent` file per package directory
+- exactly one `#intent` facet file per package directory
 - optional `INCLUDES` targets exist and match component/facet/version
 - stale manifest files (`package.json`, `manifest.intent`) are rejected
 - legacy metadata tokens are rejected

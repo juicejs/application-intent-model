@@ -1,4 +1,4 @@
-AIM: recipe.book#contract@1.5
+AIM: recipe.book#contract@2.2
 
 CONTRACT CreateRecipe {
   SUMMARY: "Creates a new recipe with its ingredients and steps."

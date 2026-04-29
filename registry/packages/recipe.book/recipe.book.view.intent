@@ -1,4 +1,4 @@
-AIM: recipe.book#view@1.5
+AIM: recipe.book#view@2.2
 
 VIEW RecipeList {
   SUMMARY: "The main browsing interface displaying all recipes with search and filter options."

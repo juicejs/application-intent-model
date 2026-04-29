@@ -55,7 +55,7 @@
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">2</div>
-              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Add exactly one entry intent file: <code>&lt;component&gt;.intent</code>.</p>
+              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Add exactly one <code>#intent</code> facet file: <code>&lt;component&gt;.intent</code>.</p>
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">3</div>
@@ -63,7 +63,7 @@
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">4</div>
-              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Update <code>registry/index.json</code> with name, version, and entry path.</p>
+              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Add your package to the <code>packages</code> array in <code>registry/index.json</code>.</p>
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">5</div>
@@ -86,9 +86,14 @@
               <span class="code-window-title">registry/index.json</span>
             </div>
             <pre><code>{
-  "name": "weather",
-  "version": "2.2",
-  "entry": "registry/packages/weather/weather.intent"
+  "version": "1",
+  "packages": [
+    {
+      "name": "weather",
+      "version": "2.2",
+      "entry": "registry/packages/weather/weather.intent"
+    }
+  ]
 }</code></pre>
           </div>
 

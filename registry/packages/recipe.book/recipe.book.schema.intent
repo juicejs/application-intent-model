@@ -1,4 +1,4 @@
-AIM: recipe.book#schema@1.5
+AIM: recipe.book#schema@2.2
 
 SCHEMA Recipe {
   SUMMARY: "The core entity representing a single recipe in the collection."

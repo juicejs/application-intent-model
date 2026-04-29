@@ -1,4 +1,4 @@
-AIM: recipe.book#intent@1.5
+AIM: recipe.book#intent@2.2
 
 INTENT RecipeBook {
   SUMMARY: "A personal recipe collection app for organizing, browsing, and managing favorite recipes."
