@@ -96,7 +96,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-md) 0;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-sm);
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -494,9 +494,9 @@ code {
    ═══════════════════════════════════════════════════════ */
 
 .page-header {
-  padding: 56px 0 48px;
+  padding: 56px 0 8px;
   border-bottom: 1px solid var(--border-light);
-  margin-bottom: 48px;
+  margin-bottom: 8px;
 }
 
 .page-header h1 {

@@ -130,8 +130,11 @@
       }
 
       function resolvePath(rel, indexUrl) {
-        const base = indexUrl.replace(/(registry|registry-files)\/index\.json$/, "");
-        return base + (rel.startsWith("registry/") ? rel : "registry/" + rel);
+        const base = indexUrl.replace(/index\.json$/, "");
+        if (indexUrl.includes("registry-files/")) {
+          return base + String(rel).replace(/^registry\//, "");
+        }
+        return base + String(rel);
       }
 
       function htmlEscape(str) {

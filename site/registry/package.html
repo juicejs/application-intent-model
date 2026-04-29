@@ -14,31 +14,43 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        height: 85vh;
+        height: 80vh;
         max-height: 1000px;
         min-height: 600px;
-        margin-top: 24px;
+        margin-top: 12px;
       }
 
       .preview-header {
-        padding: 24px 32px;
+        padding: 32px;
         background: var(--bg-secondary);
         border-bottom: 1px solid var(--border-light);
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
       }
 
-      .preview-header h2 {
-        font-size: 1.2rem;
+      .preview-header h1 {
+        font-size: 2.2rem;
         font-weight: 500;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
         color: var(--text-primary);
+        line-height: 1.1;
       }
 
-      .preview-header #preview-meta {
-        font-size: 0.9rem;
+      .preview-header #pkg-display-summary {
+        font-size: 1.05rem;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        max-width: 800px;
+        line-height: 1.5;
+      }
+
+      .pkg-meta-row {
+        font-size: 0.88rem;
         color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
 
       .preview-body {
@@ -169,15 +181,17 @@
       .back-link {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        color: var(--google-blue);
+        gap: 6px;
+        color: var(--text-secondary);
         text-decoration: none;
+        font-size: 0.9rem;
         font-weight: 500;
-        margin-bottom: 12px;
+        margin: 24px 0 12px 0;
+        transition: color var(--transition);
       }
 
       .back-link:hover {
-        text-decoration: underline;
+        color: var(--google-blue);
       }
 
       @media (max-width: 992px) {
@@ -192,25 +206,26 @@
   </head>
   <body data-page="registry" data-base="../">
 
-    <section class="page-header">
-      <a href="./" class="back-link">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-        Back to Registry
-      </a>
-      <h1 id="pkg-display-name">Package Details</h1>
-      <p id="pkg-display-summary">Loading package information...</p>
-    </section>
+    <a href="./" class="back-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back to Registry
+    </a>
 
     <div class="detail-container">
       <div class="preview-header">
-        <div>
-          <h2 id="preview-title">Loading...</h2>
-          <p id="preview-meta"></p>
+        <div style="flex: 1;">
+          <h1 id="pkg-display-name">Loading...</h1>
+          <p id="pkg-display-summary">Loading package information...</p>
+          <div class="pkg-meta-row">
+            <span id="preview-version">...</span>
+            <span>&bull;</span>
+            <span id="preview-source-link">...</span>
+          </div>
         </div>
-        <div id="actions-container">
+        <div id="actions-container" style="padding-top: 10px;">
           <!-- Actions populated by JS -->
         </div>
       </div>
@@ -248,13 +263,9 @@
         "../../registry-files/index.json"
       ];
       const preview = document.getElementById("preview");
-      const previewTitle = document.getElementById("preview-title");
-      const previewMeta = document.getElementById("preview-meta");
       const fileList = document.getElementById("file-list");
       const pkgImg = document.getElementById("pkg-img");
       const previewFilename = document.getElementById("preview-filename");
-      const pkgDisplayName = document.getElementById("pkg-display-name");
-      const pkgDisplaySummary = document.getElementById("pkg-display-summary");
       const actionsContainer = document.getElementById("actions-container");
 
       const params = new URLSearchParams(window.location.search);
@@ -271,8 +282,11 @@
       }
 
       function resolvePath(rel, indexUrl) {
-        const base = indexUrl.replace(/(registry|registry-files)\/index\.json$/, "");
-        return base + (rel.startsWith("registry/") ? rel : "registry/" + rel);
+        const base = indexUrl.replace(/index\.json$/, "");
+        if (indexUrl.includes("registry-files/")) {
+          return base + String(rel).replace(/^registry\//, "");
+        }
+        return base + String(rel);
       }
 
       function htmlEscape(str) {
@@ -300,8 +314,8 @@
 
       async function init() {
         if (!targetPkgName) {
-          pkgDisplayName.textContent = "Package Not Found";
-          pkgDisplaySummary.textContent = "No package name provided in URL.";
+          document.getElementById("pkg-display-name").textContent = "Package Not Found";
+          document.getElementById("pkg-display-summary").textContent = "No package name provided in URL.";
           return;
         }
 
@@ -311,15 +325,15 @@
           const pkg = data.packages.find(p => p.name === targetPkgName);
 
           if (!pkg) {
-            pkgDisplayName.textContent = "Package Not Found";
-            pkgDisplaySummary.textContent = `The package "${targetPkgName}" does not exist in the registry.`;
+            document.getElementById("pkg-display-name").textContent = "Package Not Found";
+            document.getElementById("pkg-display-summary").textContent = `The package "${targetPkgName}" does not exist in the registry.`;
             return;
           }
 
           document.title = `${pkg.name} — AIM Registry`;
-          pkgDisplayName.textContent = pkg.name;
-          previewTitle.textContent = pkg.name;
-          previewMeta.innerHTML = `Version ${htmlEscape(pkg.version)} &bull; <a href="${resolvePath(pkg.entry, url)}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Entry Source</a>`;
+          document.getElementById("pkg-display-name").textContent = pkg.name;
+          document.getElementById("preview-version").textContent = `Version ${pkg.version}`;
+          document.getElementById("preview-source-link").innerHTML = `<a href="${resolvePath(pkg.entry, url)}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Entry Source</a>`;
           
           actionsContainer.innerHTML = `<button class="btn primary" onclick="copyBuildCommand('${pkg.name}', this)">Copy build command</button>`;
 
@@ -347,13 +361,13 @@
             const entryRes = await fetch(resolvePath(pkg.entry, url));
             const text = await entryRes.text();
             const summaryMatch = text.match(/^\s*SUMMARY:\s*"([^"]+)"/m) || text.match(/^\s*SUMMARY:\s*(.+)$/m);
-            if (summaryMatch) pkgDisplaySummary.textContent = summaryMatch[1].trim();
+            if (summaryMatch) document.getElementById("pkg-display-summary").textContent = summaryMatch[1].trim();
           } catch (_) {}
 
           loadFileContent(pkg.entry, url);
         } catch (e) {
-          pkgDisplayName.textContent = "Error";
-          pkgDisplaySummary.textContent = "Failed to load registry index.";
+          document.getElementById("pkg-display-name").textContent = "Error";
+          document.getElementById("pkg-display-summary").textContent = "Failed to load registry index.";
         }
       }
 
