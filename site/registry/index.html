@@ -163,6 +163,24 @@
         overflow: hidden;
       }
 
+      .code-viewer.is-loading::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--google-blue);
+        animation: loading-bar 1.5s infinite ease-in-out;
+        z-index: 10;
+      }
+
+      @keyframes loading-bar {
+        0% { left: -20%; width: 20%; }
+        50% { left: 40%; width: 40%; }
+        100% { left: 100%; width: 20%; }
+      }
+
       .code-viewer .code-window {
         height: 100%;
         border: none;
@@ -357,20 +375,25 @@
 
       async function loadFileContent(filePath, indexUrl) {
         const fullUrl = resolvePath(filePath, indexUrl);
+        const codeViewer = document.querySelector('.code-viewer');
+        
         previewFilename.textContent = filePath.split("/").pop();
-        preview.textContent = "Loading...";
+        codeViewer.classList.add('is-loading');
 
         try {
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error();
           const text = await res.text();
           preview.textContent = text;
+          preview.scrollTop = 0; // Reset scroll for new file
         } catch (_) {
           preview.textContent = "Failed to load source.";
+        } finally {
+          codeViewer.classList.remove('is-loading');
         }
       }
 
-      async function selectPackage(pkg, indexUrl) {
+      async function selectPackage(pkg, indexUrl, shouldScroll = false) {
         previewTitle.textContent = pkg.name;
         previewMeta.innerHTML = `v${htmlEscape(pkg.version)} &bull; <a href="${resolvePath(pkg.entry, indexUrl)}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Entry Source</a>`;
         
@@ -405,6 +428,10 @@
 
         // Load entry file by default
         loadFileContent(pkg.entry, indexUrl);
+
+        if (shouldScroll) {
+          document.querySelector('.preview-pane').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
 
       async function loadRegistry() {
@@ -434,7 +461,7 @@
 
           // Global function for detail loading
           window.scrollToPackageDetails = (name, i) => {
-            selectPackage(data.packages[i], url);
+            selectPackage(data.packages[i], url, true);
           };
 
           // Fetch summaries
