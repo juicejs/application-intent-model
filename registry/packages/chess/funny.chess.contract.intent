@@ -1,0 +1,33 @@
+AIM: funny.chess#contract@2.2
+
+CONTRACT MovePiece {
+  SUMMARY: "Attempts to move a piece from one square to another."
+  INPUT {
+    from: "string required (e.g., 'e2')"
+    to: "string required (e.g., 'e4')"
+  }
+  AUTHZ {
+    - "Current player must own the piece at 'from'."
+  }
+  EXPECTS {
+    - "The move must be legal according to standard chess rules (considering check)."
+  }
+  ENSURES {
+    - "The piece at 'from' is moved to 'to'."
+    - "If 'to' contained an opponent piece, it is captured."
+    - "A humorous commentary is generated and added to moveHistory."
+    - "A potential Wacky Event is evaluated (1% chance)."
+    - "The turn switches to the opponent."
+  }
+}
+
+CONTRACT TriggerWackyEvent {
+  SUMMARY: "Applies a random funny effect to the game."
+  EXPECTS {
+    - "Can be triggered randomly after a move or via debug command."
+  }
+  ENSURES {
+    - "The game state is modified according to the event type (e.g., 'Teleportation', 'Identity Crisis')."
+    - "A visual notification is displayed to the users."
+  }
+}

@@ -1,0 +1,34 @@
+AIM: funny.chess#view@2.2
+
+VIEW ChessBoard {
+  SUMMARY: "The main visual representation of the game."
+  DISPLAY {
+    - "An 8x8 grid of squares with alternating 'Zany' colors (e.g., neon purple and lime green)."
+    - "Animated pieces that pulse or wiggle based on their personality."
+    - "Highlighting of legal moves for the selected piece."
+    - "A visual overlay for active Wacky Events (e.g., screen shaking, confetti rain)."
+  }
+  ACTIONS {
+    - "SelectPiece(position): Highlights legal moves."
+    - "ExecuteMove(targetPosition): Moves the selected piece if legal."
+  }
+}
+
+VIEW MoveLog {
+  SUMMARY: "A scrolling list of move descriptions."
+  DISPLAY {
+    - "A list of text entries like: 'The Grumpy Rook stomped to d5 and complained about the weather.'"
+    - "Scrollable container on the side of the board."
+  }
+}
+
+VIEW GameStatus {
+  SUMMARY: "Displays whose turn it is and game results."
+  DISPLAY {
+    - "Current turn indicator with flavor text (e.g., 'It is White's turn to mess things up')."
+    - "Victory/Loss popup with humorous animations."
+  }
+  ACTIONS {
+    - "RestartGame(): Resets the board and state."
+  }
+}

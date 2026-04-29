@@ -1,0 +1,28 @@
+AIM: funny.chess#intent@2.2
+
+INCLUDES {
+  schema: "funny.chess.schema.intent"
+  view: "funny.chess.view.intent"
+  contract: "funny.chess.contract.intent"
+}
+
+INTENT FunnyChess {
+  SUMMARY: "A browser-based 2-player chess game with humorous twists and wacky mechanics."
+  
+  REQUIREMENTS {
+    - "Provide a standard 8x8 chess board with 2-player local multiplayer support."
+    - "Implement standard chess move validation (legal moves, check, checkmate, stalemate)."
+    - "Pieces must have 'personalities' that affect their visual representation and move descriptions."
+    - "Include a 'Funny Move Log' that generates humorous commentary for every move made."
+    - "Trigger random 'Wacky Events' (e.g., piece swapping, sudden promotion) with low probability to spice up the game."
+    - "Support visual effects for captures (e.g., pieces exploding into confetti or running away)."
+    - "Rotate board when opposite player turn"
+  }
+
+  TESTS {
+    - "A player cannot make an illegal move according to standard chess rules (unless a Wacky Event overrides it)."
+    - "Checkmate is correctly detected and ends the game with a humorous victory message."
+    - "The move log updates with a unique funny string after every turn."
+    - "Capturing a piece triggers a visual effect."
+  }
+}
