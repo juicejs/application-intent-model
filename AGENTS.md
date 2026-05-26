@@ -24,14 +24,13 @@ This project uses the **Application Intent Model (AIM) v3.0** to specify product
 ├── AGENTS.md              # this file — agent onboarding
 ├── aim/
 │   ├── specs/3.0.md       # cached AIM specification (reference)
-│   ├── work/              # non-authoritative agent scratchpads
 │   ├── mappings/          # capability-to-provider bindings
 │   └── <component>/       # one directory per component
 │       └── <component>.aim
 └── ...                    # your application code
 ```
 
-Reserved directory names under `/aim/`: `specs/`, `work/`, `mappings/`. Everything else is a component namespace.
+Reserved directory names under `/aim/`: `specs/`, `mappings/`. Everything else is a component namespace.
 
 ## Operating roles
 

@@ -64,9 +64,7 @@ AIM is Markdown-native by deliberate choice, but that choice creates a risk: AI 
 
 2. **Other `.md` files are explanatory, not authoritative.** `README.md`, `CONTRIBUTING.md`, ADRs, and similar documents may describe, link to, or summarize intent — but they must not define new behavioral requirements. If a behavioral requirement appears only in an `.md` file and not in a `.aim` file, it is **drift**. The Reviewer reports it. The fix is to move the requirement into a `.aim` file.
 
-3. **Temporary agent work is non-authoritative and lives in `/aim/work/`.** Plans, scratchpads, decision logs, and any artifacts an agent produces during a task belong under `/aim/work/`. These files are explicitly non-authoritative — tools and reviewers must not treat them as a source of behavior. They exist for traceability and human review, not for code generation.
-
-4. **Anything outside `/aim/` is invisible to authority.** Behavioral content found in `docs/`, top-level `.md` files, code comments treated as spec, or chat history transcripts is not part of the project's behavioral authority. If it matters, it gets moved into `.aim`. If it doesn't, it isn't authoritative. The lone exception is `AGENTS.md` at the project root (see §2.3) — which carries project bootstrap metadata for agents but does not define behavior itself.
+3. **Anything outside `/aim/` is invisible to authority.** Behavioral content found in `docs/`, top-level `.md` files, code comments treated as spec, or chat history transcripts is not part of the project's behavioral authority. If it matters, it gets moved into `.aim`. If it doesn't, it isn't authoritative. The lone exception is `AGENTS.md` at the project root (see §2.3) — which carries project bootstrap metadata for agents but does not define behavior itself.
 
 **Diagnostics:**
 
@@ -157,7 +155,6 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 /aim/
   specs/
     3.0.md           # the v3.0 specification (mirrored from spec: URL)
-  work/              # non-authoritative agent scratchpads (see §1.3)
   mappings/          # required-alias mappings
   <component>/       # one directory per component
 ```
@@ -180,7 +177,6 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 These directory names are reserved and must not be used as component namespaces:
 
 - `aim/specs/` — cached specifications (`.md` files)
-- `aim/work/` — non-authoritative agent scratchpads (`.md` files)
 - `aim/mappings/` — capability-to-provider bindings (`.aim` files)
 
 Any other directory under `/aim/` that contains a `<name>.aim` file is a component.
@@ -218,7 +214,7 @@ Top-level section headings use the bare form:
 ## Dependencies
 ```
 
-The first paragraph immediately following any facet heading is treated as the facet's summary. An explicit `### Summary` sub-block is also permitted when the prose runs longer.
+Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block. This ensures deterministic parsing.
 
 ### 2.7 Attribute Syntax
 
@@ -356,6 +352,8 @@ The tasks subsystem owns the full task lifecycle: creation, assignment, state tr
 - [complete_task](./complete_task/juice.tasks.complete_task.aim) — mark a task completed
 
 ## Schema: Task
+
+### Summary
 
 The shared task record used by all sub-components.
 
@@ -500,6 +498,8 @@ Data at rest, structural types, and constraints.
 
 ```markdown
 ## Schema: Task
+
+### Summary
 
 A persisted task record owned by exactly one user.
 
@@ -657,7 +657,7 @@ createdAt: datetime required
 
 ### 6.7 Summary Rule
 
-Every facet block must carry a summary, either as the first paragraph after the facet heading or as an explicit `### Summary` sub-block. `Persona` may omit the summary when it acts only as a role/access declaration.
+Every facet block must carry an explicit `### Summary` sub-block immediately following the facet heading. `Persona` may omit the summary when it acts only as a role/access declaration.
 
 ---
 
@@ -878,7 +878,7 @@ A single-player snake game.
 - Sub-component file with `parent: juice.tasks` but no parent intent file exists.
 - Two `## Schema: Task` blocks in the same effective source.
 - Project missing `AGENTS.md` with declared `aim_version`.
-- A directory named `aim/specs/` or `aim/work/` used as a component namespace.
+- A directory named `aim/specs/` used as a component namespace.
 
 ---
 
