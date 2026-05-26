@@ -6,9 +6,9 @@
       "name": "nemicko.demo.todo",
       "aim_version": "3.0",
       "version": "1.0.0",
-      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent",
+      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.aim",
       "files": [
-        "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
+        "registry/packages/nemicko.demo.todo/nemicko.demo.todo.aim"
       ],
       "image": null,
       "description": "A complete personal todo manager — shows all six facet types in a single v3.0 file."

@@ -252,7 +252,7 @@
     </div>
 
     <footer class="footer" style="text-align: center; margin-top: 48px;">
-      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/">Specification</a></p>
+      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/3.0/">Specification</a></p>
     </footer>
 
     <script src="../assets/chrome.js"></script>
@@ -332,7 +332,11 @@
 
           document.title = `${pkg.name} — AIM Registry`;
           document.getElementById("pkg-display-name").textContent = pkg.name;
-          document.getElementById("preview-version").textContent = `Version ${pkg.version}`;
+          const aimVer = pkg.aim_version || pkg.version || "?";
+          const isLegacy = pkg.legacy === true || aimVer.startsWith("2.");
+          document.getElementById("preview-version").innerHTML = isLegacy
+            ? `<span style="color: var(--text-muted);">AIM ${aimVer} · legacy</span>`
+            : `<span style="color: var(--google-blue); font-weight: 500;">AIM ${aimVer}</span>`;
           document.getElementById("preview-source-link").innerHTML = `<a href="${resolvePath(pkg.entry, url)}" target="_blank" rel="noopener" style="color: var(--google-blue); text-decoration: none;">View Entry Source</a>`;
           
           actionsContainer.innerHTML = `<button class="btn primary" onclick="copyBuildCommand('${pkg.name}', this)">Copy build command</button>`;
@@ -343,7 +347,7 @@
           }
 
           fileList.innerHTML = "";
-          pkg.files.forEach(file => {
+          (pkg.files || [pkg.entry]).forEach(file => {
             const li = document.createElement("li");
             li.className = "file-item";
             if (file === pkg.entry) li.classList.add("active");
@@ -356,12 +360,14 @@
             fileList.appendChild(li);
           });
 
-          // Fetch summary for header
+          // Fetch summary for header — supports both v3.0 (Markdown) and v2.2 (DSL)
           try {
             const entryRes = await fetch(resolvePath(pkg.entry, url));
             const text = await entryRes.text();
-            const summaryMatch = text.match(/^\s*SUMMARY:\s*"([^"]+)"/m) || text.match(/^\s*SUMMARY:\s*(.+)$/m);
-            if (summaryMatch) document.getElementById("pkg-display-summary").textContent = summaryMatch[1].trim();
+            const v3 = text.match(/^##\s+Summary\s*\n+([\s\S]+?)(?=\n\s*\n|\n##|\n#|$)/m);
+            const v2 = text.match(/^\s*SUMMARY:\s*"([^"]+)"/m) || text.match(/^\s*SUMMARY:\s*(.+)$/m);
+            const summary = v3 ? v3[1].trim().replace(/\s+/g, " ") : (v2 ? v2[1].trim() : null);
+            if (summary) document.getElementById("pkg-display-summary").textContent = summary;
           } catch (_) {}
 
           loadFileContent(pkg.entry, url);

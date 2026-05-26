@@ -10,21 +10,25 @@ Each package lives in:
 
 Each package must contain:
 
-1. Exactly one `#intent` facet file: `<component>.intent`
-2. Optional additional facet files (e.g., `.schema.intent`, `.contract.intent`) referenced by the entry file
+1. Exactly one root intent file: `<component>.aim` with valid v3.0 frontmatter
+2. Optional additional facet files (e.g., `<component>.schema.aim`, `<component>.contract.aim`) referenced by the entry file
+3. Optional sub-component directories with their own intent files
 
 ## `registry/index.json` Schema
 
 Required fields:
 
-- `version`: index schema version
+- `version`: index schema version (currently `"2"`)
 - `packages`: array of package objects
 
 Each package object requires:
 
 - `name`: component namespace (lowercase, dot-separated segments; single-segment allowed)
-- `version`: `x.y` matching entry file header
-- `entry`: path to canonical intent file relative to project root (e.g., `registry/packages/name/name.intent`)
+- `aim_version`: AIM language version this package conforms to (`"3.0"` for current, `"2.2"` for legacy)
+- `version`: package release version (semver, e.g. `"1.0.0"`)
+- `entry`: path to root intent file relative to project root (e.g., `registry/packages/name/name.aim`)
+
+Legacy v2.2 packages may declare `legacy: true` and continue to use `.intent` extensions until migrated.
 
 ## Pull Request Publishing Flow
 
@@ -39,20 +43,20 @@ Merged PRs are the publishing mechanism.
 
 ## Consumption Model
 
-Consumers fetch package `entry` from this registry, resolve related sources, and materialize files into local project `/aim` (and `/aim/mappings` when applicable) before synthesis.
+Consumers fetch the package `entry` from this registry, resolve related sources (sibling facet files, sub-components), and install files into local project `/aim/` (and `/aim/mappings/` when applicable) before code generation.
 
 ## Validation Rules
 
 CI enforces:
 
-- index schema validity and non-empty package list
-- package/index consistency (one index record per package directory)
-- `entry` exists and points to `.intent`
-- entry header matches `name`, `intent` facet, and `version`
-- exactly one `#intent` facet file per package directory
-- optional `INCLUDES` targets exist and match component/facet/version
-- stale manifest files (`package.json`, `manifest.intent`) are rejected
-- legacy metadata tokens are rejected
+- Index schema validity and non-empty package list
+- Package/index consistency (one index record per package directory)
+- `entry` exists and points to `.aim` for v3.0 packages (`.intent` allowed for legacy v2.2)
+- Entry frontmatter matches `aim`, `facet: intent`, and `version`
+- Exactly one root `facet: intent` file per package
+- Optional sibling and sub-component files exist and have matching component, facet, and version
+- Stale manifest files (`package.json`, `manifest.intent`) are rejected
+- Legacy metadata tokens are rejected
 
 ## Notes
 

@@ -18,7 +18,7 @@ Installing packages from the registry is a CLI command (`sinth fetch <package>`)
 ```md
 Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0.
 
-Read any existing `.intent` files under `./intent/` for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft any new intent yet — wait for me to describe the requirements.
+Read any existing `.aim` files under `./aim/` for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft any new intent yet — wait for me to describe the requirements.
 ```
 
 ---
@@ -29,7 +29,7 @@ Read any existing `.intent` files under `./intent/` for [Component Name]. Once r
 ```md
 Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0.
 
-Read the local `.intent` files in `./intent/[Component Name]/` to understand the specified behavior, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not generate any code or tests yet — wait for my 'build' or 'repair' command.
+Read the local `.aim` files in `./aim/[Component Name]/` to understand the specified behavior, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not generate any code or tests yet — wait for my 'build' or 'repair' command.
 ```
 
 ---
@@ -40,7 +40,7 @@ Read the local `.intent` files in `./intent/[Component Name]/` to understand the
 ```md
 Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0.
 
-Read the intent files in `./intent/[Component Name]/` and scan the current implementation in the codebase. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.
+Read the intent files in `./aim/[Component Name]/` and scan the current implementation in the codebase. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.
 ```
 
 ---

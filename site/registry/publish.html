@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Publish a Package — AIM Registry</title>
-    <meta name="description" content="Contribute your component to the AIM package registry. Follow the submission workflow to publish structured .intent files for the AI development community.">
+    <meta name="description" content="Contribute your component to the AIM package registry. Follow the submission workflow to publish structured .aim files for the AI development community.">
     <meta name="author" content="Juice d.o.o.">
     <link rel="canonical" href="https://intentmodel.dev/registry/publish.html">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
@@ -12,13 +12,13 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://intentmodel.dev/registry/publish.html">
     <meta property="og:title" content="Publish a Package — AIM Registry">
-    <meta property="og:description" content="Contribute your component to the AIM package registry. Follow the submission workflow to publish structured .intent files for the AI development community.">
+    <meta property="og:description" content="Contribute your component to the AIM package registry. Follow the submission workflow to publish structured .aim files for the AI development community.">
     <meta property="og:image" content="https://intentmodel.dev/assets/og-image.png">
     <meta property="og:site_name" content="Application Intent Model">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Publish a Package — AIM Registry">
-    <meta name="twitter:description" content="Contribute your component to the AIM package registry. Follow the submission workflow to publish structured .intent files for the AI development community.">
+    <meta name="twitter:description" content="Contribute your component to the AIM package registry. Follow the submission workflow to publish structured .aim files for the AI development community.">
     <link rel="stylesheet" href="../assets/site.css">
     <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
@@ -55,7 +55,7 @@
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">2</div>
-              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Add exactly one <code>#intent</code> facet file: <code>&lt;component&gt;.intent</code>.</p>
+              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Add exactly one <code>#intent</code> facet file: <code>&lt;component&gt;.aim</code>.</p>
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">3</div>
@@ -71,7 +71,7 @@
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">6</div>
-              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Ensure all files use valid AIM preambles (e.g., <code>AIM: component#facet@2.2</code>).</p>
+              <p style="margin: 5px 0 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">Ensure all files use valid v3.0 frontmatter with <code>aim</code>, <code>facet</code>, <code>version: 3.0</code>, and <code>spec: https://intentmodel.dev/spec/3.0</code>.</p>
             </div>
             <div style="display: flex; gap: 16px; align-items: flex-start;">
               <div class="step-num">7</div>
@@ -91,8 +91,9 @@
             </div>
             <pre><code>{
   "name": "weather",
-  "version": "2.2",
-  "entry": "registry/packages/weather/weather.intent"
+  "aim_version": "3.0",
+  "version": "1.0.0",
+  "entry": "registry/packages/weather/weather.aim"
 }</code></pre>
           </div>
 
@@ -110,7 +111,7 @@
     </div>
 
     <footer class="footer" style="text-align: center;">
-      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
+      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
     </footer>
 
     <script src="../assets/chrome.js"></script>

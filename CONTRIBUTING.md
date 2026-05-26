@@ -5,9 +5,9 @@
 Community component packages are published via pull requests to `registry/packages`.
 
 1. Create a package directory: `registry/packages/<component>/`.
-2. Add exactly one `#intent` facet file: `<component>.intent`.
-3. Add optional facet files referenced by `INCLUDES`.
-4. Add your package to the `packages` array in `registry/index.json`.
+2. Add exactly one root intent file: `<component>.aim` with valid v3.0 frontmatter (`aim`, `facet: intent`, `version: 3.0`, `spec: https://intentmodel.dev/spec/3.0`).
+3. Add optional facet files (`<component>.<facet>.aim`) and sub-component intent files as needed.
+4. Add your package to the `packages` array in `registry/index.json`, with `aim_version: "3.0"`.
 5. Open a pull request.
 
 CI validates package integrity and AIM header conventions using `scripts/validate_registry.py`.
@@ -16,7 +16,7 @@ CI validates package integrity and AIM header conventions using `scripts/validat
 
 Protocol changes should update:
 
-- `specification.md` (canonical language spec)
+- `specification.md` (the canonical v3.0 language spec)
 - `README.md` (landing summary, if needed)
 
 If a spec change affects registry rules, update `scripts/validate_registry.py`.

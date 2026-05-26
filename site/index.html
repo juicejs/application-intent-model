@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AIM — The Application Intent Model</title>
-    <meta name="description" content="AIM is an open standard for intent-driven AI development. Write features as .intent files — explicit contracts every AI agent builds from, verifies, and repairs against.">
+    <meta name="description" content="AIM is an open standard for intent-driven AI development. Write features as .aim files — explicit contracts every AI agent builds from, verifies, and repairs against.">
     <meta name="author" content="Juice d.o.o.">
     <link rel="canonical" href="https://intentmodel.dev/">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
@@ -622,7 +622,7 @@
     "name": "Application Intent Model",
     "alternateName": "AIM",
     "url": "https://intentmodel.dev/",
-    "description": "An open standard for intent-driven AI development. Structure features as versioned .intent files — explicit contracts every AI agent builds from, verifies, and repairs against.",
+    "description": "An open standard for intent-driven AI development. Structure features as versioned .aim files — explicit contracts every AI agent builds from, verifies, and repairs against.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Any",
     "offers": {
@@ -671,11 +671,11 @@
               <span class="code-dot"></span>
               <span class="code-dot"></span>
               <span class="code-dot"></span>
-              <span class="code-window-title">weather.intent</span>
+              <span class="code-window-title">weather.aim</span>
             </div>
             <pre><code><span class="k">---</span>
 <span class="k">aim:</span> weather
-<span class="k">spec:</span> https://intentmodel.dev/spec/3.0
+<span class="k">facet:</span> intent
 <span class="k">---</span>
 
 <span class="k"># Weather</span>
@@ -733,10 +733,11 @@ Current conditions widget.
         <div class="evolution-card evolution-card--intent">
           <div class="evolution-era">Era 3 — Intent</div>
           <div class="evolution-example evolution-code">
-            <pre><code><span class="k">CONTRACT</span> Reset {
-  <span class="k">ENSURES</span> { <span class="s">"Link is sent"</span> }
-  <span class="k">VERIFY</span>  { <span class="s">"Single-use only"</span> }
-}</code></pre>
+            <pre><code><span class="k">## Contract: Reset</span>
+
+<span class="k">### Ensures</span>
+- Reset link is sent.
+- Single-use is enforced.</code></pre>
           </div>
           <div class="evolution-outcome">
             <strong>AI verifies against a contract.</strong>
@@ -750,7 +751,7 @@ Current conditions widget.
     <section id="example" class="lp-section">
       <div class="lp-heading">
         <h2>Inference vs. contract</h2>
-        <p>When AI has no contract, it guesses what "correct" means. A <code>.intent</code> file defines it — so the agent can verify its own output.</p>
+        <p>When AI has no contract, it guesses what "correct" means. A <code>.aim</code> file defines it — so the agent can verify its own output.</p>
       </div>
       <div class="compare-grid">
         <div class="compare-card compare-before">
@@ -760,7 +761,11 @@ Current conditions widget.
         </div>
         <div class="compare-card compare-after">
           <div class="compare-label">AI verifies — explicit contract</div>
-          <pre><code><span class="k">INTENT</span> PasswordReset {
+          <pre><code><span class="k">---</span>
+<span class="k">aim:</span> auth.reset
+<span class="k">facet:</span> intent
+<span class="k">---</span>
+
 <span class="k"># PasswordReset</span>
 
 <span class="k">## Summary</span>
@@ -800,7 +805,7 @@ Email-based reset flow.
               <span class="badge-start">Start here</span>
             </div>
             <h3>Describe your feature, get a structured spec</h3>
-            <p>Tell the Architect agent what you want to build in plain English — the actors, rules, and edge cases. It asks clarifying questions, then generates one or more <code>.intent</code> files and saves them to your repo. These files are the contract everything else builds from.</p>
+            <p>Tell the Architect agent what you want to build in plain English — the actors, rules, and edge cases. It asks clarifying questions, then generates one or more <code>.aim</code> files and saves them to your repo. These files are the contract everything else builds from.</p>
           </div>
         </div>
 
@@ -814,7 +819,7 @@ Email-based reset flow.
               <span class="workflow-agent-tag">@aim-developer</span>
             </div>
             <h3>Point the Developer at your intent files</h3>
-            <p>The Developer reads the <code>.intent</code> files and generates production-ready code and tests. Working from an explicit contract — not a vague prompt — it knows what to build, what the edge cases are, and what "done" looks like. Also handles code fixes when drift is reported.</p>
+            <p>The Developer reads the <code>.aim</code> files and generates production-ready code and tests. Working from an explicit contract — not a vague prompt — it knows what to build, what the edge cases are, and what "done" looks like. Also handles code fixes when drift is reported.</p>
           </div>
         </div>
 
@@ -842,7 +847,7 @@ Email-based reset flow.
     <section id="start" class="lp-section">
       <div class="lp-heading">
         <h2>Copy a prompt to get started</h2>
-        <p>Paste any of these into your AI coding assistant. Start with the Architect — it will ask you about your feature and create the <code>.intent</code> files.</p>
+        <p>Paste any of these into your AI coding assistant. Start with the Architect — it will ask you about your feature and create the <code>.aim</code> files.</p>
       </div>
 
       <div class="roles-grid">
@@ -851,8 +856,8 @@ Email-based reset flow.
             <span class="role-name">Architect</span>
             <span class="badge-start">Start here</span>
           </div>
-          <p class="role-desc">Turns your plain-English description into structured <code>.intent</code> files. Use this first for any new feature or component.</p>
-          <div style="display:none;" id="role-prompt-architect">Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0. Read any existing .intent files under ./intent/ for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
+          <p class="role-desc">Turns your plain-English description into structured <code>.aim</code> files. Use this first for any new feature or component.</p>
+          <div style="display:none;" id="role-prompt-architect">Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0. Read any existing .aim files under ./aim/ for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
           <button class="btn primary role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-architect').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             Copy Architect Prompt
@@ -863,8 +868,8 @@ Email-based reset flow.
           <div class="role-header">
             <span class="role-name">Developer</span>
           </div>
-          <p class="role-desc">Generates code and tests from your <code>.intent</code> files. Also handles code-side fixes when the Reviewer reports drift.</p>
-          <div style="display:none;" id="role-prompt-developer">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the local intent files in ./intent/[Component Name]/, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
+          <p class="role-desc">Generates code and tests from your <code>.aim</code> files. Also handles code-side fixes when the Reviewer reports drift.</p>
+          <div style="display:none;" id="role-prompt-developer">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the local intent files in ./aim/[Component Name]/, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
           <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-developer').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             Copy Developer Prompt
@@ -876,7 +881,7 @@ Email-based reset flow.
             <span class="role-name">Reviewer</span>
           </div>
           <p class="role-desc">Checks that your code matches the intent and produces a drift report. Assigns each finding to the Developer (code fix) or Architect (intent revision).</p>
-          <div style="display:none;" id="role-prompt-reviewer">Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the intent files in ./intent/[Component Name]/ and scan the current implementation. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
+          <div style="display:none;" id="role-prompt-reviewer">Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the intent files in ./aim/[Component Name]/ and scan the current implementation. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
           <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-reviewer').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             Copy Reviewer Prompt
@@ -962,7 +967,7 @@ gemini "@aim-reviewer \
 Command: build weather in React.
 
 Execute the full protocol:
-1. Fetch the weather package via `sinth fetch weather`. It installs into ./intent/ in the canonical nested layout.
+1. Fetch the weather package via `sinth fetch weather`. It installs into ./aim/ in the canonical nested layout.
 2. Generate the production-ready code and tests.</div>
           <div class="registry-actions">
             <button class="btn primary" onclick="copyPrompt(document.getElementById('registry-agent-example').innerText, this)">Copy Agent Prompt</button>
@@ -989,7 +994,7 @@ Command: build weather in React.
 
 Execute the full protocol:
 1. Fetch the package into
-   ./intent/ via sinth fetch.
+   ./aim/ via sinth fetch.
 2. Generate production-ready
    code and tests.</code></pre>
           </div>

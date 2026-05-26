@@ -18,7 +18,7 @@ A component is identified by a dotted namespace such as `juice.tasks` or `game.s
 
 Each component has:
 
-- one required **intent file** (a `.intent` file with `facet: intent`)
+- one required **intent file** (a `.aim` file with `facet: intent`)
 - zero or more optional **facets**: `schema`, `flow`, `contract`, `persona`, `view`, `event`
 - zero or more optional **sub-components** (each is a component in its own right)
 - zero or more optional **mapping files** (`facet: mapping`)
@@ -43,7 +43,7 @@ v3.0 uses three mainstream roles that map onto how real software teams already w
 - **Developer** — implements code and tests from intent. Fixes code when drift is found.
 - **Reviewer** — checks implementation against intent and reports drift.
 
-Roles are workflow guidance, not language constructs — they do not appear in `.intent` source files. A single agent may perform multiple roles, and multiple agents may share one role. See [`PROMPT.md`](./PROMPT.md) and [`agents/`](./agents/) for concrete prompt templates.
+Roles are workflow guidance, not language constructs — they do not appear in `.aim` source files. A single agent may perform multiple roles, and multiple agents may share one role. See [`PROMPT.md`](./PROMPT.md) and [`agents/`](./agents/) for concrete prompt templates.
 
 Repair is a verb, not a separate role. When the Reviewer flags drift, either the Developer fixes the code or the Architect revises the intent. The decision is explicit, not silent.
 
@@ -54,26 +54,47 @@ Normative behavior across all roles:
 - Assumptions are surfaced for review or converted into explicit intent updates by the Architect.
 - When implementation and intent disagree, the mismatch is resolved — Developer fixes code if implementation is wrong, Architect revises intent if specification is outdated.
 
+### 1.3 Project Authority Model
+
+AIM is Markdown-native by deliberate choice, but that choice creates a risk: AI agents already love to spawn `.md` plans, design notes, decision logs, and PRDs. Without a clear authority boundary, AIM becomes one more `.md` file in the pile instead of the artifact that displaces it. The following rules establish that boundary.
+
+**Authority hierarchy:**
+
+1. **`.aim` files are the sole behavioral authority.** Every requirement, contract, schema, flow, persona, view, and event that defines product behavior must live in a `.aim` file. Tools, agents, and reviewers treat `.aim` as the only source of truth for what the system is supposed to do.
+
+2. **Other `.md` files are explanatory, not authoritative.** `README.md`, `CONTRIBUTING.md`, ADRs, and similar documents may describe, link to, or summarize intent — but they must not define new behavioral requirements. If a behavioral requirement appears only in an `.md` file and not in a `.aim` file, it is **drift**. The Reviewer reports it. The fix is to move the requirement into a `.aim` file.
+
+3. **Temporary agent work is non-authoritative and lives in `/aim/work/`.** Plans, scratchpads, decision logs, and any artifacts an agent produces during a task belong under `/aim/work/`. These files are explicitly non-authoritative — tools and reviewers must not treat them as a source of behavior. They exist for traceability and human review, not for code generation.
+
+4. **Anything outside `/aim/` is invisible to authority.** Behavioral content found in `docs/`, top-level `.md` files, code comments treated as spec, or chat history transcripts is not part of the project's behavioral authority. If it matters, it gets moved into `.aim`. If it doesn't, it isn't authoritative. The lone exception is `AGENTS.md` at the project root (see §2.3) — which carries project bootstrap metadata for agents but does not define behavior itself.
+
+**Diagnostics:**
+
+- **Hard error** — none. The Authority Model is enforced socially and by review, not by the parser. Tools cannot reliably distinguish "describes intent" from "defines intent" in arbitrary prose.
+- **Informational diagnostic** — reviewers and validators may flag `.md` files that appear to contain behavioral requirements not present in `.aim` files. The recommended remediation is always to move the requirement into a `.aim` file.
+
+**Why this matters:**
+
+The whole point of AIM is to replace `.md` sprawl with a structured behavioral artifact agents can read once and build from. Without the Authority Model, the same agents that spawned 100 `.md` files will spawn 100 `.md` files plus a few `.aim` files. With the Authority Model, every behavioral fact has exactly one home — and drift between sources is impossible because there is only one source.
+
 ---
 
 ## 2. File Format
 
 ### 2.1 Extension
 
-All AIM source files use the `.intent` extension. The extension is retained from v2.2 as an identity marker: a file named `*.intent` is an authoritative AIM artifact, not a generic note.
+All AIM v3.0 source files use the `.aim` extension. The extension is a brand and discipline marker: a file named `*.aim` is an authoritative AIM artifact, not a generic note. (Legacy v2.2 sources used `.intent` — the extension change is part of the v2.2 → v3.0 break.)
 
 Files are valid CommonMark Markdown with YAML frontmatter. Any Markdown renderer will display them correctly.
 
 ### 2.2 Header (YAML Frontmatter)
 
-Every `.intent` file must begin with a YAML frontmatter block:
+Every `.aim` file begins with a small YAML frontmatter block:
 
 ```yaml
 ---
 aim: juice.tasks.create_task
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 parent: juice.tasks
 ---
 ```
@@ -82,8 +103,6 @@ Required fields:
 
 - `aim` — the component namespace (lowercase, dot-separated)
 - `facet` — one of `intent | schema | flow | contract | persona | view | event | mapping`
-- `version` — the AIM language version this file conforms to (e.g. `3.0`)
-- `spec` — a stable URL pointing to the language specification for `version`
 
 Optional fields:
 
@@ -91,13 +110,82 @@ Optional fields:
 - `display` — a human-readable display name (overrides the H1 heading for tooling)
 - `tags` — array of free-form tags for discovery
 
-### 2.3 Why `spec:` Is Required
+The frontmatter intentionally omits per-file `version:` and `spec:` fields. The project-wide AIM version and spec URL live in **`AGENTS.md` at the project root** (see §2.3) — a single source of truth that eliminates redundancy and drift between files.
 
-The `spec:` field exists so an AI coding agent with no prior AIM knowledge can self-bootstrap. On encountering a `.intent` file, the agent fetches the URL, reads the spec, and immediately understands the structure of the file in front of it. No plugin, extension, skill, or prompt customization required.
+### 2.3 `AGENTS.md` — Project Bootstrap
 
-The URL must be **version-stable**. `https://intentmodel.dev/spec/3.0` must continue to serve the v3.0 spec indefinitely, even after later versions exist.
+Every AIM project carries an `AGENTS.md` file at its root. This is the universal entry point any coding agent (Claude, Cursor, Aider, Gemini, etc.) reads first when entering the project — it predates AIM as a convention and is now the de facto standard across the AI coding ecosystem.
 
-### 2.4 Body (Markdown)
+**Required structure:**
+
+```markdown
+---
+aim_version: 3.0
+aim_root: ./aim/
+spec: https://intentmodel.dev/spec/3.0
+---
+
+# Agents
+
+This project uses the **Application Intent Model (AIM) v3.0** for behavioral specification.
+
+[...prose explaining roles, conventions, project specifics...]
+```
+
+The frontmatter on `AGENTS.md` carries:
+
+- `aim_version` — the AIM language version this project targets (e.g. `3.0`)
+- `aim_root` — where `.aim` files live (default `./aim/`)
+- `spec` — the canonical specification URL for the declared version
+
+The prose body explains AIM to a cold-start agent in natural language: what the roles are, where `.aim` files live, what conventions apply. Anything an agent needs to know about working in this project — both AIM and non-AIM — belongs here.
+
+**Why this works:**
+
+1. **Cold-start universally solved.** Any agent that follows the `AGENTS.md` convention finds AIM automatically. No AIM-aware tooling required for the first read.
+2. **One source of truth for version.** Bumping AIM versions is a one-line edit, not a project-wide search-and-replace.
+3. **No per-file boilerplate.** `.aim` files carry only what's unique to them (namespace + facet); shared facts live once in `AGENTS.md`.
+4. **Tool interop for free.** Cursor, Copilot, Anthropic tooling, and others that already read `AGENTS.md` pick up AIM context without integration work.
+
+### 2.4 Local Spec Cache
+
+Many agents operate without network access (sandboxed environments, CI runners, offline editing, restricted enterprise networks). To support them, AIM tooling installs a local copy of the spec under `/aim/specs/`.
+
+**Layout:**
+
+```
+/aim/
+  specs/
+    3.0.md           # the v3.0 specification (mirrored from spec: URL)
+  work/              # non-authoritative agent scratchpads (see §1.3)
+  mappings/          # required-alias mappings
+  <component>/       # one directory per component
+```
+
+**Required installer behavior:**
+
+1. On first `sinth init` (or equivalent setup) in a project, fetch the spec from the URL declared in `AGENTS.md` and write it to `/aim/specs/<version>.md`.
+2. When the project adopts a new AIM version, install the new spec file alongside any existing ones — old version files remain so projects mid-migration retain access.
+3. The local spec file is a verbatim mirror of the URL content. Tools must not modify it.
+
+**Agent spec-resolution order:**
+
+1. **`AGENTS.md`** — read the project's frontmatter to determine `aim_version` and `spec` URL.
+2. **Local cache** — read `/aim/specs/<version>.md` if present. Always works, even offline.
+3. **URL fallback** — fetch the `spec` URL declared in `AGENTS.md`.
+4. **Hard error** — if none of these resolve, refuse to proceed. Operating against an unknown specification is unsafe.
+
+**Reserved names under `/aim/`:**
+
+These directory names are reserved and must not be used as component namespaces:
+
+- `aim/specs/` — cached specifications (`.md` files)
+- `aim/work/` — non-authoritative agent scratchpads (`.md` files)
+- `aim/mappings/` — capability-to-provider bindings (`.aim` files)
+
+Any other directory under `/aim/` that contains a `<name>.aim` file is a component.
+
+### 2.5 Body (Markdown)
 
 The body of the file is Markdown. Structure is conveyed by heading levels:
 
@@ -107,7 +195,7 @@ The body of the file is Markdown. Structure is conveyed by heading levels:
 - **Bulleted lists** — for requirements, tests, steps, attributes, and any enumeration
 - **Fenced code blocks** — for attribute definitions, type expressions, and code samples
 
-### 2.5 Heading Conventions
+### 2.6 Heading Conventions
 
 Facet headings use the form `## <FacetType>: <Name>`:
 
@@ -132,7 +220,7 @@ Top-level section headings use the bare form:
 
 The first paragraph immediately following any facet heading is treated as the facet's summary. An explicit `### Summary` sub-block is also permitted when the prose runs longer.
 
-### 2.6 Attribute Syntax
+### 2.7 Attribute Syntax
 
 Attributes inside `### Attributes` blocks use a fenced code block with a simple line format:
 
@@ -170,34 +258,34 @@ Reasons this is the default in v3.0:
 ### 3.2 Canonical Layout
 
 ```
-/intent/
+/aim/
   juice.tasks/
-    juice.tasks.intent                  # parent: index + shared
-    juice.tasks.schema.intent           # shared schemas (Task, User refs)
+    juice.tasks.aim                  # parent: index + shared
+    juice.tasks.schema.aim           # shared schemas (Task, User refs)
     create_task/
-      juice.tasks.create_task.intent
-      juice.tasks.create_task.contract.intent
+      juice.tasks.create_task.aim
+      juice.tasks.create_task.contract.aim
     assign_task/
-      juice.tasks.assign_task.intent
+      juice.tasks.assign_task.aim
     complete_task/
-      juice.tasks.complete_task.intent
+      juice.tasks.complete_task.aim
   mappings/
     juice.tasks/
-      juice.tasks.mapping.intent
+      juice.tasks.mapping.aim
 ```
 
 Rules:
 
 - Each component lives in a directory named after its namespace.
-- The intent file filename matches `<component>.intent`.
-- Facet filenames match `<component>.<facet>.intent`.
+- The intent file filename matches `<component>.aim`.
+- Facet filenames match `<component>.<facet>.aim`.
 - Sub-components live in nested directories under the parent.
-- Mappings live under `/intent/mappings/<component>/`.
-- Generic filenames (`intent.intent`, `schema.intent`) are invalid.
+- Mappings live under `/aim/mappings/<component>/`.
+- Generic filenames (`aim.aim`, `schema.aim`) are invalid.
 
 ### 3.3 When To Collapse Into A Single File
 
-A component should stay in a single `.intent` file (no sub-components, facets embedded inline) only when **all** of the following hold:
+A component should stay in a single `.aim` file (no sub-components, facets embedded inline) only when **all** of the following hold:
 
 - Total content fits comfortably in a single screen of reading.
 - There is one clear behavior, not a set of distinct features.
@@ -226,8 +314,6 @@ The child declares the parent in its frontmatter:
 ---
 aim: juice.tasks.create_task
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 parent: juice.tasks
 ---
 ```
@@ -247,8 +333,6 @@ Example parent intent:
 ---
 aim: juice.tasks
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 ---
 
 # Tasks
@@ -267,9 +351,9 @@ The tasks subsystem owns the full task lifecycle: creation, assignment, state tr
 
 ## Subcomponents
 
-- [create_task](./create_task/juice.tasks.create_task.intent) — create a new task
-- [assign_task](./assign_task/juice.tasks.assign_task.intent) — assign a task to a user
-- [complete_task](./complete_task/juice.tasks.complete_task.intent) — mark a task completed
+- [create_task](./create_task/juice.tasks.create_task.aim) — create a new task
+- [assign_task](./assign_task/juice.tasks.assign_task.aim) — assign a task to a user
+- [complete_task](./complete_task/juice.tasks.complete_task.aim) — mark a task completed
 
 ## Schema: Task
 
@@ -290,7 +374,7 @@ updatedAt: datetime required
 
 ### 4.3 Sub-Component Discovery
 
-By default, sub-components are **auto-discovered**: any sibling directory containing a `<namespace>.intent` file with a matching `parent:` field is treated as a sub-component of the parent.
+By default, sub-components are **auto-discovered**: any sibling directory containing a `<namespace>.aim` file with a matching `parent:` field is treated as a sub-component of the parent.
 
 The parent may override discovery with an explicit `## Subcomponents` block. When the explicit list is present:
 
@@ -300,15 +384,9 @@ The parent may override discovery with an explicit `## Subcomponents` block. Whe
 
 ### 4.4 Upward Facet Resolution
 
-A sub-component may reference facets defined in the parent without qualification. Resolution proceeds outward from the most local scope:
+A sub-component may reference facets defined in the parent without qualification. The complete precedence rules are defined once in §8.1 — sub-components add one detail: the **parent chain** step walks the namespace upward (parent → grandparent → root) until a match is found or the chain ends.
 
-1. The sub-component's own facets (embedded or in sibling facet files).
-2. The sub-component's explicit `## Dependencies` includes.
-3. The parent component's facets.
-4. The parent's parent (for nested sub-components), and so on up the tree.
-5. External components referenced via `## Dependencies`.
-
-A name resolves to the first match encountered. Tools emit an informational diagnostic when a sub-component's facet shadows a parent's facet with the same name (this is usually a sign that the shared definition should move up, or that the sub-component name should be more specific).
+Tools emit an informational diagnostic when a sub-component defines a facet that shadows one already defined in a parent. This is usually a sign that either the shared definition should move up, or the sub-component name should be more specific.
 
 ### 4.5 Nesting Depth
 
@@ -328,8 +406,6 @@ A sub-component's `version` must match its parent's `version` exactly. The `vers
 ---
 aim: demo.todo
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 ---
 
 # Todo
@@ -361,8 +437,6 @@ Recommended:
 ---
 aim: juice.tasks.create_task
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 parent: juice.tasks
 ---
 
@@ -627,14 +701,12 @@ Capability required to resolve user identities.
 
 ### 7.3 Mapping Files
 
-Mappings bind required aliases to concrete providers. They live under `/intent/mappings/<component>/` and use `facet: mapping`.
+Mappings bind required aliases to concrete providers. They live under `/aim/mappings/<component>/` and use `facet: mapping`.
 
 ```markdown
 ---
 aim: juice.tasks
 facet: mapping
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 ---
 
 # Tasks Mappings
@@ -656,17 +728,20 @@ Unresolved `Requires` aliases are hard errors at validation time.
 
 ## 8. Resolution And Synthesis
 
-### 8.1 Resolution Order
+### 8.1 Canonical Resolution Algorithm
 
-For any facet referenced within a component, content is resolved in this order:
+This algorithm is **authoritative**. All other sections that describe resolution (notably §4.4 for sub-components and §7.3 for mappings) defer to this order.
 
-1. Embedded facet block in the same intent file.
-2. Sibling facet file (`<component>.<facet>.intent` next to the intent file).
-3. Parent component's facets (upward chain).
-4. External component referenced via `## Dependencies → Imports`.
-5. Absent.
+For any unqualified name referenced within a component, content is resolved in this order:
 
-The first match wins. Lower-precedence sources for the same facet name emit an informational diagnostic ("shadowed by higher-precedence source").
+1. **Embedded** — a facet block in the same intent file.
+2. **Sibling facet file** — `<component>.<facet>.aim` next to the intent file.
+3. **Explicit Imports** — entries under `## Dependencies → Imports` in the current file. Explicit author intent beats implicit parent inheritance.
+4. **Parent chain** — facets defined in the parent component, then the grandparent, and so on up the namespace until either a match is found or the chain ends.
+5. **Required alias via mapping** — names declared under `## Dependencies → Requires` resolved through a mapping file (see §7.3).
+6. **Absent** — the name does not resolve. If it was required by another facet (e.g. a `ref()` in attributes), this is a hard error.
+
+The first match wins. Lower-precedence sources for the same name emit an informational diagnostic ("shadowed by higher-precedence source"). Tools must implement this exact order — there are no implementation-defined variations.
 
 ### 8.2 Specification Levels
 
@@ -706,7 +781,7 @@ Remote package discovery uses `registry/index.json`. Each package object must in
 
 Package validity:
 
-- `entry` must exist and end with `.intent`.
+- `entry` must exist and end with `.aim`.
 - The entry's frontmatter `aim` must match the package `name`.
 - The entry's `version` must match the package `version`.
 - A package directory must contain exactly one root `facet: intent` file (sub-components have their own intent files but only the package root is the entry).
@@ -732,7 +807,7 @@ Even when sources are fetched remotely, all implementation, review, and code gen
 - Ambiguous sub-component authority (auto-discovered sub-component not in explicit `## Subcomponents` list).
 - Unresolved `Requires` aliases with no matching mapping.
 - Sub-component facet name collision with a parent facet name (when the parent definition is authoritative).
-- Generic filenames (`intent.intent`, `schema.intent`, `mapping.intent`).
+- Generic filenames (`intent.aim`, `schema.aim`, `mapping.aim`).
 
 ### 10.2 Informational Diagnostics
 
@@ -748,13 +823,15 @@ Even when sources are fetched remotely, all implementation, review, and code gen
 
 v3.0 is a breaking change. Tools should ship a `sinth migrate` command that converts v2.2 sources to v3.0:
 
-1. Convert `AIM: <name>#<facet>@2.2` headers to YAML frontmatter with `version: 3.0` and `spec: https://intentmodel.dev/spec/3.0`.
-2. Translate `INTENT Name { ... }` → `# Name` + section headings.
-3. Translate `SCHEMA Name { ATTRIBUTES { ... } }` → `## Schema: Name` + `### Attributes` + fenced `aim-attrs` block.
-4. Translate other facet blocks similarly.
-5. Optionally split large intent files into sub-components when natural feature boundaries exist (manual review recommended).
+1. Convert `AIM: <name>#<facet>@2.2` headers to YAML frontmatter with `aim:` and `facet:` only (per-file `version:` and `spec:` are no longer used).
+2. Create or update `AGENTS.md` at the project root with `aim_version: 3.0` and `spec: https://intentmodel.dev/spec/3.0` in its frontmatter.
+3. Rename `*.intent` files to `*.aim`.
+4. Translate `INTENT Name { ... }` → `# Name` + section headings.
+5. Translate `SCHEMA Name { ATTRIBUTES { ... } }` → `## Schema: Name` + `### Attributes` + fenced `aim-attrs` block.
+6. Translate other facet blocks similarly.
+7. Optionally split large intent files into sub-components when natural feature boundaries exist (manual review recommended).
 
-v2.2 and v3.0 sources must not coexist within the same `/intent` tree. The migration is one-shot per project. v2.2 projects also need to rename `/aim/` to `/intent/` as part of migration.
+v2.2 and v3.0 sources must not coexist within the same `/aim/` tree. The migration is one-shot per project.
 
 ---
 
@@ -766,8 +843,6 @@ v2.2 and v3.0 sources must not coexist within the same `/intent` tree. The migra
 ---
 aim: demo.snake
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 ---
 
 # Snake
@@ -785,24 +860,25 @@ A single-player snake game.
 ### 12.2 Component With Sub-Components
 
 ```
-/intent/game.snake/
-  game.snake.intent              # parent: shared schemas, index
-  game.snake.schema.intent       # shared SnakeState, FoodPellet
+/aim/game.snake/
+  game.snake.aim              # parent: shared schemas, index
+  game.snake.schema.aim       # shared SnakeState, FoodPellet
   tick/
-    game.snake.tick.intent
+    game.snake.tick.aim
   collision/
-    game.snake.collision.intent
+    game.snake.collision.aim
   score/
-    game.snake.score.intent
+    game.snake.score.aim
 ```
 
 ### 12.3 Invalid
 
-- Frontmatter missing `spec:` field.
+- Frontmatter missing `aim:` or `facet:` field.
 - `## Data: Foo` heading (invalid facet type).
 - Sub-component file with `parent: juice.tasks` but no parent intent file exists.
 - Two `## Schema: Task` blocks in the same effective source.
-- Sub-component `version: 3.0` under a parent declaring `version: 2.2`.
+- Project missing `AGENTS.md` with declared `aim_version`.
+- A directory named `aim/specs/` or `aim/work/` used as a component namespace.
 
 ---
 

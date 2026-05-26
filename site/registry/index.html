@@ -94,7 +94,7 @@
         <thead>
           <tr>
             <th>Package</th>
-            <th>Version</th>
+            <th>AIM Version</th>
             <th>Summary</th>
             <th style="text-align: right;">Actions</th>
           </tr>
@@ -106,7 +106,7 @@
     </div>
 
     <footer class="footer" style="text-align: center; margin-top: 48px;">
-      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/">Specification</a></p>
+      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/3.0/">Specification</a></p>
     </footer>
 
     <script src="../assets/chrome.js"></script>
@@ -141,6 +141,15 @@
         return str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
       }
 
+      // Extract summary from either v3.0 (Markdown) or v2.2 (DSL) intent files.
+      function extractSummary(text) {
+        const v3 = text.match(/^##\s+Summary\s*\n+([\s\S]+?)(?=\n\s*\n|\n##|\n#|$)/m);
+        if (v3) return v3[1].trim().replace(/\s+/g, " ");
+        const v2 = text.match(/^\s*SUMMARY:\s*"([^"]+)"/m) || text.match(/^\s*SUMMARY:\s*(.+)$/m);
+        if (v2) return v2[1].trim();
+        return null;
+      }
+
       async function loadRegistry() {
         try {
           const { url, res } = await fetchFirst(indexCandidates);
@@ -154,10 +163,15 @@
 
           const rows = data.packages.map((pkg, i) => {
             const detailUrl = `./package.html?name=${encodeURIComponent(pkg.name)}`;
+            const aimVer = pkg.aim_version || pkg.version || "?";
+            const isLegacy = pkg.legacy === true || aimVer.startsWith("2.");
+            const badge = isLegacy
+              ? `<span style="display:inline-block; padding:2px 8px; border-radius:4px; background:var(--bg-secondary); color:var(--text-muted); font-size:0.72rem; font-weight:500;">AIM ${htmlEscape(aimVer)} · legacy</span>`
+              : `<span style="display:inline-block; padding:2px 8px; border-radius:4px; background:var(--google-blue); color:white; font-size:0.72rem; font-weight:500;">AIM ${htmlEscape(aimVer)}</span>`;
             return `
-              <tr onclick="window.location='${detailUrl}'" style="cursor: pointer;">
+              <tr onclick="window.location='${detailUrl}'" style="cursor: pointer;${isLegacy ? ' opacity: 0.7;' : ''}">
                 <td data-label="Package"><a href="${detailUrl}" class="package-name" onclick="event.stopPropagation()">${htmlEscape(pkg.name)}</a></td>
-                <td data-label="Version"><span style="color: var(--text-muted); font-size: 0.9rem;">v${htmlEscape(pkg.version)}</span></td>
+                <td data-label="AIM Version">${badge}</td>
                 <td data-label="Summary" class="summary-text" data-summary-idx="${i}">Loading...</td>
                 <td data-label="Actions" style="text-align: right; white-space: nowrap;">
                   <a href="${detailUrl}" class="btn" style="padding: 6px 12px; font-size: 0.8rem; margin-right: 8px;" onclick="event.stopPropagation()">View Details</a>
@@ -175,8 +189,8 @@
             try {
               const res = await fetch(resolvePath(pkg.entry, url));
               const text = await res.text();
-              const summaryMatch = text.match(/^\s*SUMMARY:\s*"([^"]+)"/m) || text.match(/^\s*SUMMARY:\s*(.+)$/m);
-              summaryCell.innerHTML = summaryMatch ? htmlEscape(summaryMatch[1].trim()) : '<span class="muted">No summary found</span>';
+              const summary = extractSummary(text);
+              summaryCell.innerHTML = summary ? htmlEscape(summary) : '<span class="muted">No summary found</span>';
             } catch (_) {
               summaryCell.innerHTML = '<span class="muted">Failed to load</span>';
             }

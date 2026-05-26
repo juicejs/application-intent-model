@@ -1,8 +1,6 @@
 ---
 aim: nemicko.demo.todo
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 ---
 
 # TaskManager

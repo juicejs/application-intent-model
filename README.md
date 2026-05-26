@@ -1,6 +1,6 @@
 # Application Intent Model (AIM) v3.0
 
-AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It replaces the sprawl of `.md` PRDs, design notes, and plan files that agents otherwise generate — capturing product behavior in structured `.intent` files that agents read once, build from, review against, and repair over time.
+AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It replaces the sprawl of `.md` PRDs, design notes, and plan files that agents otherwise generate — capturing product behavior in structured `.aim` files that agents read once, build from, review against, and repair over time.
 
 ---
 
@@ -9,7 +9,7 @@ AIM is an intent-driven specification language and coordination layer for humans
 - **Eliminate hallucinations.** Ground AI agents in explicit, versioned specifications instead of loose chat context.
 - **Deterministic code generation.** Build production-ready code traceable to every requirement.
 - **Automated review.** Detect when code drifts from intent and decide explicitly: fix code, or revise intent.
-- **Self-bootstrapping.** Every `.intent` file carries a `spec:` URL — any agent (Claude, Cursor, Gemini, Aider) can fetch the spec on first encounter and immediately understand the format. No plugin required.
+- **Self-bootstrapping.** Every `.aim` file carries a `spec:` URL — any agent (Claude, Cursor, Gemini, Aider) can fetch the spec on first encounter and immediately understand the format. No plugin required.
 
 ---
 
@@ -32,8 +32,6 @@ Migrating from v2.2: see Section 11 of [specification.md](./specification.md).
 ---
 aim: juice.tasks.create_task
 facet: intent
-version: 3.0
-spec: https://intentmodel.dev/spec/3.0
 parent: juice.tasks
 ---
 
@@ -69,17 +67,17 @@ description: string optional
 ## Layout
 
 ```
-/intent/
+/aim/
   juice.tasks/
-    juice.tasks.intent              # parent: index + shared schemas
-    juice.tasks.schema.intent       # shared Task schema
+    juice.tasks.aim              # parent: index + shared schemas
+    juice.tasks.schema.aim       # shared Task schema
     create_task/
-      juice.tasks.create_task.intent
+      juice.tasks.create_task.aim
     assign_task/
-      juice.tasks.assign_task.intent
+      juice.tasks.assign_task.aim
   mappings/
     juice.tasks/
-      juice.tasks.mapping.intent
+      juice.tasks.mapping.aim
 ```
 
 Each sub-component is a real component with its own intent file and namespace. The parent indexes them and holds shared facets.
@@ -95,21 +93,22 @@ Each sub-component is a real component with its own intent file and namespace. T
 
 ---
 
-## Render `.intent` files as Markdown on GitHub
+## Render `.aim` files as Markdown on GitHub
 
 Drop a `.gitattributes` file at your repo root:
 
 ```gitattributes
-*.intent linguist-language=Markdown
-*.intent linguist-detectable=true
+*.aim linguist-language=Markdown
+*.aim linguist-detectable=true
 ```
 
-GitHub will render `.intent` files as Markdown with full frontmatter, headings, and lists.
+GitHub will render `.aim` files as Markdown with full frontmatter, headings, and lists.
 
 ---
 
 ## Reference
 
+- **[AGENTS.md](./AGENTS.md)** — project bootstrap for AI coding agents (cold-start entry point).
 - **[specification.md](./specification.md)** — the authoritative v3.0 language spec.
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant (Claude, Cursor, Aider, Gemini).
 - **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
