@@ -1,100 +1,148 @@
-# Application Intent Model (AIM) v2.2
+# Application Intent Model (AIM) v3.0
 
-AIM is an intent-driven specification language and coordination layer for humans and AI agents. It eliminates "logic drift" and "hallucinations" by capturing product behavior in structured `.intent` files that agents can build from, verify against, and repair over time.
-
----
-
-## Why AIM?
-
-- **Eliminate Hallucinations**: Ground your AI agents in explicit contracts, not just loose chat context.
-- **Deterministic Synthesis**: Build production-ready code that is 100% traceable to requirements.
-- **Automated Verification**: Automatically detect when your code drifts away from your intent.
-- **Progressive Precision**: Start with a simple intent envelope and add facets (Schema, Contract, Flow) only as needed.
+AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It replaces the sprawl of `.md` PRDs, design notes, and plan files that agents otherwise generate — capturing product behavior in structured `.intent` files that agents read once, build from, review against, and repair over time.
 
 ---
 
-## Core Concepts
+## Why AIM
 
-Each component has one canonical entrypoint:
-- `aim/<component>/<component>.intent`
-
-As logic grows, add precision facets:
-- `schema`: Data structures and structural types.
-- `contract`: Externally observable guarantees (Input/Output).
-- `flow`: Operational sequencing and internal logic.
-- `persona`: Actor roles and view access.
-- `view`: UI surfaces and user actions.
-- `event`: Async payloads and routing.
+- **Eliminate hallucinations.** Ground AI agents in explicit, versioned specifications instead of loose chat context.
+- **Deterministic code generation.** Build production-ready code traceable to every requirement.
+- **Automated review.** Detect when code drifts from intent and decide explicitly: fix code, or revise intent.
+- **Self-bootstrapping.** Every `.intent` file carries a `spec:` URL — any agent (Claude, Cursor, Gemini, Aider) can fetch the spec on first encounter and immediately understand the format. No plugin required.
 
 ---
 
-## The Workflow
+## What's new in v3.0
 
-1. **Author**: Define behavior in `.intent` files (Requirements -> Intent).
-2. **Implement**: Generate code and tests from local intent (Intent -> Code).
-3. **Verify**: Compare implementation against intent (Code -> Drift Report).
-4. **Repair**: Restore alignment when drift is detected (Drift -> Alignment).
+v3.0 is a breaking change from v2.2. The shifts:
+
+1. **Markdown-native syntax.** Files are valid Markdown with YAML frontmatter — renders on GitHub, in any IDE, and in any LLM context with no special tooling.
+2. **Self-describing headers.** Every file carries a `spec:` URL so cold-start agents can fetch the spec and self-bootstrap.
+3. **Sub-component-first authoring.** Complex applications are decomposed into focused sub-components by default. The parent intent acts as an index plus a home for shared facets.
+4. **Three mainstream roles.** Architect, Developer, Reviewer — matching real software teams instead of formal-methods jargon.
+
+Migrating from v2.2: see Section 11 of [specification.md](./specification.md).
 
 ---
 
-## Quick Example
+## File format at a glance
 
-AIM uses a block-based syntax (not YAML/JSON) for maximum readability and precision.
+```markdown
+---
+aim: juice.tasks.create_task
+facet: intent
+version: 3.0
+spec: https://intentmodel.dev/spec/3.0
+parent: juice.tasks
+---
 
-```ail
-AIM: auth.reset#intent@2.2
+# CreateTask
 
-INTENT PasswordReset {
-  SUMMARY: "Email-based password reset flow."
-  REQUIREMENTS {
-    - "User can request a reset link by email."
-    - "Reset link expires after one hour."
-  }
+## Summary
 
-  CONTRACT Request {
-    INPUT { email: string required }
-    ENSURES { - "Secure token generated" - "Email sent" }
-  }
-}
+Create a new task on behalf of the authenticated user.
+
+## Requirements
+
+- Title must be 1–200 characters.
+- Owner is the creating user.
+- A `tasks.created` event is emitted on success.
+
+## Contract: CreateTask
+
+### Input
+
+```aim-attrs
+title: string required min(1) max(200)
+description: string optional
+```
+
+### Ensures
+
+- A new Task record is persisted with status="open".
+- A `tasks.created` event is emitted.
 ```
 
 ---
 
-## Technical Reference
+## Layout
 
-- **[specification.md](./specification.md)**: The authoritative v2.2 language spec.
-- **[PROMPT.md](./PROMPT.md)**: Role-based prompts for non-CLI assistants (Claude, Cursor, etc.).
-- **[Registry](./registry/)**: Browse reusable intent packages.
+```
+/intent/
+  juice.tasks/
+    juice.tasks.intent              # parent: index + shared schemas
+    juice.tasks.schema.intent       # shared Task schema
+    create_task/
+      juice.tasks.create_task.intent
+    assign_task/
+      juice.tasks.assign_task.intent
+  mappings/
+    juice.tasks/
+      juice.tasks.mapping.intent
+```
+
+Each sub-component is a real component with its own intent file and namespace. The parent indexes them and holds shared facets.
 
 ---
 
-## Repository Layout
+## The workflow
 
-- `agents/`: Gemini CLI persona definitions.
-- `skills/`: Autonomous skills for Gemini (Intent-Code Consistency).
-- `registry/`: The component package catalog.
-- `site/`: The [intentmodel.dev](https://intentmodel.dev) website source.
+1. **Architect** writes intent files from requirements.
+2. **Developer** generates code and tests from intent.
+3. **Reviewer** compares code against intent and reports drift.
+4. **Repair** is explicit: code fix (Developer) or intent revision (Architect) — never silent normalization.
 
 ---
 
-## 🚀 Native Gemini CLI Extension
+## Render `.intent` files as Markdown on GitHub
 
-AIM is now a first-class extension for [Gemini CLI](https://geminicli.com). Stop copying prompts and start using specialized terminal personas.
+Drop a `.gitattributes` file at your repo root:
 
-### Installation
+```gitattributes
+*.intent linguist-language=Markdown
+*.intent linguist-detectable=true
+```
+
+GitHub will render `.intent` files as Markdown with full frontmatter, headings, and lists.
+
+---
+
+## Reference
+
+- **[specification.md](./specification.md)** — the authoritative v3.0 language spec.
+- **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant (Claude, Cursor, Aider, Gemini).
+- **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
+- **[Registry](./registry/)** — community catalog of reusable intent packages.
+
+---
+
+## Repository layout
+
+- `agents/` — Architect, Developer, Reviewer persona definitions.
+- `skills/` — Autonomous skills for code-generation workflows.
+- `registry/` — Component package catalog.
+- `site/` — The [intentmodel.dev](https://intentmodel.dev) website source.
+
+---
+
+## Gemini CLI extension
+
+AIM ships as a first-class Gemini CLI extension. Three personas, one command:
+
 ```bash
 gemini extensions install application-intent-model
 ```
 
-### Specialized Personas
-Invoke experts directly from your terminal:
-- **✍️ @aim-author**: "I want to build a 2FA login flow."
-- **📦 @aim-registry**: "fetch weather" (materializes into local `/aim`)
-- **🛠️ @aim-implementer**: "build weather in React"
-- **🔍 @aim-verifier**: "verify auth package" (generates a Drift Report)
-- **🩹 @aim-repairer**: "fix drift in auth"
+Then invoke from your terminal:
+
+- `@aim-architect`: "I want to build a 2FA login flow."
+- `@aim-developer`: "build [component] in React"
+- `@aim-reviewer`: "review [component]" (produces a drift report)
+
+Package fetching is a CLI command (`sinth fetch <package>`), not a separate agent.
 
 ---
 
-Current Spec: **AIM v2.2**  
+Current spec: **AIM v3.0**  
 Built by **[Juice d.o.o.](https://juice.com.hr)**

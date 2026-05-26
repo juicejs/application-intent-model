@@ -1,58 +1,56 @@
-# AIM v2.2 Role-Based Prompt Library
+# AIM v3.0 Role-Based Prompt Library
 
-Use these prompts to initialize an AI agent (Claude Code, Cursor, Aider) directly into a specific AIM v2.2 Operating Role. These prompts establish the "Brain" and read local context without performing actions yet.
+Use these prompts to initialize an AI agent (Claude Code, Cursor, Aider, etc.) into a specific AIM v3.0 role. Each prompt grounds the agent in the v3.0 specification at <https://intentmodel.dev/spec/3.0> and reads local context before performing any action.
+
+v3.0 uses three mainstream roles that map onto how real software teams work:
+
+- **Architect** — owns the specification, writes intent
+- **Developer** — implements code and tests, fixes code when drift is found
+- **Reviewer** — checks code against intent, reports drift
+
+Installing packages from the registry is a CLI command (`sinth fetch <package>`), not a separate role. Any agent invokes the CLI when they need packages.
 
 ---
 
-### ✍️ 1. Intent Author
-*Use this when you are starting a new project or refining requirements.*
+### 🏛 1. Architect
+*Use this when starting a new project or refining requirements.*
 
 ```md
-Initialize as an AIM v2.2 Agent in the Intent Author role by reading your instructions at https://intentmodel.dev/brain.author.md. 
+Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0.
 
-Read any existing .intent files in ./aim/ for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the existing intent context (or noted its absence). Do not draft any new intent yet—wait for me to describe the requirements.
+Read any existing `.intent` files under `./intent/` for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft any new intent yet — wait for me to describe the requirements.
 ```
 
 ---
 
-### 🛠️ 2. Implementer
-*Use this to prepare an agent for code synthesis.*
+### 🛠 2. Developer
+*Use this to prepare an agent for code generation, or for code repair against a drift report.*
 
 ```md
-Initialize as an AIM v2.2 Agent in the Implementer role by reading your instructions at https://intentmodel.dev/brain.implementer.md. 
+Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0.
 
-Read the local .intent files in ./aim/[Component Name] to understand the specified behavior. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the requirements you are prepared to build. Do not synthesize any code or tests yet—wait for my 'build' command.
+Read the local `.intent` files in `./intent/[Component Name]/` to understand the specified behavior, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not generate any code or tests yet — wait for my 'build' or 'repair' command.
 ```
 
 ---
 
-### 🔍 3. Verifier
+### 🔍 3. Reviewer
 *Use this to prepare for drift detection.*
 
 ```md
-Initialize as an AIM v2.2 Agent in the Verifier role by reading your instructions at https://intentmodel.dev/brain.verifier.md. 
+Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0.
 
-Read the intent files in ./aim/[Component Name] and scan the current implementation in the codebase. Once ready, confirm you have successfully parsed the v2.2 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.
+Read the intent files in `./intent/[Component Name]/` and scan the current implementation in the codebase. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.
 ```
 
 ---
 
-### 🩹 4. Repairer
-*Use this to prepare for restoring alignment.*
+## A note on repair
 
-```md
-Initialize as an AIM v2.2 Agent in the Repairer role by reading your instructions at https://intentmodel.dev/brain.repairer.md. 
+v3.0 collapsed the v2.2 "Repairer" role into the Developer and Architect. When the Reviewer reports drift:
 
-Read the intent and code for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and identified the drift context you are prepared to repair. Do not apply any fixes yet—wait for me to specify the repair priority.
-```
+- If the code is wrong → the **Developer** fixes the code.
+- If the intent is outdated → the **Architect** revises the intent.
+- If unclear → ask the user before changing either layer.
 
----
-
-### 📦 5. Registry Agent (Utility)
-*Use this to fetch and materialize packages from the registry.*
-
-```md
-Initialize as an AIM v2.2 Agent in the Registry role by reading your instructions at https://intentmodel.dev/brain.md. 
-
-Read the local ./aim/ directory and the registry index (https://intentmodel.dev/registry-files/index.json) to understand the current project state. Once ready, confirm you have successfully parsed the v2.2 specification and identified the local materialization state. Do not fetch or materialize anything yet.
-```
+Repair is always explicit — drift is never silently normalized.

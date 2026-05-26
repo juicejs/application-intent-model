@@ -1,115 +1,162 @@
-AIM: nemicko.demo.todo#intent@2.2
+---
+aim: nemicko.demo.todo
+facet: intent
+version: 3.0
+spec: https://intentmodel.dev/spec/3.0
+---
 
-INTENT TaskManager {
-  SUMMARY: "A complete personal task management system supporting creation, completion, and deletion of daily todos."
+# TaskManager
 
-  REQUIREMENTS {
-    - "Users can create new tasks with a title and optional description."
-    - "Users can mark active tasks as completed."
-    - "Users can delete tasks to remove them permanently."
-    - "Tasks must securely belong only to the authenticated user."
-  }
+## Summary
 
-  TESTS {
-    - "A user cannot view or complete a task owned by a different user."
-    - "Completing an already completed task returns safely without error."
-  }
+A complete personal task management system supporting creation, completion, and deletion of daily todos.
 
-  # --- 1. STATE (The Data) ---
-  SCHEMA TodoItem {
-    SUMMARY: "The core data entity representing a single user task."
-    ATTRIBUTES {
-      id: string generated unique
-      ownerId: string required
-      title: string required max(100)
-      description: string optional
-      status: string default('PENDING') enum('PENDING', 'COMPLETED')
-      createdAt: timestamp generated
-    }
-  }
+## Requirements
 
-  # --- 2. RULES (The Guardrails) ---
-  CONTRACT CreateTodo {
-    SUMMARY: "Creates a new pending task for the active user."
-    INPUT {
-      title: string required
-      description: string optional
-    }
-    AUTHZ {
-      - "User must be actively authenticated"
-    }
-    EXPECTS {
-      - "Title must not be empty or purely whitespace"
-    }
-    ENSURES {
-      - PERSISTS "New TodoItem with status='PENDING' and ownerId=currentUser.id"
-      - EMITS "TodoCreatedEvent"
-    }
-    RETURNS {
-      - "The created TodoItem"
-    }
-  }
+- Users can create new tasks with a title and optional description.
+- Users can mark active tasks as completed.
+- Users can delete tasks to remove them permanently.
+- Tasks must securely belong only to the authenticated user.
 
-  CONTRACT CompleteTodo {
-    SUMMARY: "Safely marks an active task as complete."
-    INPUT {
-      todoId: string required
-    }
-    AUTHZ {
-      - "User must be authenticated"
-      - "User must be the ownerId of the TodoItem"
-    }
-    EXPECTS {
-      - "TodoItem record must exist"
-      - "TodoItem.status must currently be 'PENDING'"
-    }
-    ENSURES {
-      - UPDATES "TodoItem.status to 'COMPLETED'"
-    }
-    RETURNS {
-      - "The updated TodoItem"
-    }
-  }
+## Tests
 
-  # --- 3. MECHANICS (The Internal Plumbing) ---
-  FLOW ExecuteCreateTodo {
-    SUMMARY: "Orchestrates database insertion and event publishing for new tasks."
-    TRIGGER {
-      - "Invoked by CreateTodo CONTRACT"
-    }
-    STEPS {
-      - "CALL Auth.GetCurrentUser to extract userId"
-      - "Construct new TodoItem object with input data and extracted userId"
-      - "CALL Storage.Insert(TodoItem)"
-      - "CALL EventBus.Publish('TodoCreated', TodoItem)"
-    }
-    ON_ERROR {
-      - "CALL Logger.Warn('Failed to create task')"
-      - "RETHROW error to surface to UI"
-    }
-  }
+- A user cannot view or complete a task owned by a different user.
+- Completing an already completed task returns safely without error.
 
-  # --- 4. ACTORS & UI (The Triggers) ---
-  PERSONA StandardUser {
-    SUMMARY: "A regular individual managing their personal task list."
-    ROLE {
-      - "user:standard"
-    }
-    ACCESS {
-      - VIEW TodoDashboard
-    }
-  }
+## Schema: TodoItem
 
-  VIEW TodoDashboard {
-    SUMMARY: "The main interface for viewing and interacting with the task list."
-    DISPLAY {
-      - "A list of TodoItem records where ownerId=currentUser.id"
-      - "Visual distinction between PENDING and COMPLETED tasks"
-      - "Empty state message if no tasks exist"
-    }
-    ACTIONS {
-      - "Submitting the 'New Task' form -> CALL CreateTodo"
-      - "Tapping the checkbox on a PENDING task -> CALL CompleteTodo"
-    }
-  }
-}
+The core data entity representing a single user task.
+
+### Attributes
+
+```aim-attrs
+id: string generated unique
+ownerId: string required
+title: string required max(100)
+description: string optional
+status: enum(PENDING, COMPLETED) default(PENDING)
+createdAt: timestamp generated
+```
+
+## Contract: CreateTodo
+
+Creates a new pending task for the active user.
+
+### Input
+
+```aim-attrs
+title: string required
+description: string optional
+```
+
+### Authz
+
+- User must be actively authenticated.
+
+### Expects
+
+- Title must not be empty or purely whitespace.
+
+### Ensures
+
+- Persists a new TodoItem with `status="PENDING"` and `ownerId=currentUser.id`.
+- Emits a `TodoCreated` event.
+
+### Returns
+
+- The created TodoItem.
+
+## Contract: CompleteTodo
+
+Safely marks an active task as complete.
+
+### Input
+
+```aim-attrs
+todoId: string required
+```
+
+### Authz
+
+- User must be authenticated.
+- User must be the `ownerId` of the TodoItem.
+
+### Expects
+
+- The TodoItem record must exist.
+- `TodoItem.status` must currently be `PENDING`.
+
+### Ensures
+
+- Updates `TodoItem.status` to `COMPLETED`.
+
+### Returns
+
+- The updated TodoItem.
+
+## Flow: ExecuteCreateTodo
+
+Orchestrates database insertion and event publishing for new tasks.
+
+### Trigger
+
+- Invoked by the `Contract: CreateTodo` boundary.
+
+### Steps
+
+1. `CALL` Auth.GetCurrentUser to extract userId.
+2. Construct a new TodoItem with input data and the extracted userId.
+3. `CALL` Storage.Insert(TodoItem).
+4. `CALL` EventBus.Publish("TodoCreated", TodoItem).
+
+### On Error
+
+- `CALL` Logger.Warn("Failed to create task").
+- Rethrow the error to surface to the UI.
+
+## Persona: StandardUser
+
+A regular individual managing their personal task list.
+
+### Role
+
+- `user:standard`
+
+### Access
+
+- May view `View: TodoDashboard`.
+
+## View: TodoDashboard
+
+The main interface for viewing and interacting with the task list.
+
+### Display
+
+- A list of TodoItem records where `ownerId = currentUser.id`.
+- Visual distinction between PENDING and COMPLETED tasks.
+- Empty state message if no tasks exist.
+
+### Actions
+
+- Submitting the "New Task" form → invokes `Contract: CreateTodo`.
+- Tapping the checkbox on a PENDING task → invokes `Contract: CompleteTodo`.
+
+## Event: TodoCreated
+
+Emitted when a new todo is persisted.
+
+### Payload
+
+```aim-attrs
+todoId: string required
+ownerId: string required
+createdAt: timestamp required
+```
+
+### Emitted By
+
+- `Flow: ExecuteCreateTodo`
+
+### Routing
+
+- Channel: `todos.created`

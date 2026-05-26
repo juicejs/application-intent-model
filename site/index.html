@@ -637,7 +637,7 @@
     },
     "codeRepository": "https://github.com/juicejs/application-intent-model",
     "license": "https://github.com/juicejs/application-intent-model/blob/main/LICENSE",
-    "version": "2.2"
+    "version": "3.0"
   }
   </script>
   </head>
@@ -673,21 +673,25 @@
               <span class="code-dot"></span>
               <span class="code-window-title">weather.intent</span>
             </div>
-            <pre><code><span class="k">AIM:</span> weather#intent@2.2
+            <pre><code><span class="k">---</span>
+<span class="k">aim:</span> weather
+<span class="k">spec:</span> https://intentmodel.dev/spec/3.0
+<span class="k">---</span>
 
-<span class="k">INTENT</span> Weather {
-  <span class="k">SUMMARY:</span> <span class="s">"Current conditions widget."</span>
+<span class="k"># Weather</span>
 
-  <span class="k">REQUIREMENTS</span> {
-    - <span class="s">"Show temperature and location."</span>
-    - <span class="s">"Refresh every 10 minutes."</span>
-  }
+<span class="k">## Summary</span>
+Current conditions widget.
 
-  <span class="k">CONTRACT</span> Fetch {
-    <span class="k">ENSURES</span> { <span class="s">"Returns current data"</span> }
-    <span class="k">VERIFY</span>  { <span class="s">"Fails gracefully offline"</span> }
-  }
-}</code></pre>
+<span class="k">## Requirements</span>
+- Show temperature and location.
+- Refresh every 10 minutes.
+
+<span class="k">## Contract: Fetch</span>
+
+<span class="k">### Ensures</span>
+- Returns current data.
+- Fails gracefully when offline.</code></pre>
           </div>
         </div>
       </div>
@@ -757,17 +761,21 @@
         <div class="compare-card compare-after">
           <div class="compare-label">AI verifies — explicit contract</div>
           <pre><code><span class="k">INTENT</span> PasswordReset {
-  <span class="k">SUMMARY:</span> <span class="s">"Email-based reset flow."</span>
-  <span class="k">REQUIREMENTS</span> {
-    - <span class="s">"Token expires after 24h."</span>
-    - <span class="s">"Single-use only."</span>
-    - <span class="s">"Log all resets."</span>
-  }
-  <span class="k">CONTRACT</span> {
-    <span class="k">ENSURES</span> { <span class="s">"Reset link is sent"</span> }
-    <span class="k">VERIFY</span>  { <span class="s">"Single-use enforced"</span> }
-  }
-}</code></pre>
+<span class="k"># PasswordReset</span>
+
+<span class="k">## Summary</span>
+Email-based reset flow.
+
+<span class="k">## Requirements</span>
+- Token expires after 24h.
+- Single-use only.
+- Log all resets.
+
+<span class="k">## Contract: Reset</span>
+
+<span class="k">### Ensures</span>
+- Reset link is sent.
+- Single-use is enforced.</code></pre>
           <p class="compare-note">"Correct" is defined. AI checks its output against the contract. Same spec → same behavior across every agent and session.</p>
         </div>
       </div>
@@ -776,7 +784,7 @@
     <!-- 4. FULL WORKFLOW -->
     <section id="getting-started" class="lp-section">
       <div class="lp-heading">
-        <h2>Get started in 4 steps</h2>
+        <h2>Get started in 3 steps</h2>
         <p>Each step uses one specialized agent. Paste the prompt into Claude, Cursor, Copilot, or any chat-based assistant and follow its guidance. No new tools required.</p>
       </div>
 
@@ -788,11 +796,11 @@
           </div>
           <div class="wt-card">
             <div class="wt-card-top">
-              <span class="workflow-agent-tag">@aim-author</span>
+              <span class="workflow-agent-tag">@aim-architect</span>
               <span class="badge-start">Start here</span>
             </div>
             <h3>Describe your feature, get a structured spec</h3>
-            <p>Tell the Author agent what you want to build in plain English — the actors, rules, and edge cases. It asks clarifying questions, then generates a <code>.intent</code> file and saves it to your repo. This file is the contract everything else builds from.</p>
+            <p>Tell the Architect agent what you want to build in plain English — the actors, rules, and edge cases. It asks clarifying questions, then generates one or more <code>.intent</code> files and saves them to your repo. These files are the contract everything else builds from.</p>
           </div>
         </div>
 
@@ -803,10 +811,10 @@
           </div>
           <div class="wt-card">
             <div class="wt-card-top">
-              <span class="workflow-agent-tag">@aim-implementer</span>
+              <span class="workflow-agent-tag">@aim-developer</span>
             </div>
-            <h3>Point the Implementer at your intent file</h3>
-            <p>The Implementer reads the <code>.intent</code> file and synthesizes production-ready code and tests. Working from an explicit contract — not a vague prompt — it knows what to build, what the edge cases are, and what "done" looks like.</p>
+            <h3>Point the Developer at your intent files</h3>
+            <p>The Developer reads the <code>.intent</code> files and generates production-ready code and tests. Working from an explicit contract — not a vague prompt — it knows what to build, what the edge cases are, and what "done" looks like. Also handles code fixes when drift is reported.</p>
           </div>
         </div>
 
@@ -817,25 +825,10 @@
           </div>
           <div class="wt-card">
             <div class="wt-card-top">
-              <span class="workflow-agent-tag">@aim-verifier</span>
+              <span class="workflow-agent-tag">@aim-reviewer</span>
             </div>
-            <h3>Verify alignment before you merge</h3>
-            <p>Run the Verifier to compare your implementation against the intent. It produces a drift report: which requirements are met, which CONTRACT invariants are satisfied, and which — if any — have been broken or missed.</p>
-          </div>
-        </div>
-
-        <div class="wt-item">
-          <div class="wt-track">
-            <div class="wt-circle">4</div>
-            <div class="wt-line"></div>
-          </div>
-          <div class="wt-card">
-            <div class="wt-card-top">
-              <span class="workflow-agent-tag">@aim-repairer</span>
-              <span style="font-size: 0.72rem; color: var(--text-muted);">When needed</span>
-            </div>
-            <h3>Repair drift before it becomes a bug</h3>
-            <p>If the Verifier finds drift, the Repairer fixes it — updating the code to match the intent, or updating the intent to reflect a deliberate change. The branch lands clean, with code and spec in sync.</p>
+            <h3>Review alignment before you merge</h3>
+            <p>Run the Reviewer to compare your implementation against the intent. It produces a drift report and assigns each finding: code fix (back to the Developer) or intent revision (back to the Architect). Repair is explicit — never silently normalized.</p>
           </div>
         </div>
       </div>
@@ -849,56 +842,44 @@
     <section id="start" class="lp-section">
       <div class="lp-heading">
         <h2>Copy a prompt to get started</h2>
-        <p>Paste any of these into your AI coding assistant. Start with the Author — it will ask you about your feature and create the <code>.intent</code> file.</p>
+        <p>Paste any of these into your AI coding assistant. Start with the Architect — it will ask you about your feature and create the <code>.intent</code> files.</p>
       </div>
 
       <div class="roles-grid">
         <div class="role-card">
           <div class="role-header">
-            <span class="role-name">Intent Author</span>
+            <span class="role-name">Architect</span>
             <span class="badge-start">Start here</span>
           </div>
-          <p class="role-desc">Turns your plain-English description into a structured <code>.intent</code> file. Use this first for any new feature or component.</p>
-          <div style="display:none;" id="role-prompt-author">Initialize as an AIM v2.2 Agent in the Intent Author role by reading your instructions at https://intentmodel.dev/brain.author.md. Read any existing .intent files for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
-          <button class="btn primary role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-author').innerText, this)">
+          <p class="role-desc">Turns your plain-English description into structured <code>.intent</code> files. Use this first for any new feature or component.</p>
+          <div style="display:none;" id="role-prompt-architect">Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0. Read any existing .intent files under ./intent/ for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
+          <button class="btn primary role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-architect').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy Author Prompt
+            Copy Architect Prompt
           </button>
         </div>
 
         <div class="role-card">
           <div class="role-header">
-            <span class="role-name">Implementer</span>
+            <span class="role-name">Developer</span>
           </div>
-          <p class="role-desc">Synthesizes code and tests directly from your <code>.intent</code> files. Use this after the Author has created the spec.</p>
-          <div style="display:none;" id="role-prompt-implementer">Initialize as an AIM v2.2 Agent in the Implementer role by reading your instructions at https://intentmodel.dev/brain.implementer.md. Read the local intent in ./aim/[Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
-          <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-implementer').innerText, this)">
+          <p class="role-desc">Generates code and tests from your <code>.intent</code> files. Also handles code-side fixes when the Reviewer reports drift.</p>
+          <div style="display:none;" id="role-prompt-developer">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the local intent files in ./intent/[Component Name]/, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
+          <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-developer').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy Implementer Prompt
+            Copy Developer Prompt
           </button>
         </div>
 
         <div class="role-card">
           <div class="role-header">
-            <span class="role-name">Verifier</span>
+            <span class="role-name">Reviewer</span>
           </div>
-          <p class="role-desc">Checks that your code still matches the intent after changes. Use this before merging to catch drift before it becomes a bug.</p>
-          <div style="display:none;" id="role-prompt-verifier">Initialize as an AIM v2.2 Agent in the Verifier role by reading your instructions at https://intentmodel.dev/brain.verifier.md. Map the intent in ./aim/ to the current implementation. Once ready, confirm you have successfully parsed the v2.2 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
-          <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-verifier').innerText, this)">
+          <p class="role-desc">Checks that your code matches the intent and produces a drift report. Assigns each finding to the Developer (code fix) or Architect (intent revision).</p>
+          <div style="display:none;" id="role-prompt-reviewer">Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the intent files in ./intent/[Component Name]/ and scan the current implementation. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
+          <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-reviewer').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy Verifier Prompt
-          </button>
-        </div>
-
-        <div class="role-card">
-          <div class="role-header">
-            <span class="role-name">Repairer</span>
-          </div>
-          <p class="role-desc">Restores alignment when code and intent diverge — fixes the code to match the spec, or updates the spec to reflect what changed.</p>
-          <div style="display:none;" id="role-prompt-repairer">Initialize as an AIM v2.2 Agent in the Repairer role by reading your instructions at https://intentmodel.dev/brain.repairer.md. Read the intent and code for [Component Name]. Once ready, confirm you have successfully parsed the v2.2 specification and identified the drift context you are prepared to repair. Do not apply fixes yet.</div>
-          <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-repairer').innerText, this)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy Repairer Prompt
+            Copy Reviewer Prompt
           </button>
         </div>
       </div>
@@ -919,7 +900,7 @@
           <ul class="gemini-list">
             <li>
               <span class="gemini-check">✓</span>
-              <span><strong>Native personas</strong> — <code>@aim-author</code>, <code>@aim-implementer</code>, <code>@aim-verifier</code>, <code>@aim-repairer</code></span>
+              <span><strong>Native personas</strong> — <code>@aim-architect</code>, <code>@aim-developer</code>, <code>@aim-reviewer</code></span>
             </li>
             <li>
               <span class="gemini-check">✓</span>
@@ -946,14 +927,14 @@ gemini extensions install \
   application-intent-model
 
 <span class="c"># Invoke personas directly</span>
-gemini "@aim-author I want to \
+gemini "@aim-architect I want to \
   build a 2FA flow"
 
-gemini "@aim-verifier \
-  verify weather package"
+gemini "@aim-developer \
+  build weather in React"
 
-gemini "@aim-repairer \
-  fix logic drift in auth"</code></pre>
+gemini "@aim-reviewer \
+  review auth for drift"</code></pre>
           </div>
         </div>
       </div>
@@ -976,13 +957,13 @@ gemini "@aim-repairer \
             <span class="pkg-chip">terminal.countdown</span>
             <span class="pkg-chip">game.tango</span>
           </div>
-          <div style="display:none;" id="registry-agent-example">Initialize as an AIM v2.2 Implementer Agent by reading your instructions at https://intentmodel.dev/brain.implementer.md.
+          <div style="display:none;" id="registry-agent-example">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0.
 
 Command: build weather in React.
 
 Execute the full protocol:
-1. Fetch and materialize the package into local ./aim/ using the V2.2 Nested Layout.
-2. Synthesize the production-ready code and tests.</div>
+1. Fetch the weather package via `sinth fetch weather`. It installs into ./intent/ in the canonical nested layout.
+2. Generate the production-ready code and tests.</div>
           <div class="registry-actions">
             <button class="btn primary" onclick="copyPrompt(document.getElementById('registry-agent-example').innerText, this)">Copy Agent Prompt</button>
             <a class="btn" href="./registry/">Browse Registry</a>
@@ -999,17 +980,17 @@ Execute the full protocol:
             </div>
             <pre><code><span class="c"># Paste into Claude, Cursor, or Copilot</span>
 
-Initialize as an AIM v2.2
-Implementer Agent by reading
-your instructions at:
-intentmodel.dev/brain.implementer.md
+Initialize as an AIM v3.0
+Developer Agent by reading:
+intentmodel.dev/brain.developer.md
+intentmodel.dev/spec/3.0
 
 Command: build weather in React.
 
 Execute the full protocol:
-1. Fetch and materialize the
-   package into local ./aim/
-2. Synthesize production-ready
+1. Fetch the package into
+   ./intent/ via sinth fetch.
+2. Generate production-ready
    code and tests.</code></pre>
           </div>
         </div>
@@ -1017,7 +998,7 @@ Execute the full protocol:
     </section>
 
     <footer class="footer" style="text-align: center;">
-      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="./spec/">Spec</a> &bull; <a href="./registry/">Registry</a> &bull; <a href="https://github.com/juicejs/application-intent-model">GitHub</a></p>
+      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="./spec/3.0/">Spec</a> &bull; <a href="./registry/">Registry</a> &bull; <a href="https://github.com/juicejs/application-intent-model">GitHub</a></p>
     </footer>
 
     <script src="./assets/chrome.js"></script>

@@ -1,9 +1,23 @@
 {
-  "version": "1",
+  "version": "2",
+  "schema_note": "v2 adds aim_version per package. Index entries declare which AIM language version the package conforms to. v3.0 entries use Markdown+frontmatter; v2.2 entries use the legacy block DSL.",
   "packages": [
     {
+      "name": "nemicko.demo.todo",
+      "aim_version": "3.0",
+      "version": "1.0.0",
+      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent",
+      "files": [
+        "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
+      ],
+      "image": null,
+      "description": "A complete personal todo manager — shows all six facet types in a single v3.0 file."
+    },
+    {
       "name": "game.snake",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/game.snake/game.snake.intent",
       "files": [
         "registry/packages/game.snake/game.snake.contract.intent",
@@ -14,7 +28,9 @@
     },
     {
       "name": "game.tango",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/game.tango/game.tango.intent",
       "files": [
         "registry/packages/game.tango/game.tango.intent"
@@ -22,17 +38,10 @@
       "image": null
     },
     {
-      "name": "nemicko.demo.todo",
-      "version": "2.2",
-      "entry": "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent",
-      "files": [
-        "registry/packages/nemicko.demo.todo/nemicko.demo.todo.intent"
-      ],
-      "image": null
-    },
-    {
       "name": "recipe.book",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/recipe.book/recipe.book.intent",
       "files": [
         "registry/packages/recipe.book/recipe.book.contract.intent",
@@ -44,7 +53,9 @@
     },
     {
       "name": "terminal.countdown",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/terminal.countdown/terminal.countdown.intent",
       "files": [
         "registry/packages/terminal.countdown/terminal.countdown.contract.intent",
@@ -55,7 +66,9 @@
     },
     {
       "name": "tool.pixelart",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/tool.pixelart/tool.pixelart.intent",
       "files": [
         "registry/packages/tool.pixelart/tool.pixelart.contract.intent",
@@ -66,7 +79,9 @@
     },
     {
       "name": "weather",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/weather/weather.intent",
       "files": [
         "registry/packages/weather/weather.intent"
@@ -74,13 +89,10 @@
       "image": null
     },
     {
-      "name": "recipe.book",
-      "version": "2.2",
-      "entry": "registry/packages/recipe.book/recipe.book.intent"
-    },
-    {
       "name": "funny.chess",
+      "aim_version": "2.2",
       "version": "2.2",
+      "legacy": true,
       "entry": "registry/packages/chess/funny.chess.intent"
     }
   ]

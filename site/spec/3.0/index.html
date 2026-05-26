@@ -6,21 +6,18 @@
     <title>Technical Specification — AIM v3.0</title>
     <meta name="description" content="The complete technical specification for the Application Intent Model v3.0. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
     <meta name="author" content="Juice d.o.o.">
-    <link rel="canonical" href="https://intentmodel.dev/spec/">
-    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
-    <!-- Open Graph -->
+    <link rel="canonical" href="https://intentmodel.dev/spec/3.0/">
+    <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://intentmodel.dev/spec/">
+    <meta property="og:url" content="https://intentmodel.dev/spec/3.0/">
     <meta property="og:title" content="Technical Specification — AIM v3.0">
-    <meta property="og:description" content="The complete technical specification for the Application Intent Model v3.0. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
+    <meta property="og:description" content="The complete technical specification for the Application Intent Model v3.0.">
     <meta property="og:image" content="https://intentmodel.dev/assets/og-image.png">
     <meta property="og:site_name" content="Application Intent Model">
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Technical Specification — AIM v3.0">
-    <meta name="twitter:description" content="The complete technical specification for the Application Intent Model v3.0. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
-    <link rel="stylesheet" href="../assets/site.css">
-    <!-- 100% privacy-first analytics -->
+    <meta name="twitter:description" content="The complete technical specification for the Application Intent Model v3.0.">
+    <link rel="stylesheet" href="../../assets/site.css">
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
     <style>
       .toc-container {
@@ -60,18 +57,17 @@
         font-size: 0.85rem;
         opacity: 0.8;
       }
-      /* Ensure anchors have space for header if any */
       #spec-content h1, #spec-content h2, #spec-content h3 {
         scroll-margin-top: 24px;
       }
     </style>
   </head>
-  <body data-page="spec" data-base="../">
+  <body data-page="spec" data-base="../../">
 
     <section class="page-header">
       <p class="label">AIM v3.0</p>
       <h1>Technical Specification</h1>
-      <p>The complete reference for intent files, facets, contracts, and the package registry format. &bull; <a id="spec-link" href="../../specification.md" target="_blank" rel="noopener">View Raw Markdown</a></p>
+      <p>The complete reference for v3.0 intent files, facets, sub-components, and the package registry format. &bull; <a id="spec-link" href="../../specification.md" target="_blank" rel="noopener">View Raw Markdown</a></p>
     </section>
 
     <nav id="toc" class="toc-container" style="display: none;">
@@ -84,10 +80,10 @@
     </article>
 
     <footer class="footer" style="text-align: center;">
-      <p>AIM Open Standard v2.2 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
+      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../../">Home</a> &bull; <a href="../../registry/">Registry</a> &bull; <a href="../">v2.2 spec</a></p>
     </footer>
 
-    <script src="../assets/chrome.js"></script>
+    <script src="../../assets/chrome.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
       async function fetchFirst(urls) {
@@ -106,25 +102,20 @@
         const toc = document.getElementById("toc");
         const tocList = document.getElementById("toc-list");
         const headings = contentEl.querySelectorAll("h1, h2, h3");
-        
+
         if (headings.length < 2) return;
 
         headings.forEach((heading, index) => {
-          // Skip the main page title if it's the first H1
-          if (heading.tagName === "H1" && index === 0 && heading.textContent.includes("AIM")) {
-             // Optional: hide it if we want it cleaner
-          }
-
           const id = "section-" + index;
           heading.id = id;
 
           const li = document.createElement("li");
           li.className = "toc-item level-" + heading.tagName.substring(1);
-          
+
           const a = document.createElement("a");
           a.href = "#" + id;
           a.textContent = heading.textContent;
-          
+
           li.appendChild(a);
           tocList.appendChild(li);
         });
@@ -135,12 +126,12 @@
       async function renderSpec() {
         const el = document.getElementById("spec-content");
         const link = document.getElementById("spec-link");
-        const candidates = ["../specification.md", "../../specification.md", "/specification.md"];
+        const candidates = ["../../specification.md", "../../../specification.md", "/specification.md"];
         try {
           const { url, res } = await fetchFirst(candidates);
           link.href = url;
           const md = await res.text();
-          
+
           if (window.marked && typeof window.marked.parse === "function") {
             el.innerHTML = window.marked.parse(md);
             generateTOC(el);
