@@ -122,7 +122,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 ---
 aim_version: 3.0
 aim_root: ./aim/
-spec: https://intentmodel.dev/spec/3.0
+spec: https://intentmodel.dev/spec/3.0.md
 ---
 
 # Agents
@@ -824,7 +824,7 @@ Even when sources are fetched remotely, all implementation, review, and code gen
 v3.0 is a breaking change. Tools should ship a `sinth migrate` command that converts v2.2 sources to v3.0:
 
 1. Convert `AIM: <name>#<facet>@2.2` headers to YAML frontmatter with `aim:` and `facet:` only (per-file `version:` and `spec:` are no longer used).
-2. Create or update `AGENTS.md` at the project root with `aim_version: 3.0` and `spec: https://intentmodel.dev/spec/3.0` in its frontmatter.
+2. Create or update `AGENTS.md` at the project root with `aim_version: 3.0` and `spec: https://intentmodel.dev/spec/3.0.md` in its frontmatter.
 3. Rename `*.intent` files to `*.aim`.
 4. Translate `INTENT Name { ... }` → `# Name` + section headings.
 5. Translate `SCHEMA Name { ATTRIBUTES { ... } }` → `## Schema: Name` + `### Attributes` + fenced `aim-attrs` block.

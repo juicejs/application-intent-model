@@ -89,7 +89,7 @@ status: enum(open, completed, archived) required
 ## 4. FAIL-SAFES
 
 Before delivering any `.aim` file, verify:
-1. Frontmatter has all required fields including `spec: https://intentmodel.dev/spec/3.0`.
+1. Frontmatter has `aim:` and `facet:` (and `parent:` for sub-components). Per-file `version:` and `spec:` are not used — those live once in `AGENTS.md`.
 2. Filename ends in `.aim`.
 3. Body is valid Markdown — no v2.2-style `INTENT { ... }` blocks.
 4. Every intent file has exactly one H1 and a non-empty `## Requirements`.

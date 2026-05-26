@@ -19,7 +19,7 @@ This `GEMINI.md` provides operating rules and role dispatch. The specification p
 
 - **Extension:** Every AIM artifact MUST end in `.aim`.
 - **Format:** Markdown body with YAML frontmatter. Renders as Markdown anywhere.
-- **Frontmatter:** Every file starts with a YAML block containing `aim`, `facet`, `version: 3.0`, `spec: https://intentmodel.dev/spec/3.0`, and `parent` if it's a sub-component.
+- **Frontmatter:** Every file starts with a YAML block containing `aim` and `facet` (and `parent` if it's a sub-component). The project-wide `aim_version` and `spec:` URL live once in `AGENTS.md` at the project root, not per file.
 - **Identity:** The `aim` namespace MUST match the filename and directory path.
 
 ## 3. Syntax rules
@@ -58,7 +58,7 @@ Package installation is a CLI command (`sinth fetch <package>`), not a separate 
 
 ## 7. Fail-safes before writing any `.aim` file
 
-1. Frontmatter present and complete with `spec: https://intentmodel.dev/spec/3.0`.
+1. Frontmatter present and complete with `aim:` and `facet:` (per-file `version:` and `spec:` are no longer used — they live in `AGENTS.md`).
 2. Filename ends in `.aim` (never `.md`, `.yml`, `.yaml`, `.json`).
 3. Body is valid Markdown — no v2.2 DSL blocks.
 4. Sub-component files declare `parent:` matching an existing parent intent file.
@@ -67,4 +67,4 @@ Package installation is a CLI command (`sinth fetch <package>`), not a separate 
 
 ---
 
-For the full language specification, fetch <https://intentmodel.dev/spec/3.0>.
+For the full language specification, fetch <https://intentmodel.dev/spec/3.0.md>.

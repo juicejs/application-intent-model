@@ -857,7 +857,7 @@ Email-based reset flow.
             <span class="badge-start">Start here</span>
           </div>
           <p class="role-desc">Turns your plain-English description into structured <code>.aim</code> files. Use this first for any new feature or component.</p>
-          <div style="display:none;" id="role-prompt-architect">Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0. Read any existing .aim files under ./aim/ for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
+          <div style="display:none;" id="role-prompt-architect">Initialize as an AIM v3.0 Architect Agent by reading your instructions at https://intentmodel.dev/brain.architect.md and the language specification at https://intentmodel.dev/spec/3.0.md. Read any existing .aim files under ./aim/ for [Component Name]. Once ready, confirm you have parsed the v3.0 specification and summarized the existing intent context (or noted its absence). Do not draft new intent yet.</div>
           <button class="btn primary role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-architect').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             Copy Architect Prompt
@@ -869,7 +869,7 @@ Email-based reset flow.
             <span class="role-name">Developer</span>
           </div>
           <p class="role-desc">Generates code and tests from your <code>.aim</code> files. Also handles code-side fixes when the Reviewer reports drift.</p>
-          <div style="display:none;" id="role-prompt-developer">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the local intent files in ./aim/[Component Name]/, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
+          <div style="display:none;" id="role-prompt-developer">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0.md. Read the local intent files in ./aim/[Component Name]/, walking parent and sub-components. Once ready, confirm you have parsed the v3.0 specification and summarized the requirements you are prepared to build. Do not build yet.</div>
           <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-developer').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             Copy Developer Prompt
@@ -881,7 +881,7 @@ Email-based reset flow.
             <span class="role-name">Reviewer</span>
           </div>
           <p class="role-desc">Checks that your code matches the intent and produces a drift report. Assigns each finding to the Developer (code fix) or Architect (intent revision).</p>
-          <div style="display:none;" id="role-prompt-reviewer">Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0. Read the intent files in ./aim/[Component Name]/ and scan the current implementation. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
+          <div style="display:none;" id="role-prompt-reviewer">Initialize as an AIM v3.0 Reviewer Agent by reading your instructions at https://intentmodel.dev/brain.reviewer.md and the language specification at https://intentmodel.dev/spec/3.0.md. Read the intent files in ./aim/[Component Name]/ and scan the current implementation. Once ready, confirm you have parsed the v3.0 specification and mapped the relationship between intent and implementation. Do not produce a drift report yet.</div>
           <button class="btn role-copy-btn" onclick="copyPrompt(document.getElementById('role-prompt-reviewer').innerText, this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             Copy Reviewer Prompt
@@ -962,7 +962,7 @@ gemini "@aim-reviewer \
             <span class="pkg-chip">terminal.countdown</span>
             <span class="pkg-chip">game.tango</span>
           </div>
-          <div style="display:none;" id="registry-agent-example">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0.
+          <div style="display:none;" id="registry-agent-example">Initialize as an AIM v3.0 Developer Agent by reading your instructions at https://intentmodel.dev/brain.developer.md and the language specification at https://intentmodel.dev/spec/3.0.md.
 
 Command: build weather in React.
 
@@ -988,7 +988,7 @@ Execute the full protocol:
 Initialize as an AIM v3.0
 Developer Agent by reading:
 intentmodel.dev/brain.developer.md
-intentmodel.dev/spec/3.0
+intentmodel.dev/spec/3.0.md
 
 Command: build weather in React.
 

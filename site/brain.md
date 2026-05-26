@@ -127,7 +127,7 @@ parent: <parent namespace>   # only on sub-components
 ---
 ```
 
-Required: `aim`, `facet`, `version`, `spec`. The `spec` URL must always be `https://intentmodel.dev/spec/3.0`.
+Required: `aim`, `facet`. Optional: `parent` (sub-components), `display`, `tags`. Per-file `version:` and `spec:` are NOT used — those live once in `AGENTS.md` at the project root.
 
 ### 4.3 File layout
 
@@ -210,7 +210,7 @@ description: string optional
 
 Before writing any `.aim` file, verify:
 
-1. **Frontmatter first** — opens with `---`, contains `aim`, `facet`, `version: 3.0`, `spec: https://intentmodel.dev/spec/3.0`.
+1. **Frontmatter first** — opens with `---`, contains `aim` and `facet` (and `parent` for sub-components).
 2. **Extension** — filename ends in `.aim`.
 3. **Path identity** — frontmatter `aim` matches the filename and directory.
 4. **No generic names** — `schema.aim`, `intent.aim` are hard errors.
