@@ -14,11 +14,11 @@
           <path d="M13 23.5 L13 8.5 L19 16 L25 8.5 L25 23.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
         <span>Application Intent Model</span>
-        <span class="site-version">v3.0</span>
+        <span class="site-version">v3.1</span>
       </a>
       <nav class="site-nav" aria-label="Primary">
         <a data-nav="home" href="${base}">Home</a>
-        <a data-nav="spec" href="${base}spec/3.0/">Specification</a>
+        <a data-nav="spec" href="${base}spec/">Specification</a>
         <a data-nav="registry" href="${base}registry/">Registry</a>
         <a data-nav="publish" href="${base}registry/publish.html">Publish</a>
       </nav>

@@ -1,10 +1,10 @@
-# AIM v3.0 Core Mandates
+# AIM v3.1 Core Mandates
 
 These mandates are foundational. All agents working in this project MUST adhere to these rules without exception.
 
 ## 1. Required reading
 
-Before executing any command or writing any file, read the v3.0 specification.
+Before executing any command or writing any file, read the v3.1 specification.
 
 **Bootstrap order:**
 
@@ -27,7 +27,7 @@ This `GEMINI.md` provides operating rules and role dispatch. The specification p
 - **Headings:** `# <Name>` for component, `## Summary`/`## Requirements`/`## Tests`/`## Subcomponents`/`## Dependencies` for sections, `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets, `### Attributes`/`### Input`/etc. for sub-blocks.
 - **Lists:** Standard Markdown bullets.
 - **Attributes:** Fenced `aim-attrs` code blocks with `name: type modifiers` lines.
-- **No v2.2 DSL.** `INTENT Name { ... }`, `SUMMARY:`, `REQUIREMENTS {` block syntax is invalid in v3.0.
+- **No v2.2 DSL.** `INTENT Name { ... }`, `SUMMARY:`, `REQUIREMENTS {` block syntax is invalid in v3.1.
 
 ## 4. Layout
 
@@ -67,4 +67,4 @@ Package installation is a CLI command (`sinth fetch <package>`), not a separate 
 
 ---
 
-For the full language specification, fetch <https://intentmodel.dev/spec/3.0.md>.
+For the full language specification, fetch <https://intentmodel.dev/spec.md>.

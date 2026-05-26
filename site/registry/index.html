@@ -106,7 +106,7 @@
     </div>
 
     <footer class="footer" style="text-align: center; margin-top: 48px;">
-      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/3.0/">Specification</a></p>
+      <p>AIM Open Standard v3.1 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../spec/">Specification</a></p>
     </footer>
 
     <script src="../assets/chrome.js"></script>
@@ -141,7 +141,7 @@
         return str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
       }
 
-      // Extract summary from either v3.0 (Markdown) or v2.2 (DSL) intent files.
+      // Extract summary from either v3.1 (Markdown) or v2.2 (DSL) intent files.
       function extractSummary(text) {
         const v3 = text.match(/^##\s+Summary\s*\n+([\s\S]+?)(?=\n\s*\n|\n##|\n#|$)/m);
         if (v3) return v3[1].trim().replace(/\s+/g, " ");

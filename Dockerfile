@@ -10,7 +10,7 @@ RUN rm -rf /usr/share/nginx/html/* \
     && cp /app/README.md /usr/share/nginx/html/README.md \
     && cp /app/AGENTS.md /usr/share/nginx/html/AGENTS.md \
     && cp /app/specification.md /usr/share/nginx/html/specification.md \
-    && cp /app/specification.md /usr/share/nginx/html/spec/3.0.md \
+    && cp /app/specification.md /usr/share/nginx/html/spec.md \
     && cp -R /app/registry /usr/share/nginx/html/registry-files \
     && find /usr/share/nginx/html -name '.DS_Store' -delete
 

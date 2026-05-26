@@ -1,19 +1,19 @@
 ---
-aim_version: 3.0
+aim_version: 3.1
 aim_root: ./aim/
-spec: https://intentmodel.dev/spec/3.0.md
+spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Application Intent Model (AIM) v3.0** to specify product behavior. Read this file before doing any work — it is the cold-start entry point for every AI coding agent that enters the project.
+This project uses the **Application Intent Model (AIM) v3.1** to specify product behavior. Read this file before doing any work — it is the cold-start entry point for every AI coding agent that enters the project.
 
 ## How to read this project
 
 - **Behavioral truth lives in `.aim` files** under `/aim/`. These are the only files that define what the system is supposed to do.
 - **The AIM specification** is the authoritative grammar reference. Read it before parsing or writing any `.aim` file:
   1. Try the local cache first: `/aim/specs/3.0.md`
-  2. Fall back to the canonical URL: <https://intentmodel.dev/spec/3.0.md>
+  2. Fall back to the canonical URL: <https://intentmodel.dev/spec.md>
   3. If neither resolves, refuse to proceed — operating against an unknown specification is unsafe.
 - **`.md` files (including this one) are explanatory, never authoritative.** They describe, link, and onboard, but they do not define behavior. Any behavioral requirement found in a `.md` file but not in a `.aim` file is **drift** that should be moved into intent.
 

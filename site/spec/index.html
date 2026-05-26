@@ -3,23 +3,22 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="0; url=./3.0/">
-    <title>Technical Specification — AIM v3.0</title>
-    <meta name="description" content="The complete technical specification for the Application Intent Model v3.0. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
+    <title>Technical Specification — AIM v3.1</title>
+    <meta name="description" content="The complete technical specification for the Application Intent Model v3.1. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
     <meta name="author" content="Juice d.o.o.">
-    <link rel="canonical" href="https://intentmodel.dev/spec/3.0/">
+    <link rel="canonical" href="https://intentmodel.dev/spec/">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://intentmodel.dev/spec/">
-    <meta property="og:title" content="Technical Specification — AIM v3.0">
-    <meta property="og:description" content="The complete technical specification for the Application Intent Model v3.0. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
+    <meta property="og:title" content="Technical Specification — AIM v3.1">
+    <meta property="og:description" content="The complete technical specification for the Application Intent Model v3.1. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
     <meta property="og:image" content="https://intentmodel.dev/assets/og-image.png">
     <meta property="og:site_name" content="Application Intent Model">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Technical Specification — AIM v3.0">
-    <meta name="twitter:description" content="The complete technical specification for the Application Intent Model v3.0. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
+    <meta name="twitter:title" content="Technical Specification — AIM v3.1">
+    <meta name="twitter:description" content="The complete technical specification for the Application Intent Model v3.1. Markdown-native syntax with YAML frontmatter, sub-component decomposition, and three mainstream agent roles.">
     <link rel="stylesheet" href="../assets/site.css">
     <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
@@ -70,7 +69,7 @@
   <body data-page="spec" data-base="../">
 
     <section class="page-header">
-      <p class="label">AIM v3.0</p>
+      <p class="label">AIM v3.1</p>
       <h1>Technical Specification</h1>
       <p>The complete reference for intent files, facets, contracts, and the package registry format. &bull; <a id="spec-link" href="../../specification.md" target="_blank" rel="noopener">View Raw Markdown</a></p>
     </section>
@@ -85,7 +84,7 @@
     </article>
 
     <footer class="footer" style="text-align: center;">
-      <p>AIM Open Standard v3.0 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
+      <p>AIM Open Standard v3.1 &bull; © 2026 <a href='https://juice.com.hr' target='_blank'>Juice d.o.o.</a> &bull; <a href="../">Home</a> &bull; <a href="../registry/">Registry</a></p>
     </footer>
 
     <script src="../assets/chrome.js"></script>
@@ -136,7 +135,7 @@
       async function renderSpec() {
         const el = document.getElementById("spec-content");
         const link = document.getElementById("spec-link");
-        const candidates = ["../specification.md", "../../specification.md", "/specification.md"];
+        const candidates = ["/spec.md", "../spec.md", "../specification.md", "/specification.md"];
         try {
           const { url, res } = await fetchFirst(candidates);
           link.href = url;

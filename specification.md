@@ -1,8 +1,8 @@
-# Application Intent Model (AIM) v3.0
+# Application Intent Model (AIM) v3.1
 
 Application Intent Model (AIM) is an intent-driven specification language for humans and AI coding agents. It captures product behavior in a form readable enough for product and design discussion and structured enough for implementation, review, repair, and deterministic code generation.
 
-AIM v3.0 is a **breaking change** from v2.2. The motivation is to make AIM the single authoritative artifact that AI coding agents read and write — replacing the ad hoc sprawl of PRDs, design notes, READMEs, and plan files that agents otherwise generate. The three structural shifts that drive v3.0:
+AIM v3.1 is a **breaking change** from v2.2. The motivation is to make AIM the single authoritative artifact that AI coding agents read and write — replacing the ad hoc sprawl of PRDs, design notes, READMEs, and plan files that agents otherwise generate. The three structural shifts that drive v3.1:
 
 1. **Markdown-native syntax.** Files are now valid Markdown so they render on GitHub, in IDEs, and in any LLM context with no special tooling.
 2. **Self-describing headers.** Every file carries a `spec:` URL so an agent encountering AIM for the first time can fetch the specification and self-bootstrap.
@@ -27,7 +27,7 @@ The intent file is the canonical entrypoint. All other detail attaches to it dir
 
 ### 1.1 What Changed From v2.2
 
-| Concern | v2.2 | v3.0 |
+| Concern | v2.2 | v3.1 |
 |---|---|---|
 | File syntax | Custom DSL with braces and uppercase keywords | Markdown with YAML frontmatter |
 | Header | Single line: `AIM: name#facet@x.y` | YAML frontmatter with `spec:` URL |
@@ -37,7 +37,7 @@ The intent file is the canonical entrypoint. All other detail attaches to it dir
 
 ### 1.2 Agent Roles
 
-v3.0 uses three mainstream roles that map onto how real software teams already work:
+v3.1 uses three mainstream roles that map onto how real software teams already work:
 
 - **Architect** — translates requirements into intent files. Owns the specification.
 - **Developer** — implements code and tests from intent. Fixes code when drift is found.
@@ -81,7 +81,7 @@ The whole point of AIM is to replace `.md` sprawl with a structured behavioral a
 
 ### 2.1 Extension
 
-All AIM v3.0 source files use the `.aim` extension. The extension is a brand and discipline marker: a file named `*.aim` is an authoritative AIM artifact, not a generic note. (Legacy v2.2 sources used `.intent` — the extension change is part of the v2.2 → v3.0 break.)
+All AIM v3.1 source files use the `.aim` extension. The extension is a brand and discipline marker: a file named `*.aim` is an authoritative AIM artifact, not a generic note. (Legacy v2.2 sources used `.intent` — the extension change is part of the v2.2 → v3.1 break.)
 
 Files are valid CommonMark Markdown with YAML frontmatter. Any Markdown renderer will display them correctly.
 
@@ -118,21 +118,21 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 3.0
+aim_version: 3.1
 aim_root: ./aim/
-spec: https://intentmodel.dev/spec/3.0.md
+spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Application Intent Model (AIM) v3.0** for behavioral specification.
+This project uses the **Application Intent Model (AIM) v3.1** for behavioral specification.
 
 [...prose explaining roles, conventions, project specifics...]
 ```
 
 The frontmatter on `AGENTS.md` carries:
 
-- `aim_version` — the AIM language version this project targets (e.g. `3.0`)
+- `aim_version` — the AIM language version this project targets (e.g. `3.1`)
 - `aim_root` — where `.aim` files live (default `./aim/`)
 - `spec` — the canonical specification URL for the declared version
 
@@ -154,7 +154,7 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 ```
 /aim/
   specs/
-    3.0.md           # the v3.0 specification (mirrored from spec: URL)
+    3.0.md           # the v3.1 specification (mirrored from spec: URL)
   mappings/          # required-alias mappings
   <component>/       # one directory per component
 ```
@@ -236,15 +236,38 @@ Format per line: `<name>: <type> <modifier>*`
 
 Modifiers from v2.2 carry over: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`.
 
+### 2.8 Allowed Markdown Features
+
+`.aim` files use CommonMark Markdown, but the spec constrains which features are allowed where. The rule:
+
+- **Structured spec blocks** — facet sub-blocks like `### Requirements`, `### Tests`, `### Steps`, `### Attributes`, `### Input`, `### Ensures`, `### Returns` — use only the patterns the spec defines (bullets, fenced `aim-attrs` blocks). These blocks have parseable semantics; alternative forms create parsing ambiguity.
+- **Free-form prose sections** — `## Summary`, descriptive paragraphs between facet blocks, the body of `AGENTS.md` — follow standard CommonMark without restriction.
+
+| Feature | In structured blocks | In prose |
+|---|---|---|
+| Bulleted lists | ✓ (required form) | ✓ |
+| Tables | ✗ | ✓ |
+| Blockquotes | ✗ | ✓ |
+| Task lists (`- [ ]`) | ✗ | ✓ |
+| Footnotes | ✗ | ✓ |
+| Bold, italic, inline links | ✓ (inside list items) | ✓ |
+| Inline code (backticks) | ✓ | ✓ |
+| Fenced code blocks | ✓ (only `aim-attrs` in `### Attributes`; arbitrary elsewhere) | ✓ |
+| Raw HTML | ✗ | ✗ |
+
+**Task lists deserve specific mention.** Markdown's `- [ ]` syntax is forbidden in `## Requirements`, `## Tests`, and other structured blocks even though it looks like a bullet list. The `.aim` file is *intent*, not *status*. Implementation and verification status live in a drift report under `/aim/work/` produced by the Reviewer — see §1.3 (Authority Model) and the Reviewer's drift-report convention in [`agents/aim-reviewer.md`](agents/aim-reviewer.md). Putting status into intent makes the spec lie when code changes and the checkbox doesn't.
+
+**Raw HTML is banned everywhere** because it breaks parsers and circumvents the Markdown-native discipline.
+
 ---
 
 ## 3. Project Layout
 
 ### 3.1 Sub-Component-First Default
 
-AIM v3.0 inverts the v2.2 default. Real applications are decomposed into focused sub-components. Each sub-component is a real component with its own intent file, its own namespace, and its own facets. The parent component serves as an index plus a home for cross-cutting requirements and shared facets.
+AIM v3.1 inverts the v2.2 default. Real applications are decomposed into focused sub-components. Each sub-component is a real component with its own intent file, its own namespace, and its own facets. The parent component serves as an index plus a home for cross-cutting requirements and shared facets.
 
-Reasons this is the default in v3.0:
+Reasons this is the default in v3.1:
 
 - LLMs reason better over small focused files than large ones
 - Multiple agents can work on different sub-components in parallel without merge conflicts
@@ -821,17 +844,17 @@ Even when sources are fetched remotely, all implementation, review, and code gen
 
 ## 11. Migration From v2.2
 
-v3.0 is a breaking change. Tools should ship a `sinth migrate` command that converts v2.2 sources to v3.0:
+v3.1 is a breaking change. Tools should ship a `sinth migrate` command that converts v2.2 sources to v3.1:
 
 1. Convert `AIM: <name>#<facet>@2.2` headers to YAML frontmatter with `aim:` and `facet:` only (per-file `version:` and `spec:` are no longer used).
-2. Create or update `AGENTS.md` at the project root with `aim_version: 3.0` and `spec: https://intentmodel.dev/spec/3.0.md` in its frontmatter.
+2. Create or update `AGENTS.md` at the project root with `aim_version: 3.1` and `spec: https://intentmodel.dev/spec.md` in its frontmatter.
 3. Rename `*.intent` files to `*.aim`.
 4. Translate `INTENT Name { ... }` → `# Name` + section headings.
 5. Translate `SCHEMA Name { ATTRIBUTES { ... } }` → `## Schema: Name` + `### Attributes` + fenced `aim-attrs` block.
 6. Translate other facet blocks similarly.
 7. Optionally split large intent files into sub-components when natural feature boundaries exist (manual review recommended).
 
-v2.2 and v3.0 sources must not coexist within the same `/aim/` tree. The migration is one-shot per project.
+v2.2 and v3.1 sources must not coexist within the same `/aim/` tree. The migration is one-shot per project.
 
 ---
 

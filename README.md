@@ -1,4 +1,4 @@
-# Application Intent Model (AIM) v3.0
+# Application Intent Model (AIM) v3.1
 
 AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It replaces the sprawl of `.md` PRDs, design notes, and plan files that agents otherwise generate — capturing product behavior in structured `.aim` files that agents read once, build from, review against, and repair over time.
 
@@ -13,9 +13,9 @@ AIM is an intent-driven specification language and coordination layer for humans
 
 ---
 
-## What's new in v3.0
+## What's new in v3.1
 
-v3.0 is a breaking change from v2.2. The shifts:
+v3.1 is a breaking change from v2.2. The shifts:
 
 1. **Markdown-native syntax.** Files are valid Markdown with YAML frontmatter — renders on GitHub, in any IDE, and in any LLM context with no special tooling.
 2. **Self-describing headers.** Every file carries a `spec:` URL so cold-start agents can fetch the spec and self-bootstrap.
@@ -109,7 +109,7 @@ GitHub will render `.aim` files as Markdown with full frontmatter, headings, and
 ## Reference
 
 - **[AGENTS.md](./AGENTS.md)** — project bootstrap for AI coding agents (cold-start entry point).
-- **[specification.md](./specification.md)** — the authoritative v3.0 language spec.
+- **[specification.md](./specification.md)** — the authoritative v3.1 language spec.
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant (Claude, Cursor, Aider, Gemini).
 - **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
 - **[Registry](./registry/)** — community catalog of reusable intent packages.
@@ -143,5 +143,5 @@ Package fetching is a CLI command (`sinth fetch <package>`), not a separate agen
 
 ---
 
-Current spec: **AIM v3.0**  
+Current spec: **AIM v3.1**  
 Built by **[Juice d.o.o.](https://juice.com.hr)**

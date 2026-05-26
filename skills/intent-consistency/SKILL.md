@@ -1,4 +1,4 @@
-# Skill: Intent-Code Consistency (AIM v3.0)
+# Skill: Intent-Code Consistency (AIM v3.1)
 
 Use this skill to manage the relationship between product requirements and actual code implementation. This skill is specifically designed to eliminate "logic drift" and "AI hallucinations" by using the Application Intent Model (AIM).
 

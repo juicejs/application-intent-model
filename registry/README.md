@@ -10,7 +10,7 @@ Each package lives in:
 
 Each package must contain:
 
-1. Exactly one root intent file: `<component>.aim` with valid v3.0 frontmatter
+1. Exactly one root intent file: `<component>.aim` with valid v3.1 frontmatter
 2. Optional additional facet files (e.g., `<component>.schema.aim`, `<component>.contract.aim`) referenced by the entry file
 3. Optional sub-component directories with their own intent files
 
