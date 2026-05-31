@@ -154,21 +154,21 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 ```
 /aim/
   specs/
-    3.0.md           # the v3.1 specification (mirrored from spec: URL)
+    spec.md          # the AIM specification (mirrored from spec: URL)
   mappings/          # required-alias mappings
   <component>/       # one directory per component
 ```
 
 **Required installer behavior:**
 
-1. On first `sinth init` (or equivalent setup) in a project, fetch the spec from the URL declared in `AGENTS.md` and write it to `/aim/specs/<version>.md`.
-2. When the project adopts a new AIM version, install the new spec file alongside any existing ones — old version files remain so projects mid-migration retain access.
+1. On first `sinth init` (or equivalent setup) in a project, fetch the spec from the URL declared in `AGENTS.md` and write it to `/aim/specs/spec.md`.
+2. When the project adopts a new AIM version, the installer overwrites the local `spec.md` with the new version.
 3. The local spec file is a verbatim mirror of the URL content. Tools must not modify it.
 
 **Agent spec-resolution order:**
 
-1. **`AGENTS.md`** — read the project's frontmatter to determine `aim_version` and `spec` URL.
-2. **Local cache** — read `/aim/specs/<version>.md` if present. Always works, even offline.
+1. **`AGENTS.md`** — read the project's frontmatter to determine `spec` URL (the `aim_version` provides language context but the URL is the source of truth).
+2. **Local cache** — read `/aim/specs/spec.md` if present. Always works, even offline.
 3. **URL fallback** — fetch the `spec` URL declared in `AGENTS.md`.
 4. **Hard error** — if none of these resolve, refuse to proceed. Operating against an unknown specification is unsafe.
 

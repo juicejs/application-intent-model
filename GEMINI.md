@@ -9,7 +9,7 @@ Before executing any command or writing any file, read the v3.1 specification.
 **Bootstrap order:**
 
 1. Read `AGENTS.md` at the project root — its frontmatter declares `aim_version` and the canonical `spec:` URL.
-2. Read `/aim/specs/<version>.md` (local cache) if present.
+2. Read `/aim/specs/spec.md` (local cache) if present.
 3. Fall back to the URL declared in `AGENTS.md`.
 4. If none resolve, refuse to proceed.
 

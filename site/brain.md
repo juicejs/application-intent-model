@@ -11,7 +11,7 @@ Before executing any command or writing any file, read the v3.1 specification.
 **Bootstrap order:**
 
 1. Read `AGENTS.md` at the project root. Its frontmatter declares `aim_version` and the canonical `spec:` URL for the version this project targets.
-2. Read the local spec cache at `/aim/specs/<version>.md` if present (always works, even offline).
+2. Read the local spec cache at `/aim/specs/spec.md` if present (always works, even offline).
 3. Fall back to the canonical URL declared in `AGENTS.md`.
 4. If none of these resolve, refuse to proceed — operating against an unknown specification is unsafe.
 

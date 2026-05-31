@@ -12,7 +12,7 @@ This project uses the **Application Intent Model (AIM) v3.1** to specify product
 
 - **Behavioral truth lives in `.aim` files** under `/aim/`. These are the only files that define what the system is supposed to do.
 - **The AIM specification** is the authoritative grammar reference. Read it before parsing or writing any `.aim` file:
-  1. Try the local cache first: `/aim/specs/3.0.md`
+  1. Try the local cache first: `/aim/specs/spec.md`
   2. Fall back to the canonical URL: <https://intentmodel.dev/spec.md>
   3. If neither resolves, refuse to proceed — operating against an unknown specification is unsafe.
 - **`.md` files (including this one) are explanatory, never authoritative.** They describe, link, and onboard, but they do not define behavior. Any behavioral requirement found in a `.md` file but not in a `.aim` file is **drift** that should be moved into intent.
@@ -23,7 +23,7 @@ This project uses the **Application Intent Model (AIM) v3.1** to specify product
 .
 ├── AGENTS.md              # this file — agent onboarding
 ├── aim/
-│   ├── specs/3.0.md       # cached AIM specification (reference)
+│   ├── specs/spec.md      # cached AIM specification (reference)
 │   ├── mappings/          # capability-to-provider bindings
 │   └── <component>/       # one directory per component
 │       └── <component>.aim
