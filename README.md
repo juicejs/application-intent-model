@@ -60,7 +60,9 @@ The owner's task-list surface.
 
 The `[exposes](aim:#Contract:CreateTodo)` token is a typed edge: `View → exposes → Contract:CreateTodo`. Collect every such token across a project and you have the relation graph.
 
-See [examples/nemicko.demo.todo.aim](./examples/nemicko.demo.todo.aim) for a complete v4 component exercising every facet and edge type.
+Two worked examples ship with the spec:
+- [examples/nemicko.demo.todo.aim](./examples/nemicko.demo.todo.aim) — a complete component in a single file.
+- [examples/helpdesk/](./examples/helpdesk/) — a multi-file app (sub-components, a mapping, and a binding file) whose graph spans files, exercising **all** six facets and all nine edge verbs. Start with its [README](./examples/helpdesk/README.md) for the rendered graph.
 
 ---
 
@@ -92,7 +94,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
 - **[brain/](./brain/)** — the shared and per-role operating-brain instructions.
-- **[examples/](./examples/)** — conformance example `.aim` files.
+- **[examples/](./examples/)** — conformance examples: a single-file component and the multi-file [helpdesk](./examples/helpdesk/) app.
 - **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension: core mandates and manifest exposing the three roles as `@aim-architect` / `@aim-developer` / `@aim-reviewer`.
 
 ---

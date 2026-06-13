@@ -1,0 +1,101 @@
+# Example: Helpdesk (multi-file, full v4 showcase)
+
+A small support-ticket app that exercises **every** AIM v4 feature in one connected graph. It is intentionally split across files, because the point of v4 is that the relation graph *spans files* — and you can still traverse, check, and diff it.
+
+> The single-file [`nemicko.demo.todo.aim`](../nemicko.demo.todo.aim) shows the basics in one file. This example shows the graph at scale.
+
+## The app
+
+Requesters open support tickets from a form and track them. Agents work a shared **table** of all tickets, open one, and resolve it. Resolving a ticket emits an event that an asynchronous flow picks up to **email the requester**.
+
+## What it showcases
+
+| v4 feature | Where |
+|---|---|
+| All six facets | `Schema` ×2, `Contract` ×3, `Flow` ×3, `Persona` ×2, `View` ×3, `Event` ×2 |
+| Sub-components + parent-as-index | `submit/` and `resolve/` under `helpdesk.tickets`; parent holds shared schema, personas, views |
+| All nine typed edges | `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `refs` |
+| Upward resolution | sub-components write `[mutates](aim:#Schema:Ticket)` — `Ticket` resolves up to the parent |
+| Cross-component edges | parent → child (`...resolve#Contract:ResolveTicket`) and → external (`comms#Contract:SendEmail`) |
+| Dependencies + mapping | `Imports`/`Requires` in the parent; `helpdesk.tickets.mapping.aim` binds the `Users` capability |
+| Intent↔code bindings | `helpdesk.tickets.binding.aim` maps nodes to `file#symbol`, `route:`, `table:`, `topic:` |
+| A table view and a form view | `View: TicketQueue` (table) and `View: SubmitForm` (form) |
+
+## Layout
+
+```
+aim/
+  helpdesk.tickets/
+    helpdesk.tickets.aim            # parent: index, shared User+Ticket, personas, dashboard views, notify flow, deps
+    submit/  helpdesk.tickets.submit.aim    # SubmitForm + SubmitTicket + ExecuteSubmit + TicketSubmitted
+    resolve/ helpdesk.tickets.resolve.aim   # ResolveTicket + ExecuteResolve + TicketResolved
+  comms/
+    comms.aim                       # SendEmail — the external capability the notify flow invokes
+  mappings/helpdesk.tickets/
+    helpdesk.tickets.mapping.aim    # Users capability → company.identity
+  bindings/helpdesk.tickets/
+    helpdesk.tickets.binding.aim    # intent → code (raises the component to Level 3)
+```
+
+## The graph
+
+Every heading is a node; every `[verb](aim:…)` is a typed edge. Collected across the files, they form one graph (colored by facet type):
+
+```mermaid
+graph LR
+  classDef persona fill:#fde68a,stroke:#b45309,color:#3f2d00;
+  classDef view fill:#bfdbfe,stroke:#1d4ed8,color:#0b2559;
+  classDef contract fill:#bbf7d0,stroke:#15803d,color:#053019;
+  classDef flow fill:#ddd6fe,stroke:#6d28d9,color:#2a1065;
+  classDef schema fill:#fecaca,stroke:#b91c1c,color:#450a0a;
+  classDef event fill:#fed7aa,stroke:#c2410c,color:#431407;
+
+  P_Req["Persona: Requester"]:::persona
+  P_Ag["Persona: Agent"]:::persona
+  V_Form["View: SubmitForm"]:::view
+  V_Queue["View: TicketQueue"]:::view
+  V_Detail["View: TicketDetail"]:::view
+  C_Sub["Contract: SubmitTicket"]:::contract
+  C_Res["Contract: ResolveTicket"]:::contract
+  C_Email["Contract: SendEmail"]:::contract
+  F_Sub["Flow: ExecuteSubmit"]:::flow
+  F_Res["Flow: ExecuteResolve"]:::flow
+  F_Notify["Flow: NotifyRequester"]:::flow
+  S_Ticket["Schema: Ticket"]:::schema
+  S_User["Schema: User"]:::schema
+  E_Sub["Event: TicketSubmitted"]:::event
+  E_Res["Event: TicketResolved"]:::event
+
+  P_Req -->|accesses| V_Form
+  P_Req -->|accesses| V_Detail
+  P_Ag -->|accesses| V_Queue
+  P_Ag -->|accesses| V_Detail
+  V_Queue -->|reads| S_Ticket
+  V_Queue -->|navigates| V_Detail
+  V_Detail -->|reads| S_Ticket
+  V_Form -->|exposes| C_Sub
+  V_Detail -->|exposes| C_Res
+  C_Sub -->|invokes| F_Sub
+  C_Res -->|invokes| F_Res
+  F_Sub -->|mutates| S_Ticket
+  F_Sub -->|emits| E_Sub
+  F_Res -->|mutates| S_Ticket
+  F_Res -->|emits| E_Res
+  F_Notify -->|subscribes| E_Res
+  F_Notify -->|reads| S_Ticket
+  F_Notify -->|invokes| C_Email
+  S_Ticket -->|refs| S_User
+```
+
+*(The contracts also declare `mutates`/`emits` as their observable guarantees — the flows then realize them. The diagram shows the flow-level edges to keep the chain readable; both are in the `.aim` files.)*
+
+A standalone vector version of the same graph (facet columns, left-to-right) lives in [`graph.svg`](./graph.svg):
+
+![AIM v4 helpdesk relation graph](./graph.svg)
+
+## Reading the graph
+
+- **Submit path:** `Requester` *accesses* `SubmitForm`, which *exposes* `SubmitTicket`; the contract *invokes* `ExecuteSubmit`, which *mutates* `Ticket` and *emits* `TicketSubmitted`.
+- **Resolve + notify (the async hop):** `Agent` opens `TicketDetail`, which *exposes* `ResolveTicket` → *invokes* `ExecuteResolve` → *mutates* `Ticket` + *emits* `TicketResolved`. Separately, `NotifyRequester` *subscribes* to `TicketResolved`, *reads* the `Ticket`, and *invokes* the external `comms.SendEmail`. Nothing *invokes* `NotifyRequester` — it is entered by the event, which is exactly why event-driven flows are not orphans.
+- **Impact analysis for free:** changing `Schema: Ticket` reaches **10** nodes along inbound edges — both contracts, both feature flows, the notify flow, all three views (transitively), and both personas. That set is *computed* from the graph, not guessed.
+- **Drift as graph-diff:** because `helpdesk.tickets.binding.aim` maps nodes to code (`SubmitTicket → src/tickets/submit.ts#submitTicket`, `Ticket → table:tickets`, `TicketResolved → topic:…`), a Reviewer can diff this declared graph against the realized code graph and report precise, owner-routed findings.

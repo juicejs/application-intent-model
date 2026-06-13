@@ -1,0 +1,132 @@
+---
+aim: helpdesk.tickets
+facet: intent
+---
+
+# Helpdesk
+
+A small support-ticket system. Requesters open tickets; agents work a shared queue and resolve them. This parent file is the **index** for the component and the home for everything shared across features: the schemas, the personas, the dashboard views, the external dependencies, and the resolved-ticket notification flow. Each lifecycle action is a sub-component.
+
+## Summary
+
+Requesters submit support tickets and track their status. Agents see the whole queue as a table, open a ticket's detail, and resolve it. Resolving a ticket notifies the requester by email — handled asynchronously off the resolved event, not in the request path.
+
+## Requirements
+
+- Every ticket has exactly one requester and at most one assigned agent.
+- A ticket moves through states: `open` → `in_progress` → `resolved`.
+- Requesters see only their own tickets; agents see the whole queue.
+- Resolving a ticket notifies the requester.
+
+## Subcomponents
+
+- [submit](./submit/helpdesk.tickets.submit.aim) — a requester opens a ticket
+- [resolve](./resolve/helpdesk.tickets.resolve.aim) — an agent resolves a ticket
+
+## Dependencies
+
+### Imports
+
+- `comms.SendEmail` as Mailer
+
+### Requires
+
+- Directory as Users
+
+## Schema: User
+
+### Summary
+
+A person who can use the helpdesk, in either role.
+
+### Attributes
+
+```aim-attrs
+id: string required
+name: string required max(120)
+email: string required
+role: enum(requester, agent) required
+```
+
+## Schema: Ticket
+
+### Summary
+
+A single support request and its lifecycle state.
+
+### Attributes
+
+```aim-attrs
+id: string required
+subject: string required min(1) max(160)
+body: string required max(4000)
+requesterId: string required ref(User.id)
+assigneeId: string optional ref(User.id)
+status: enum(open, in_progress, resolved) required default(open)
+createdAt: datetime required
+resolvedAt: datetime optional
+```
+
+### Constraints
+
+- `status` transitions follow: `open` → `in_progress` → `resolved`.
+
+## Persona: Requester
+
+An authenticated user who opens and tracks their own tickets.
+
+### Access
+
+- [accesses](aim:helpdesk.tickets.submit#View:SubmitForm)
+- [accesses](aim:#View:TicketDetail)
+
+## Persona: Agent
+
+A support agent who works the shared queue and resolves tickets.
+
+### Access
+
+- [accesses](aim:#View:TicketQueue)
+- [accesses](aim:#View:TicketDetail)
+
+## View: TicketQueue
+
+### Summary
+
+The agent's worklist — every ticket as a table, newest first.
+
+### Display
+
+- A table of [reads](aim:#Schema:Ticket) rows: subject, requester, status, createdAt.
+- Status shown as a colored badge; resolved tickets dimmed.
+
+### Actions
+
+- Clicking a row — [navigates](aim:#View:TicketDetail).
+
+## View: TicketDetail
+
+### Summary
+
+A single ticket in full, with the actions available for the viewer's role.
+
+### Display
+
+- The [reads](aim:#Schema:Ticket) record: subject, body, requester, assignee, status, timestamps.
+
+### Actions
+
+- Resolve (agents only) — [exposes](aim:helpdesk.tickets.resolve#Contract:ResolveTicket).
+
+## Flow: NotifyRequester
+
+### Summary
+
+When a ticket is resolved, email its requester. Event-driven and asynchronous — it is entered by subscribing to the resolved event, not invoked in the resolve request path.
+
+### Steps
+
+1. React to a resolved ticket — [subscribes](aim:helpdesk.tickets.resolve#Event:TicketResolved).
+2. Load the ticket to find its requester — [reads](aim:#Schema:Ticket).
+3. Resolve the requester's email address via the `Users` directory.
+4. Send the notification — [invokes](aim:comms#Contract:SendEmail).

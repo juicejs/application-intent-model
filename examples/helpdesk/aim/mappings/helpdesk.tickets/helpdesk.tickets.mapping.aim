@@ -1,0 +1,22 @@
+---
+aim: helpdesk.tickets
+facet: mapping
+---
+
+# Helpdesk Mappings
+
+Binds the helpdesk's required capabilities (declared under `## Dependencies → Requires` in the parent intent) to concrete providers.
+
+## Map: Users
+
+### Summary
+
+Resolves the `Users` directory alias to the company identity provider.
+
+### Target
+
+- `company.identity`
+
+### Operation Map
+
+- `Users.ResolveUser` → `company.identity.ResolveUser`

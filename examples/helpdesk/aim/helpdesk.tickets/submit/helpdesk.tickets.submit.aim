@@ -1,0 +1,95 @@
+---
+aim: helpdesk.tickets.submit
+facet: intent
+parent: helpdesk.tickets
+---
+
+# SubmitTicket
+
+## Summary
+
+A requester opens a new ticket from a form. The ticket starts `open`, owned by the requester, and a `TicketSubmitted` event is emitted. `Ticket` and `User` are not defined here — they resolve upward to the parent `helpdesk.tickets`.
+
+## Requirements
+
+- Subject is 1–160 characters; body is required.
+- The new ticket is owned by the submitting user and starts `open`.
+- A `TicketSubmitted` event is emitted on success.
+
+## Tests
+
+- Submitting with an empty subject fails validation.
+- A submitted ticket appears in the requester's list and the agent queue.
+- A `TicketSubmitted` event carries the new ticket id.
+
+## View: SubmitForm
+
+### Summary
+
+The requester's "New ticket" form.
+
+### Display
+
+- Fields: subject (single-line text), body (multiline text).
+
+### Actions
+
+- Submit — [exposes](aim:#Contract:SubmitTicket).
+
+## Contract: SubmitTicket
+
+### Summary
+
+Create a new ticket on behalf of the current requester.
+
+### Input
+
+```aim-attrs
+subject: string required min(1) max(160)
+body: string required max(4000)
+```
+
+### Authz
+
+- Caller must be an authenticated requester.
+
+### Ensures
+
+- Orchestration is delegated to the submit flow — [invokes](aim:#Flow:ExecuteSubmit).
+- A new Ticket is persisted with status="open" — [mutates](aim:#Schema:Ticket).
+- A submission event is emitted — [emits](aim:#Event:TicketSubmitted).
+
+### Returns
+
+- The created Ticket.
+
+## Flow: ExecuteSubmit
+
+### Summary
+
+Persist the ticket and emit the submission event.
+
+### Steps
+
+1. Set `requesterId` to the current user and `status` to `open`.
+2. Persist the ticket — [mutates](aim:#Schema:Ticket).
+3. Emit the event — [emits](aim:#Event:TicketSubmitted).
+
+## Event: TicketSubmitted
+
+### Summary
+
+Emitted when a requester opens a new ticket.
+
+### Payload
+
+```aim-attrs
+ticketId: string required
+requesterId: string required
+createdAt: datetime required
+```
+
+### Routing
+
+- Channel: `helpdesk.tickets.submitted`
+- Durable: true

@@ -1,0 +1,38 @@
+---
+aim: comms
+facet: intent
+---
+
+# Comms
+
+A minimal shared messaging capability that other components depend on. It is included here so the helpdesk's cross-component edge (`NotifyRequester` → `SendEmail`) resolves against a real node rather than dangling.
+
+## Summary
+
+Sends transactional email. Exposed as a single contract that other components import and invoke.
+
+## Requirements
+
+- An email is sent to one recipient with a subject and body.
+
+## Contract: SendEmail
+
+### Summary
+
+Send one transactional email.
+
+### Input
+
+```aim-attrs
+to: string required
+subject: string required max(200)
+body: string required
+```
+
+### Ensures
+
+- The message is handed to the mail provider for delivery.
+
+### Returns
+
+- A provider message id.

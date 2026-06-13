@@ -1,0 +1,84 @@
+---
+aim: helpdesk.tickets.resolve
+facet: intent
+parent: helpdesk.tickets
+---
+
+# ResolveTicket
+
+## Summary
+
+An agent resolves a ticket. Its status moves to `resolved`, `resolvedAt` is stamped, and a `TicketResolved` event is emitted — which the parent's `NotifyRequester` flow consumes to email the requester.
+
+## Requirements
+
+- Only an agent may resolve a ticket.
+- A ticket may be resolved only from `open` or `in_progress`.
+- Resolving stamps `resolvedAt` and emits `TicketResolved`.
+
+## Tests
+
+- A requester (non-agent) is denied.
+- Resolving an already-resolved ticket is a safe no-op.
+- A `TicketResolved` event carries the ticket id and the resolver.
+
+## Contract: ResolveTicket
+
+### Summary
+
+Mark a ticket resolved on behalf of the acting agent.
+
+### Input
+
+```aim-attrs
+ticketId: string required
+```
+
+### Authz
+
+- Caller must be an agent.
+
+### Expects
+
+- The ticket exists and is not already `resolved`.
+
+### Ensures
+
+- Orchestration is delegated to the resolve flow — [invokes](aim:#Flow:ExecuteResolve).
+- The ticket status becomes `resolved` and `resolvedAt` is set — [mutates](aim:#Schema:Ticket).
+- A resolution event is emitted — [emits](aim:#Event:TicketResolved).
+
+### Returns
+
+- The updated Ticket.
+
+## Flow: ExecuteResolve
+
+### Summary
+
+Transition the ticket to resolved and emit the event.
+
+### Steps
+
+1. Verify the acting agent and the current status.
+2. Set `status="resolved"` and stamp `resolvedAt` — [mutates](aim:#Schema:Ticket).
+3. Emit the event — [emits](aim:#Event:TicketResolved).
+
+## Event: TicketResolved
+
+### Summary
+
+Emitted when an agent resolves a ticket. Consumed by the parent's `NotifyRequester` flow.
+
+### Payload
+
+```aim-attrs
+ticketId: string required
+resolvedBy: string required
+resolvedAt: datetime required
+```
+
+### Routing
+
+- Channel: `helpdesk.tickets.resolved`
+- Durable: true

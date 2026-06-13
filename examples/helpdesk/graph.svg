@@ -1,0 +1,92 @@
+<svg viewBox="0 0 1060 600" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, sans-serif">
+<title>AIM v4 helpdesk relation graph</title>
+<desc>Nodes colored by facet type across five columns — Persona, View, Contract, Flow, Schema/Event — connected by typed edges labelled with verbs.</desc>
+<rect x="0" y="0" width="1060" height="600" fill="#ffffff"/>
+<defs>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+<marker id="ard" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9333ea"/></marker>
+</defs>
+
+<!-- column headers -->
+<g font-size="12" font-weight="700" fill="#94a3b8" text-anchor="middle">
+<text x="80" y="24">PERSONA</text><text x="270" y="24">VIEW</text><text x="480" y="24">CONTRACT</text><text x="690" y="24">FLOW</text><text x="930" y="24">SCHEMA / EVENT</text>
+</g>
+
+<!-- edges (drawn first, under nodes) -->
+<g fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar)">
+<path d="M150 235 L190 150"/>
+<path d="M150 250 L190 470"/>
+<path d="M150 380 L190 305"/>
+<path d="M150 395 L190 485"/>
+<path d="M350 300 C 300 380, 300 420, 270 460"/>
+<path d="M350 290 L840 215"/>
+<path d="M350 480 L840 230"/>
+<path d="M350 135 L400 135"/>
+<path d="M350 475 L400 475"/>
+<path d="M610 135 L660 135"/>
+<path d="M610 475 L660 475"/>
+<path d="M820 135 L840 195"/>
+<path d="M820 150 L900 330"/>
+<path d="M820 475 L840 240"/>
+<path d="M820 490 L900 475"/>
+<path d="M900 100 L880 75"/>
+</g>
+<!-- async / cross-component edges (purple dashed) -->
+<g fill="none" stroke="#9333ea" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ard)">
+<path d="M760 545 C 850 545, 905 510, 905 495"/>
+<path d="M760 560 C 840 590, 900 300, 905 245"/>
+<path d="M685 545 C 560 520, 540 510, 540 500"/>
+</g>
+
+<!-- edge labels -->
+<g font-size="10.5" fill="#475569" text-anchor="middle">
+<text x="158" y="186">accesses</text>
+<text x="120" y="362">accesses</text>
+<text x="300" y="372">navigates</text>
+<text x="560" y="243">reads</text>
+<text x="372" y="124">exposes</text>
+<text x="372" y="466">exposes</text>
+<text x="632" y="124">invokes</text>
+<text x="632" y="466">invokes</text>
+<text x="824" y="172">mutates</text>
+<text x="868" y="252">emits</text>
+<text x="884" y="92">refs</text>
+<text x="820" y="540" fill="#9333ea">subscribes</text>
+<text x="640" y="600" fill="#9333ea">invokes</text>
+</g>
+
+<!-- nodes -->
+<g font-size="12.5" text-anchor="middle">
+<!-- persona (amber) -->
+<rect x="10" y="220" width="140" height="40" rx="9" fill="#fde68a" stroke="#b45309"/><text x="80" y="245" fill="#3f2d00">Requester</text>
+<rect x="10" y="370" width="140" height="40" rx="9" fill="#fde68a" stroke="#b45309"/><text x="80" y="395" fill="#3f2d00">Agent</text>
+<!-- view (blue) -->
+<rect x="190" y="115" width="160" height="40" rx="9" fill="#bfdbfe" stroke="#1d4ed8"/><text x="270" y="140" fill="#0b2559">SubmitForm</text>
+<rect x="190" y="285" width="160" height="40" rx="9" fill="#bfdbfe" stroke="#1d4ed8"/><text x="270" y="310" fill="#0b2559">TicketQueue &#9638;</text>
+<rect x="190" y="460" width="160" height="40" rx="9" fill="#bfdbfe" stroke="#1d4ed8"/><text x="270" y="485" fill="#0b2559">TicketDetail</text>
+<!-- contract (green) -->
+<rect x="400" y="115" width="160" height="40" rx="9" fill="#bbf7d0" stroke="#15803d"/><text x="480" y="140" fill="#053019">SubmitTicket</text>
+<rect x="400" y="460" width="160" height="40" rx="9" fill="#bbf7d0" stroke="#15803d"/><text x="480" y="485" fill="#053019">ResolveTicket</text>
+<rect x="460" y="480" width="160" height="40" rx="9" fill="#bbf7d0" stroke="#15803d"/><text x="540" y="505" fill="#053019">SendEmail &#10548;</text>
+<!-- flow (purple) -->
+<rect x="610" y="115" width="160" height="40" rx="9" fill="#ddd6fe" stroke="#6d28d9"/><text x="690" y="140" fill="#2a1065">ExecuteSubmit</text>
+<rect x="610" y="460" width="160" height="40" rx="9" fill="#ddd6fe" stroke="#6d28d9"/><text x="690" y="485" fill="#2a1065">ExecuteResolve</text>
+<rect x="610" y="525" width="160" height="40" rx="9" fill="#ddd6fe" stroke="#6d28d9"/><text x="690" y="550" fill="#2a1065">NotifyRequester</text>
+<!-- schema (red) + event (orange) -->
+<rect x="850" y="40" width="150" height="38" rx="9" fill="#fecaca" stroke="#b91c1c"/><text x="925" y="64" fill="#450a0a">User</text>
+<rect x="850" y="195" width="150" height="38" rx="9" fill="#fecaca" stroke="#b91c1c"/><text x="925" y="219" fill="#450a0a">Ticket</text>
+<rect x="850" y="312" width="150" height="38" rx="9" fill="#fed7aa" stroke="#c2410c"/><text x="925" y="336" fill="#431407">TicketSubmitted</text>
+<rect x="850" y="456" width="150" height="38" rx="9" fill="#fed7aa" stroke="#c2410c"/><text x="925" y="480" fill="#431407">TicketResolved</text>
+</g>
+
+<!-- legend -->
+<g font-size="11" fill="#475569">
+<rect x="12" y="548" width="14" height="12" rx="3" fill="#fde68a" stroke="#b45309"/><text x="32" y="558" text-anchor="start">Persona</text>
+<rect x="92" y="548" width="14" height="12" rx="3" fill="#bfdbfe" stroke="#1d4ed8"/><text x="112" y="558" text-anchor="start">View (&#9638; table)</text>
+<rect x="210" y="548" width="14" height="12" rx="3" fill="#bbf7d0" stroke="#15803d"/><text x="230" y="558" text-anchor="start">Contract</text>
+<rect x="300" y="548" width="14" height="12" rx="3" fill="#ddd6fe" stroke="#6d28d9"/><text x="320" y="558" text-anchor="start">Flow</text>
+<rect x="360" y="548" width="14" height="12" rx="3" fill="#fecaca" stroke="#b91c1c"/><text x="380" y="558" text-anchor="start">Schema</text>
+<rect x="440" y="548" width="14" height="12" rx="3" fill="#fed7aa" stroke="#c2410c"/><text x="460" y="558" text-anchor="start">Event</text>
+<line x1="12" y1="578" x2="40" y2="578" stroke="#9333ea" stroke-width="1.6" stroke-dasharray="5 4"/><text x="46" y="582" text-anchor="start">async / cross-component (the notify hop)</text>
+</g>
+</svg>
