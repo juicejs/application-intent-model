@@ -93,6 +93,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 - **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
 - **[brain/](./brain/)** — the shared and per-role operating-brain instructions.
 - **[examples/](./examples/)** — conformance example `.aim` files.
+- **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension: core mandates and manifest exposing the three roles as `@aim-architect` / `@aim-developer` / `@aim-reviewer`.
 
 ---
 
