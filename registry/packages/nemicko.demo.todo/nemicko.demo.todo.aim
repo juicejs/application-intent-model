@@ -23,6 +23,8 @@ A complete personal task management system supporting creation, completion, and 
 
 ## Schema: TodoItem
 
+### Summary
+
 The core data entity representing a single user task.
 
 ### Attributes
@@ -37,6 +39,8 @@ createdAt: timestamp generated
 ```
 
 ## Contract: CreateTodo
+
+### Summary
 
 Creates a new pending task for the active user.
 
@@ -57,14 +61,17 @@ description: string optional
 
 ### Ensures
 
-- Persists a new TodoItem with `status="PENDING"` and `ownerId=currentUser.id`.
-- Emits a `TodoCreated` event.
+- Orchestration is delegated to the creation flow — [invokes](aim:#Flow:ExecuteCreateTodo).
+- Persists a new TodoItem with `status="PENDING"` and `ownerId=currentUser.id` — [mutates](aim:#Schema:TodoItem).
+- Emits the creation event — [emits](aim:#Event:TodoCreated).
 
 ### Returns
 
 - The created TodoItem.
 
 ## Contract: CompleteTodo
+
+### Summary
 
 Safely marks an active task as complete.
 
@@ -86,7 +93,7 @@ todoId: string required
 
 ### Ensures
 
-- Updates `TodoItem.status` to `COMPLETED`.
+- Updates `TodoItem.status` to `COMPLETED` — [mutates](aim:#Schema:TodoItem).
 
 ### Returns
 
@@ -94,22 +101,20 @@ todoId: string required
 
 ## Flow: ExecuteCreateTodo
 
+### Summary
+
 Orchestrates database insertion and event publishing for new tasks.
-
-### Trigger
-
-- Invoked by the `Contract: CreateTodo` boundary.
 
 ### Steps
 
-1. `CALL` Auth.GetCurrentUser to extract userId.
+1. Extract the userId via `Auth.GetCurrentUser`.
 2. Construct a new TodoItem with input data and the extracted userId.
-3. `CALL` Storage.Insert(TodoItem).
-4. `CALL` EventBus.Publish("TodoCreated", TodoItem).
+3. Insert the record — [mutates](aim:#Schema:TodoItem).
+4. Publish the creation event — [emits](aim:#Event:TodoCreated).
 
 ### On Error
 
-- `CALL` Logger.Warn("Failed to create task").
+- Log a warning via `Logger.Warn("Failed to create task")`.
 - Rethrow the error to surface to the UI.
 
 ## Persona: StandardUser
@@ -122,24 +127,28 @@ A regular individual managing their personal task list.
 
 ### Access
 
-- May view `View: TodoDashboard`.
+- [accesses](aim:#View:TodoDashboard)
 
 ## View: TodoDashboard
+
+### Summary
 
 The main interface for viewing and interacting with the task list.
 
 ### Display
 
-- A list of TodoItem records where `ownerId = currentUser.id`.
+- A list of [reads](aim:#Schema:TodoItem) records where `ownerId = currentUser.id`.
 - Visual distinction between PENDING and COMPLETED tasks.
 - Empty state message if no tasks exist.
 
 ### Actions
 
-- Submitting the "New Task" form → invokes `Contract: CreateTodo`.
-- Tapping the checkbox on a PENDING task → invokes `Contract: CompleteTodo`.
+- Submitting the "New Task" form — [exposes](aim:#Contract:CreateTodo)
+- Tapping the checkbox on a PENDING task — [exposes](aim:#Contract:CompleteTodo)
 
 ## Event: TodoCreated
+
+### Summary
 
 Emitted when a new todo is persisted.
 
@@ -150,10 +159,6 @@ todoId: string required
 ownerId: string required
 createdAt: timestamp required
 ```
-
-### Emitted By
-
-- `Flow: ExecuteCreateTodo`
 
 ### Routing
 

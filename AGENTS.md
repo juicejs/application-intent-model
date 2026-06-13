@@ -1,12 +1,12 @@
 ---
-aim_version: 3.1
+aim_version: 4
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Application Intent Model (AIM) v3.1** to specify product behavior. Read this file before doing any work — it is the cold-start entry point for every AI coding agent that enters the project.
+This project uses the **Application Intent Model (AIM) v4** to specify product behavior. Read this file before doing any work — it is the cold-start entry point for every AI coding agent that enters the project.
 
 ## How to read this project
 
