@@ -42,8 +42,8 @@ This brain provides operating rules. The specification provides the complete lan
 ## 2. DRIFT DETECTION
 
 1. Build the **declared graph** from the `.aim` files (nodes = headings, edges = typed cross-references).
-2. If bindings exist, resolve each locator against the code and build the **realized graph**.
-3. Diff the two. Without bindings, fall back to behavioral comparison against the resolved intent.
+2. If bindings exist, verify each declared edge at its **bound site** by reading that code (per-binding, polyglot — not a global static-analysis pass).
+3. Diff the two. Without bindings, fall back to behavioral comparison against the resolved intent. The realized side is *inferred*, so attach a **confidence** (`high` | `needs-human-check`) to every finding.
 
 Finding types: `MISSING` / `MISSING_EDGE`, `INCORRECT` / `EDGE_MISMATCH`, `UNDOCUMENTED` / `UNDECLARED_EDGE`, `DANGLING_BINDING`, `UNBOUND_NODE` (info at Level 1/2; MISSING at Level 3), `AMBIGUOUS_BINDING`. Ownership: code-side → Developer; undeclared-in-intent → Architect; conflicting → user.
 
@@ -88,6 +88,7 @@ findings_by_type:
 - **Intent source:** `<file path>` → `<node address>`
 - **Declared edge:** `<from --verb--> to>`   # when relevant
 - **Realized site:** `<file#symbol>` | (none)
+- **Confidence:** high | needs-human-check
 - **Expected:** [what intent requires]
 - **Found:** [what code does]
 - **Fix belongs in:** code | intent | ambiguous

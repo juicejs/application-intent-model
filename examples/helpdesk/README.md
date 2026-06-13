@@ -12,9 +12,10 @@ Requesters open support tickets from a form and track them. Agents work a shared
 
 | v4 feature | Where |
 |---|---|
-| All six facets | `Schema` ×2, `Contract` ×3, `Flow` ×3, `Persona` ×2, `View` ×3, `Event` ×2 |
+| All seven facets | `Schema` ×2, `Contract` ×3, `Flow` ×4, `Persona` ×2, `View` ×3, `Event` ×2, `Trigger` ×1 |
 | Sub-components + parent-as-index | `submit/` and `resolve/` under `helpdesk.tickets`; parent holds shared schema, personas, views |
-| All nine typed edges | `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `refs` |
+| All ten typed edges | `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs` |
+| Non-actor entry point | `Trigger: StaleSweep` (cron) `triggers` `Flow: EscalateStale` — a scheduled sweep with no Persona or View |
 | Upward resolution | sub-components write `[mutates](aim:#Schema:Ticket)` — `Ticket` resolves up to the parent |
 | Cross-component edges | parent → child (`...resolve#Contract:ResolveTicket`) and → external (`comms#Contract:SendEmail`) |
 | Dependencies + mapping | `Imports`/`Requires` in the parent; `helpdesk.tickets.mapping.aim` binds the `Users` capability |
@@ -26,7 +27,7 @@ Requesters open support tickets from a form and track them. Agents work a shared
 ```
 aim/
   helpdesk.tickets/
-    helpdesk.tickets.aim            # parent: index, shared User+Ticket, personas, dashboard views, notify flow, deps
+    helpdesk.tickets.aim            # parent: index, shared User+Ticket, personas, views, notify + escalate flows, StaleSweep trigger, deps
     submit/  helpdesk.tickets.submit.aim    # SubmitForm + SubmitTicket + ExecuteSubmit + TicketSubmitted
     resolve/ helpdesk.tickets.resolve.aim   # ResolveTicket + ExecuteResolve + TicketResolved
   comms/
@@ -49,6 +50,7 @@ graph LR
   classDef flow fill:#ddd6fe,stroke:#6d28d9,color:#2a1065;
   classDef schema fill:#fecaca,stroke:#b91c1c,color:#450a0a;
   classDef event fill:#fed7aa,stroke:#c2410c,color:#431407;
+  classDef trigger fill:#99f6e4,stroke:#0f766e,color:#042f2e;
 
   P_Req["Persona: Requester"]:::persona
   P_Ag["Persona: Agent"]:::persona
@@ -65,6 +67,8 @@ graph LR
   S_User["Schema: User"]:::schema
   E_Sub["Event: TicketSubmitted"]:::event
   E_Res["Event: TicketResolved"]:::event
+  F_Esc["Flow: EscalateStale"]:::flow
+  T_Sweep["Trigger: StaleSweep"]:::trigger
 
   P_Req -->|accesses| V_Form
   P_Req -->|accesses| V_Detail
@@ -85,6 +89,9 @@ graph LR
   F_Notify -->|reads| S_Ticket
   F_Notify -->|invokes| C_Email
   S_Ticket -->|refs| S_User
+  T_Sweep -->|triggers| F_Esc
+  F_Esc -->|reads| S_Ticket
+  F_Esc -->|mutates| S_Ticket
 ```
 
 *(The contracts also declare `mutates`/`emits` as their observable guarantees — the flows then realize them. The diagram shows the flow-level edges to keep the chain readable; both are in the `.aim` files.)*
@@ -97,5 +104,6 @@ A standalone vector version of the same graph (facet columns, left-to-right) liv
 
 - **Submit path:** `Requester` *accesses* `SubmitForm`, which *exposes* `SubmitTicket`; the contract *invokes* `ExecuteSubmit`, which *mutates* `Ticket` and *emits* `TicketSubmitted`.
 - **Resolve + notify (the async hop):** `Agent` opens `TicketDetail`, which *exposes* `ResolveTicket` → *invokes* `ExecuteResolve` → *mutates* `Ticket` + *emits* `TicketResolved`. Separately, `NotifyRequester` *subscribes* to `TicketResolved`, *reads* the `Ticket`, and *invokes* the external `comms.SendEmail`. Nothing *invokes* `NotifyRequester` — it is entered by the event, which is exactly why event-driven flows are not orphans.
-- **Impact analysis for free:** changing `Schema: Ticket` reaches **10** nodes along inbound edges — both contracts, both feature flows, the notify flow, all three views (transitively), and both personas. That set is *computed* from the graph, not guessed.
+- **Scheduled, non-actor path:** `StaleSweep` (a cron `Trigger`) *triggers* `EscalateStale`, which *reads* and *mutates* `Ticket`. No Persona or View is involved — the Trigger is the entry point, so the flow has a real inbound edge instead of looking orphaned. (External webhooks model the same way.)
+- **Impact analysis for free:** changing `Schema: Ticket` reaches **12** nodes along inbound edges — both contracts, all four flows (incl. the notify and escalate flows), all three views, both personas, and the `StaleSweep` trigger (transitively). That set is *computed* from the graph, not guessed.
 - **Drift as graph-diff:** because `helpdesk.tickets.binding.aim` maps nodes to code (`SubmitTicket → src/tickets/submit.ts#submitTicket`, `Ticket → table:tickets`, `TicketResolved → topic:…`), a Reviewer can diff this declared graph against the realized code graph and report precise, owner-routed findings.

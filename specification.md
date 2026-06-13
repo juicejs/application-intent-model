@@ -98,7 +98,7 @@ A node is any **addressable heading** in the resolved source. There are three ra
 | Rank | Markdown | Node-type | Example |
 |---|---|---|---|
 | Component | `aim:` frontmatter / H1 | `component` | `nemicko.demo.todo` |
-| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` (+ `requirement`) | `## Contract: CreateTodo` |
+| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` (+ `requirement`) | `## Contract: CreateTodo` |
 | Facet sub-block | `### <Sub>` and its list items | `block` (addressable, not separately typed) | `### Ensures` item `[2]` |
 
 Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** — they are never the endpoint of a typed edge. Only `component` and the facet node-types participate in the edge graph. The node-type is read directly off the facet-heading keyword; there is no inference.
@@ -169,7 +169,7 @@ parent: juice.tasks
 Required fields:
 
 - `aim` — the component namespace (lowercase, dot-separated)
-- `facet` — one of `intent | schema | flow | contract | persona | view | event | mapping | binding`
+- `facet` — one of `intent | schema | flow | contract | persona | view | event | trigger | mapping | binding`
 
 Optional fields:
 
@@ -273,6 +273,7 @@ Facet headings use the form `## <FacetType>: <Name>`:
 ## Persona: TaskOwner
 ## View: TaskDashboard
 ## Event: TaskCreated
+## Trigger: NightlySweep
 ```
 
 Binding-facet files use `## Bind: <FacetType> <Name>` headings (see §10.2):
@@ -291,7 +292,7 @@ Top-level section headings use the bare form:
 ## Dependencies
 ```
 
-The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.7). This keeps node boundaries deterministic.
+The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.8). This keeps node boundaries deterministic.
 
 ### 3.7 Attribute Syntax
 
@@ -397,7 +398,7 @@ A component should stay in a single `.aim` file (no sub-components, facets embed
 - There is one clear behavior, not a set of distinct features.
 - No facet needs independent ownership or review.
 
-Otherwise, split. Split is the default; single-file is the exception. (A collapsed single-file component is also the only case where inline `### Realized By` bindings are permitted instead of a separate binding facet — see §10.2.)
+Otherwise, split. Split is the default; single-file is the exception.
 
 ### 4.4 Path Identity
 
@@ -600,7 +601,7 @@ Note: `Task` and `User` are not defined in this file — they resolve upward to 
 
 ## 7. Precision Facets
 
-The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable.
+The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 adds a seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks.
 
 ### 7.1 Schema
 
@@ -761,7 +762,33 @@ createdAt: datetime required
 
 The event's emitters (`### Emitted By`) are **not** authored here — they are derived from the `emits` edges declared at the contracts/flows that emit the event (§8.4).
 
-### 7.7 Summary Rule
+### 7.7 Trigger
+
+Non-actor entry points: schedules, webhooks, and external origins that initiate behavior without a Persona or View. A Trigger is the source of a `triggers` edge into a Flow or Contract — which gives a cron job or inbound webhook a place in the graph, and gives the flow it starts a legitimate inbound edge (so it is not flagged as an orphan).
+
+```markdown
+## Trigger: NightlySweep
+
+### Summary
+
+Runs the stale-ticket sweep every night.
+
+### Kind
+
+- schedule
+
+### Schedule
+
+- cron: `0 2 * * *`
+
+### Fires
+
+- [triggers](aim:#Flow:EscalateStale)
+```
+
+A webhook or external origin sets `### Kind` to `webhook` / `external` and describes the source in prose instead of `### Schedule`. **Externally-originated events** need no special construct: model the origin as a Trigger that `triggers` an ingest Flow, and let that Flow `emits` the internal Event — the event then has a real emitter. Note: the `## Trigger:` *facet* defined here (an entry-point node) is distinct from v3.1's removed `### Trigger` *inverse block* (§8.3).
+
+### 7.8 Summary Rule
 
 Every facet block must carry an explicit `### Summary` sub-block immediately following the facet heading. `Persona` may omit the summary when it acts only as a role/access declaration.
 
@@ -797,7 +824,7 @@ This subsumes the *use site* of a v3.1 `## Dependencies → Imports` alias: the 
 
 ### 8.2 Closed Verb Taxonomy
 
-There are nine **declared** verbs and two **derived** inverses. Each declared verb has a fixed from→to node-type schema. A verb used between disallowed node-types is a **hard error**.
+There are ten **declared** verbs and two **derived** inverses. Each declared verb has a fixed from→to node-type schema. A verb used between disallowed node-types is a **hard error**.
 
 | Verb | from | to | Meaning | Kind |
 |---|---|---|---|---|
@@ -809,15 +836,16 @@ There are nine **declared** verbs and two **derived** inverses. Each declared ve
 | `subscribes` | flow, contract, component | event | consumes an event | declared |
 | `accesses` | persona | view | a persona may reach a view | declared |
 | `navigates` | view | view | UI navigation between surfaces | declared |
+| `triggers` | trigger | contract, flow | a schedule, webhook, or external origin initiates a behavioral unit | declared |
 | `refs` | schema attr | schema attr | data-level foreign reference (the `ref()` modifier) | declared |
-| `triggered-by` | flow | contract / view | inverse of `invokes`/`exposes` | derived |
+| `triggered-by` | flow, contract | contract / view / trigger | inverse of `invokes`/`exposes`/`triggers` | derived |
 | `emitted-by` | event | flow / contract | inverse of `emits` | derived |
 
 `requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1).
 
 ### 8.3 Declared vs Derived
 
-- **Declared once, at the acting end.** The node that performs the verb owns the edge: a View declares `exposes`/`navigates`/`reads`, a Flow declares `invokes`/`emits`/`reads`/`mutates`, a Persona declares `accesses`/`invokes`, a Contract declares `emits`/`mutates`/`invokes`, a Schema attribute declares `refs`.
+- **Declared once, at the acting end.** The node that performs the verb owns the edge: a View declares `exposes`/`navigates`/`reads`, a Flow declares `invokes`/`emits`/`reads`/`mutates`, a Persona declares `accesses`/`invokes`, a Contract declares `emits`/`mutates`/`invokes`, a Trigger declares `triggers`, a Schema attribute declares `refs`.
 - **Inverse views are derived, never authored.** The v3.1 blocks `### Trigger` ("Invoked by Contract: X") on a Flow and `### Emitted By` on an Event are inverse projections of `invokes`/`emits` edges. v4 removes them from authored source. A tool may render them as read-only views.
 
 This is the structural fix for v3.1's "three inconsistent expressions" problem: there is now exactly one authoritative direction per relation, so the forward and backward statements can never fall out of sync.
@@ -934,6 +962,8 @@ Two graphs:
 
 A **binding** connects a node in D to a node in R. Drift detection projects D and R into a common space through the bindings and diffs them.
 
+**Building R is bounded, not global.** A tool does **not** statically analyze the whole codebase to reconstruct R. Bindings localize the work: for each *declared* edge, the Reviewer opens the *bound site* and checks that one claim — "does `src/todos/create.ts#createTodo` actually mutate `Ticket` and emit `TicketCreated`?" That is read-the-bound-file, not map-the-system, and it is **polyglot by default** (an agent reads any language, where a static analyzer needs one parser per language; dynamic code that defeats static analysis can still be reasoned about and flagged). Because R is *inferred* this way, every graph-diff finding carries a **confidence** (§13.3). Tooling that *does* have static analysis MAY supply a precomputed **realized-graph manifest** for deterministic diffing — this spec does not define that manifest's format; it is an ecosystem concern.
+
 ### 10.2 Binding Notation And Location
 
 A binding target is a portable **code-locator URI**, written as inline code:
@@ -980,21 +1010,11 @@ facet: binding
 - binds: `topic:todos.created` — kind: topic
 ```
 
-**Inline escape hatch.** For a trivially small single-file component (the §4.3 collapse case), a separate binding file is needless ceremony, so an inline `### Realized By` sub-block under a facet is permitted:
-
-```markdown
-## Contract: CreateTodo
-...
-### Realized By
-
-- `src/todos/create.ts#createTodo` — kind: handler
-```
-
-A dedicated `*.binding.aim` file **wins** over inline `### Realized By` for the same node; the conflict emits an informational "binding shadowed" diagnostic.
+**Bindings always live in a `facet: binding` file — there is no inline binding form.** Keeping realization out of the behavioral files is the whole point (§1.3): a code path may rot without making the intent wrong, and a behavioral file never carries a volatile `file#symbol` path. (An early v4 draft allowed an inline `### Realized By` escape hatch for trivial components; it was removed — the lazy path muddied the behavior≠realization boundary, so bindings are separate, full stop.)
 
 ### 10.3 Optional-Capability Invariant
 
-- A component with no binding facet and no `### Realized By` block is fully valid (Level 1/2). Binding coverage is reported as informational, never a hard error.
+- A component with no binding facet is fully valid (Level 1/2). Binding coverage is reported as informational, never a hard error.
 - Bindings become load-bearing only at Level 3 graph-diff — which the author opted into by writing the bindings. You are never punished for a binding you did not write.
 
 ---
@@ -1026,7 +1046,7 @@ The first match wins. Lower-precedence sources for the same name emit an informa
 - **Level 2** — Intent plus some facets and edges. Most production components.
 - **Level 3** — Full facet trace **with bindings present**, so the declared graph can be diffed against the realized code graph. Highest fidelity for implementation and review.
 
-The level affects expected implementation precision, expected code-generation precision, and strictness of traceability and graph-diff checks. Tools may report a component's level as an informational diagnostic. Level 3 is the precise condition under which an unbound declared node becomes an enforceable finding (§13).
+The level affects expected implementation precision, expected code-generation precision, and strictness of traceability and graph-diff checks. Tools may report a component's level as an informational diagnostic. Level 3 is the precise condition under which an unbound declared node becomes an enforceable finding (§13). Level-3 graph-diff is enforced by the Reviewer verifying each edge at its bound site with a confidence (§10.1, §13.3), or by a supplied realized-graph manifest.
 
 ### 11.3 Traceability Chain
 
@@ -1036,6 +1056,7 @@ The traceability chain is the set of typed declared edges through the behavioral
 Persona → View → Contract → Flow / Schema / Event
 ```
 
+- Entry points are a **Persona** (actor, `accesses` a View) **or** a **Trigger** (schedule/webhook/external, `triggers` a Flow/Contract).
 - `Persona` `accesses` `View`.
 - `View.Actions` `exposes` `Contract`.
 - `Contract` `invokes` `Flow`.
@@ -1091,9 +1112,8 @@ A catalog may serve packages of multiple AIM versions side by side. A **working 
 - Lower-precedence facet source shadowed by a higher-precedence one.
 - Sub-component nesting exceeding three levels.
 - Unresolved `Import` alias (not blocking but flagged for repair).
-- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`; an Event nothing `emits`; a View no Persona `accesses`.
+- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.)
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
-- **Binding shadowed** — a `*.binding.aim` entry and an inline `### Realized By` both bind the same node (§10.2).
 
 ### 13.3 Graph-Diff Findings (Reviewer)
 
@@ -1108,7 +1128,7 @@ When bindings are present, the Reviewer diffs the declared graph against the rea
 | `UNDECLARED_EDGE` | realized code has an edge with no declared counterpart | UNDOCUMENTED → Architect |
 | `AMBIGUOUS_BINDING` | one node binds to conflicting sites, or two nodes bind the same site | ambiguous → user input |
 
-A `clean` drift report (`status: clean`) means the declared and realized graphs are isomorphic through the declared bindings — a materially stronger guarantee than "no prose mismatch found." The **impact set** (the nodes reachable from a changed node along inbound edges) is not a violation but a reporting capability, and is the headline payoff of the derived graph.
+Because R is inferred by reading the bound code (§10.1), **every finding carries a confidence** — `high` (the bound code clearly matches or clearly does not) or `needs-human-check` (dynamic or ambiguous code the Reviewer could not settle). A `clean` drift report (`status: clean`) means the declared and realized graphs are isomorphic through the declared bindings *at the stated confidence* — a materially stronger guarantee than "no prose mismatch found," but only as strong as the confidence attached. The **impact set** (the nodes reachable from a changed node along inbound edges) is not a violation but a reporting capability, and is the headline payoff of the derived graph.
 
 ---
 
@@ -1211,3 +1231,9 @@ Add bindings once code exists and you want enforceable drift detection. Bind the
 5. New requirements → new sub-component or revised parent; new edges declared at the acting nodes.
 
 The intent is the contract. Code follows intent. When they diverge, one of them is wrong and the divergence is resolved explicitly.
+
+### 16.7 Triggers, Schedules, And Orchestration
+
+- **Non-actor entry points** — cron jobs, schedules, polling loops, webhooks, external systems — are modeled with a `## Trigger:` facet (§7.7) and a `triggers` edge into the Flow or Contract they start. This is what gives a nightly job or an inbound webhook a place in the graph; without it, the flow it starts would look like an orphan.
+- **External events** need no new machinery: model the origin as a Trigger that `triggers` an ingest Flow, and let that Flow `emits` the internal Event. The event then has a real emitter and subscribers attach as usual.
+- **Sagas and long-running orchestration** are expressible with existing verbs: the orchestrator Flow `invokes` each step, `mutates` a saga-state Schema to track progress, and `emits`/`subscribes` compensation Events. AIM captures the *intent* of the orchestration, not the durable-timer/signal semantics of a workflow engine — those remain an implementation detail bound to code.

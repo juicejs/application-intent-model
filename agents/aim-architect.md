@@ -59,7 +59,7 @@ Required frontmatter:
 ```yaml
 ---
 aim: <namespace>
-facet: intent | schema | flow | contract | persona | view | event | mapping | binding
+facet: intent | schema | flow | contract | persona | view | event | trigger | mapping | binding
 parent: <parent namespace>   # only on sub-components
 ---
 ```
@@ -74,7 +74,7 @@ parent: <parent namespace>   # only on sub-components
 ### 3.3 Heading Conventions
 - `# <Name>` — component display name (exactly one per file)
 - `## Summary` / `## Requirements` / `## Tests` / `## Subcomponents` / `## Dependencies`
-- `## Schema: <Name>` / `## Contract: <Name>` / `## Flow: <Name>` / `## Persona: <Name>` / `## View: <Name>` / `## Event: <Name>`
+- `## Schema: <Name>` / `## Contract: <Name>` / `## Flow: <Name>` / `## Persona: <Name>` / `## View: <Name>` / `## Event: <Name>` / `## Trigger: <Name>`
 - `## Bind: <FacetType> <Name>` — in a `facet: binding` file
 - Every facet heading is immediately followed by `### Summary` (except a role/access-only Persona).
 
@@ -94,6 +94,7 @@ A cross-reference is `[verb](aim:<address>)` — a CommonMark link whose text is
 - View → `exposes` Contract; View → `reads` Schema; View → `navigates` View
 - Persona → `accesses` View; Persona → `invokes` Contract
 - Contract/Flow → `invokes` Flow/Contract; `mutates`/`reads` Schema; `emits`/`subscribes` Event
+- Trigger → `triggers` Flow/Contract — a `## Trigger:` node for cron / webhook / external (non-actor) entry points
 
 Example: `- Submitting the form — [exposes](aim:#Contract:CreateTodo)`. Never author `### Trigger` or `### Emitted By` — those are derived from the forward edge.
 

@@ -11,7 +11,7 @@ This project uses the **Application Intent Model (AIM) v4** to specify product b
 ## How to read this project
 
 - **Behavioral truth lives in `.aim` files** under `/aim/`. These are the only files that define what the system is supposed to do.
-- **Each `.aim` file is a projection of a node-and-edge graph.** Headings are nodes (`## Contract: CreateTask`); cross-references are typed edges written as `[verb](aim:<address>)` — a View `exposes` a Contract, a Flow `emits` an Event, and so on. Tooling derives the graph by collecting these edges; nothing maintains a separate graph file.
+- **Each `.aim` file is a projection of a node-and-edge graph.** Headings are nodes (`## Contract: CreateTask`); cross-references are typed edges written as `[verb](aim:<address>)` — a View `exposes` a Contract, a Flow `emits` an Event, and so on. Non-actor entry points (cron, webhooks, external systems) are `## Trigger:` nodes that `triggers` a flow/contract. Tooling derives the graph by collecting these edges; nothing maintains a separate graph file.
 - **The AIM specification** is the authoritative grammar reference. Read it before parsing or writing any `.aim` file:
   1. Try the local cache first: `/aim/specs/spec.md`
   2. Fall back to the canonical URL: <https://intentmodel.dev/spec.md>

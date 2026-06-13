@@ -62,7 +62,7 @@ The `[exposes](aim:#Contract:CreateTodo)` token is a typed edge: `View → expos
 
 Two worked examples ship with the spec:
 - [examples/nemicko.demo.todo.aim](./examples/nemicko.demo.todo.aim) — a complete component in a single file.
-- [examples/helpdesk/](./examples/helpdesk/) — a multi-file app (sub-components, a mapping, and a binding file) whose graph spans files, exercising **all** six facets and all nine edge verbs. Start with its [README](./examples/helpdesk/README.md) for the rendered graph.
+- [examples/helpdesk/](./examples/helpdesk/) — a multi-file app (sub-components, a mapping, and a binding file) whose graph spans files, exercising **every** facet and all ten edge verbs. Start with its [README](./examples/helpdesk/README.md) for the rendered graph.
 
 ---
 

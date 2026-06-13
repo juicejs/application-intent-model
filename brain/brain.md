@@ -106,7 +106,7 @@ v4 has three roles. Repair is a verb, not a role.
 ```yaml
 ---
 aim: <namespace>
-facet: intent | schema | flow | contract | persona | view | event | mapping | binding
+facet: intent | schema | flow | contract | persona | view | event | trigger | mapping | binding
 parent: <parent namespace>   # only on sub-components
 ---
 ```
@@ -135,7 +135,7 @@ Generic filenames are **hard errors**: `intent.aim`, `schema.aim`, `binding.aim`
 
 ### 3.5 Typed edges
 
-A cross-reference is `[verb](aim:<address>)` — declared at the acting node. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `refs`. Example: `- [accesses](aim:#View:TodoDashboard)`. The graph is derived by collecting these; inverse blocks are never authored.
+A cross-reference is `[verb](aim:<address>)` — declared at the acting node. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs` (`triggers` is declared on a `## Trigger:` node for cron/webhook/external entry points). Example: `- [accesses](aim:#View:TodoDashboard)`. The graph is derived by collecting these; inverse blocks are never authored.
 
 ### 3.6 Minimum valid intent file
 

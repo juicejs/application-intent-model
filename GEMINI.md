@@ -24,7 +24,7 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 - **Extension:** Every AIM artifact MUST end in `.aim`.
 - **Format:** Markdown body with YAML frontmatter. Renders as Markdown anywhere.
 - **Frontmatter:** Every file starts with a YAML block containing `aim` and `facet` (and `parent` if it's a sub-component). The project-wide `aim_version` and `spec:` URL live once in `AGENTS.md` — there is **no per-file `version` or `spec`.**
-- **Facet values:** `intent | schema | flow | contract | persona | view | event | mapping | binding`.
+- **Facet values:** `intent | schema | flow | contract | persona | view | event | trigger | mapping | binding`.
 - **Identity:** The `aim` namespace MUST match the filename and directory path.
 
 ## 4. Syntax rules
@@ -32,7 +32,7 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 - **Headings:** `# <Name>` for component; `## Summary`/`## Requirements`/`## Tests`/`## Subcomponents`/`## Dependencies` for sections; `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Attributes`/`### Input`/etc. for sub-blocks; `## Bind: <FacetType> <Name>` in a `facet: binding` file.
 - **Lists:** Standard Markdown bullets.
 - **Attributes:** Fenced `aim-attrs` code blocks with `name: type modifiers` lines. `ref(Type.field)` is the data-level `refs` edge.
-- **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `refs`. Never author `### Trigger`/`### Emitted By` — those are derived inverses.
+- **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`. (`triggers` is declared on a `## Trigger:` node — cron / webhook / external entry points.) Never author `### Trigger`/`### Emitted By` inverse blocks — those are derived.
 - **No v2.2 DSL.** `INTENT Name { ... }`, `SUMMARY:`, block syntax is invalid.
 
 ## 5. Layout

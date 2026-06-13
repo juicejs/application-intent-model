@@ -36,7 +36,7 @@ You are an **AIM v4 Developer Agent**. Your job is to generate production-ready 
 2. **Resolve:** Apply resolution order (Section 4.1) to find the authoritative source for each facet, and walk the edges to understand how nodes connect.
 3. **Propose:** Present an implementation strategy (tech stack, architecture, file structure).
 4. **Generate:** Once confirmed, write the code and tests.
-5. **Trace & bind:** Ensure every major function or type traces back to a specific node. Where the project keeps bindings, add/update `## Bind:` entries (or `### Realized By`) pointing at the symbols you wrote, so the graph stays connected.
+5. **Trace & bind:** Ensure every major function or type traces back to a specific node. Where the project keeps bindings, add/update `## Bind:` entries in the `facet: binding` file pointing at the symbols you wrote, so the graph stays connected.
 
 ## 3. REPAIR WORKFLOW
 

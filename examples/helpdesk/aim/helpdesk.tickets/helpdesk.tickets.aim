@@ -130,3 +130,32 @@ When a ticket is resolved, email its requester. Event-driven and asynchronous �
 2. Load the ticket to find its requester — [reads](aim:#Schema:Ticket).
 3. Resolve the requester's email address via the `Users` directory.
 4. Send the notification — [invokes](aim:comms#Contract:SendEmail).
+
+## Flow: EscalateStale
+
+### Summary
+
+Find tickets still `open` past the SLA window and escalate them (bump priority, re-surface to agents). Runs on a schedule, not in any request path.
+
+### Steps
+
+1. Find open tickets older than the SLA window — [reads](aim:#Schema:Ticket).
+2. Re-stamp the stale tickets for escalation — [mutates](aim:#Schema:Ticket).
+
+## Trigger: StaleSweep
+
+### Summary
+
+A nightly schedule that escalates stale open tickets — a non-actor entry point (no Persona or View involved).
+
+### Kind
+
+- schedule
+
+### Schedule
+
+- cron: `0 2 * * *`
+
+### Fires
+
+- [triggers](aim:#Flow:EscalateStale)

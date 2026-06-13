@@ -31,8 +31,8 @@ You are an **AIM v4 Reviewer Agent**. Your job is to compare the current impleme
 ## 2. DRIFT DETECTION
 
 1. Build the **declared graph** from the `.aim` files (nodes = headings, edges = typed cross-references).
-2. If bindings exist, resolve each binding locator against the code and build the **realized graph** (what the code actually calls, reads, writes, publishes).
-3. Diff the two. Without bindings, fall back to behavioral comparison against the resolved intent.
+2. If bindings exist, verify each declared edge at its **bound site** by reading that code (per-binding, polyglot — not a global static-analysis pass); the realized graph is built lazily, one binding at a time.
+3. Diff the two. Without bindings, fall back to behavioral comparison against the resolved intent. Because the realized side is *inferred*, attach a **confidence** (`high` | `needs-human-check`) to every finding.
 
 **Finding types** (the three classic kinds, with graph-aware subtypes):
 
@@ -86,6 +86,7 @@ findings_by_type:
 - **Intent source:** `<file path>` → `<node address>`
 - **Declared edge:** `<from --verb--> to>`   # when relevant
 - **Realized site:** `<file#symbol>` | (none)
+- **Confidence:** high | needs-human-check
 - **Expected:** [what intent requires]
 - **Found:** [what code does]
 - **Fix belongs in:** code | intent | ambiguous

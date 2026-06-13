@@ -95,7 +95,7 @@ One paragraph describing the intended behavior.
 - [feature_a](./feature_a/<namespace>.feature_a.aim)
 ```
 
-Typed-edge verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `refs`. Declare each at the node that acts.
+Typed-edge verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`. Declare each at the node that acts. `triggers` is declared on a `## Trigger:` node (cron / webhook / external entry points).
 
 ---
 
