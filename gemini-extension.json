@@ -1,6 +1,0 @@
-{
-  "name": "application-intent-model",
-  "version": "3.1.0",
-  "description": "Eliminates AI hallucinations and logic drift by grounding code generation in versioned .aim files. AIM v3.1 uses Markdown with YAML frontmatter, sub-component decomposition, and three mainstream roles (Architect, Developer, Reviewer). Any agent can self-bootstrap from the spec: URL embedded in every file.",
-  "contextFileName": "GEMINI.md"
-}

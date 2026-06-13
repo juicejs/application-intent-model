@@ -11,6 +11,7 @@ This project uses the **Application Intent Model (AIM) v4** to specify product b
 ## How to read this project
 
 - **Behavioral truth lives in `.aim` files** under `/aim/`. These are the only files that define what the system is supposed to do.
+- **Each `.aim` file is a projection of a node-and-edge graph.** Headings are nodes (`## Contract: CreateTask`); cross-references are typed edges written as `[verb](aim:<address>)` — a View `exposes` a Contract, a Flow `emits` an Event, and so on. Tooling derives the graph by collecting these edges; nothing maintains a separate graph file.
 - **The AIM specification** is the authoritative grammar reference. Read it before parsing or writing any `.aim` file:
   1. Try the local cache first: `/aim/specs/spec.md`
   2. Fall back to the canonical URL: <https://intentmodel.dev/spec.md>
@@ -25,12 +26,13 @@ This project uses the **Application Intent Model (AIM) v4** to specify product b
 ├── aim/
 │   ├── specs/spec.md      # cached AIM specification (reference)
 │   ├── mappings/          # capability-to-provider bindings
+│   ├── bindings/          # intent-to-code realization bindings (optional)
 │   └── <component>/       # one directory per component
 │       └── <component>.aim
 └── ...                    # your application code
 ```
 
-Reserved directory names under `/aim/`: `specs/`, `mappings/`. Everything else is a component namespace.
+Reserved directory names under `/aim/`: `specs/`, `mappings/`, `bindings/`. Everything else is a component namespace.
 
 ## Operating roles
 

@@ -1,28 +1,31 @@
-# Application Intent Model (AIM) v3.1
+# Application Intent Model (AIM) v4
 
-AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It replaces the sprawl of `.md` PRDs, design notes, and plan files that agents otherwise generate — capturing product behavior in structured `.aim` files that agents read once, build from, review against, and repair over time.
+AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It captures product behavior in structured `.aim` files that agents read once, build from, review against, and repair over time — replacing the sprawl of PRDs, design notes, and plan files that agents otherwise generate.
+
+**This repository is the specification itself** — the language, its reference examples, and the role prompts. Tooling, the package catalog, and publishing live in separate repositories.
 
 ---
 
 ## Why AIM
 
-- **Eliminate hallucinations.** Ground AI agents in explicit, versioned specifications instead of loose chat context.
-- **Deterministic code generation.** Build production-ready code traceable to every requirement.
-- **Automated review.** Detect when code drifts from intent and decide explicitly: fix code, or revise intent.
-- **Self-bootstrapping.** Every `.aim` file carries a `spec:` URL — any agent (Claude, Cursor, Gemini, Aider) can fetch the spec on first encounter and immediately understand the format. No plugin required.
+- **Ground agents in explicit, versioned intent** instead of loose chat context that evaporates between sessions.
+- **A reviewable contract between intent and code.** `.aim` files are normally agent-authored, but a small spec is something a human can read, correct, and diff — and a Reviewer can check code against — far more cheaply than the generated code itself.
+- **A relation graph, not just a tree.** v4 treats every `.aim` file as a projection of a node-and-edge graph: a View *exposes* a Contract, a Flow *mutates* a Schema and *emits* an Event. That graph is derived, traversable, and checkable.
+- **Drift as graph-diff.** With optional intent↔code bindings, review becomes a diff between the declared graph and the realized code graph.
+
+AIM pays off when reading the spec is meaningfully easier than reading the code. For trivially small or throwaway work, generating code directly is the right call.
 
 ---
 
-## What's new in v3.1
+## What's new in v4
 
-v3.1 is a breaking change from v2.2. The shifts:
+v4 is a breaking change from v3.1. The three shifts:
 
-1. **Markdown-native syntax.** Files are valid Markdown with YAML frontmatter — renders on GitHub, in any IDE, and in any LLM context with no special tooling.
-2. **Self-describing headers.** Every file carries a `spec:` URL so cold-start agents can fetch the spec and self-bootstrap.
-3. **Sub-component-first authoring.** Complex applications are decomposed into focused sub-components by default. The parent intent acts as an index plus a home for shared facets.
-4. **Three mainstream roles.** Architect, Developer, Reviewer — matching real software teams instead of formal-methods jargon.
+1. **Graph-founded model.** The `.aim` Markdown file is a *projection* of an underlying node-and-edge graph. Every heading is an addressable node.
+2. **Typed edge taxonomy.** One CommonMark-native token — `[verb](aim:<address>)` — replaces v3.1's inconsistent prose cross-references. Dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
+3. **Intent↔code binding layer.** Optional `facet: binding` files map intent nodes to their realization sites in code, turning drift detection into a graph-diff.
 
-Migrating from v2.2: see Section 11 of [specification.md](./specification.md).
+Migrating from v3.1: see Section 14 of [specification.md](./specification.md).
 
 ---
 
@@ -30,66 +33,42 @@ Migrating from v2.2: see Section 11 of [specification.md](./specification.md).
 
 ```markdown
 ---
-aim: juice.tasks.create_task
+aim: nemicko.demo.todo
 facet: intent
-parent: juice.tasks
 ---
 
-# CreateTask
+# TaskManager
 
 ## Summary
 
-Create a new task on behalf of the authenticated user.
+A personal task manager.
 
 ## Requirements
 
-- Title must be 1–200 characters.
-- Owner is the creating user.
-- A `tasks.created` event is emitted on success.
+- Users can create and complete tasks.
 
-## Contract: CreateTask
+## View: TodoDashboard
 
-### Input
+### Summary
 
-```aim-attrs
-title: string required min(1) max(200)
-description: string optional
+The owner's task-list surface.
+
+### Actions
+
+- Submitting the "New Task" form — [exposes](aim:#Contract:CreateTodo)
 ```
 
-### Ensures
+The `[exposes](aim:#Contract:CreateTodo)` token is a typed edge: `View → exposes → Contract:CreateTodo`. Collect every such token across a project and you have the relation graph.
 
-- A new Task record is persisted with status="open".
-- A `tasks.created` event is emitted.
-```
+See [examples/nemicko.demo.todo.aim](./examples/nemicko.demo.todo.aim) for a complete v4 component exercising every facet and edge type.
 
 ---
 
-## Layout
+## The roles
 
-```
-/aim/
-  juice.tasks/
-    juice.tasks.aim              # parent: index + shared schemas
-    juice.tasks.schema.aim       # shared Task schema
-    create_task/
-      juice.tasks.create_task.aim
-    assign_task/
-      juice.tasks.assign_task.aim
-  mappings/
-    juice.tasks/
-      juice.tasks.mapping.aim
-```
-
-Each sub-component is a real component with its own intent file and namespace. The parent indexes them and holds shared facets.
-
----
-
-## The workflow
-
-1. **Architect** writes intent files from requirements.
-2. **Developer** generates code and tests from intent.
-3. **Reviewer** compares code against intent and reports drift.
-4. **Repair** is explicit: code fix (Developer) or intent revision (Architect) — never silent normalization.
+1. **Architect** writes `.aim` files from requirements and declares the graph.
+2. **Developer** generates code and tests from the resolved graph, and keeps bindings current.
+3. **Reviewer** diffs code against the declared graph and reports drift — explicitly routed to a code fix (Developer) or an intent revision (Architect).
 
 ---
 
@@ -102,46 +81,20 @@ Drop a `.gitattributes` file at your repo root:
 *.aim linguist-detectable=true
 ```
 
-GitHub will render `.aim` files as Markdown with full frontmatter, headings, and lists.
+GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, and the edge tokens as clickable links.
 
 ---
 
-## Reference
+## Repository contents
 
-- **[AGENTS.md](./AGENTS.md)** — project bootstrap for AI coding agents (cold-start entry point).
-- **[specification.md](./specification.md)** — the authoritative v3.1 language spec.
-- **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant (Claude, Cursor, Aider, Gemini).
+- **[specification.md](./specification.md)** — the authoritative AIM v4 language spec.
+- **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
+- **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
-- **[Registry](./registry/)** — community catalog of reusable intent packages.
+- **[brain/](./brain/)** — the shared and per-role operating-brain instructions.
+- **[examples/](./examples/)** — conformance example `.aim` files.
 
 ---
 
-## Repository layout
-
-- `agents/` — Architect, Developer, Reviewer persona definitions.
-- `skills/` — Autonomous skills for code-generation workflows.
-- `registry/` — Component package catalog.
-- `site/` — The [intentmodel.dev](https://intentmodel.dev) website source.
-
----
-
-## Gemini CLI extension
-
-AIM ships as a first-class Gemini CLI extension. Three personas, one command:
-
-```bash
-gemini extensions install application-intent-model
-```
-
-Then invoke from your terminal:
-
-- `@aim-architect`: "I want to build a 2FA login flow."
-- `@aim-developer`: "build [component] in React"
-- `@aim-reviewer`: "review [component]" (produces a drift report)
-
-Package fetching is a CLI command (`sinth fetch <package>`), not a separate agent.
-
----
-
-Current spec: **AIM v3.1**  
-Built by **[Juice d.o.o.](https://juice.com.hr)**
+Current spec: **AIM v4**  
+Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License

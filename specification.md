@@ -41,7 +41,7 @@ The intent file is the canonical entrypoint. All other detail attaches to it dir
 | Traceability chain | "A useful target, not a requirement" | Derived from declared edges; checkable |
 | Inverse relations | Authored twice (`### Trigger`, `### Emitted By`) | Declared once at the acting end; inverse derived |
 | Code linkage | None | Optional `facet: binding`; drift becomes graph-diff |
-| Per-file `version`/`spec` | Contradictory in v3.1 (frontmatter omitted them, but version-inheritance, registry, and diagnostics still required them) | Removed everywhere; version lives only in `AGENTS.md` + registry index |
+| Per-file `version`/`spec` | Contradictory in v3.1 (frontmatter omitted them, but version-inheritance, registry, and diagnostics still required them) | Removed everywhere; version lives only in `AGENTS.md` (and the external catalog) |
 
 ### 1.2 Agent Roles
 
@@ -231,7 +231,7 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 
 **Required installer behavior:**
 
-1. On first `sinth init` (or equivalent setup) in a project, fetch the spec from the URL declared in `AGENTS.md` and write it to `/aim/specs/spec.md`.
+1. On first project setup (performed by an agent or tooling), fetch the spec from the URL declared in `AGENTS.md` and write it to `/aim/specs/spec.md`.
 2. When the project adopts a new AIM version, the installer overwrites the local `spec.md` with the new version.
 3. The local spec file is a verbatim mirror of the URL content. Tools must not modify it.
 
@@ -1046,34 +1046,23 @@ In v3.1 this chain was prose and "a useful target, not a requirement." In v4 it 
 
 ---
 
-## 12. Registry And Installation
+## 12. Distribution
 
-### 12.1 Registry Package Catalog
+AIM components may be packaged and shared, but **distribution is not part of this specification.** Discovery, fetch, and publishing are handled by tooling outside this repository — typically an external, database-backed catalog. This section defines only what makes a package *well-formed* as an AIM artifact and how versions coexist; it does not define a registry-index file format, a CLI, or a publishing flow.
 
-Remote package discovery uses `registry/index.json`. Each package object must include:
+### 12.1 Well-Formed Package
 
-- `name`
-- `version` — the package release version (semver permitted, e.g. `1.0.0`)
-- `aim_version` — the AIM language version the package conforms to (`"4"`, `"3.1"`, or `"2.2"`)
-- `entry` — relative path to the package's root intent file
+A distributable package has a single root component. It is well-formed when:
 
-Package validity:
+- It has exactly one root `facet: intent` file as its entry (sub-components have their own intent files, but only the root is the entry).
+- The entry's frontmatter `aim` matches the package's advertised name, and `facet` is `intent`.
+- Its declared intra-graph references resolve: every `## Bind:` target and every edge token addressing a node *within the package* names a node that exists. A dangling intra-graph reference is a hard error. (References to a *consumer's* code via binding locators cannot be checked inside the package, since a package ships intent, not the consumer's code.)
 
-- `entry` exists and ends with `.aim` (for v4/v3.1 packages) or `.intent` (only when `legacy: true`).
-- The entry's frontmatter `aim` matches the package `name`.
-- The entry's frontmatter `facet` is `intent`.
-- A package directory contains exactly one root `facet: intent` file (sub-components have their own intent files, but only the package root is the entry).
-- The package's declared intra-graph references resolve: every `## Bind:` target and every edge token addressing a node *within the package* names a node that exists (dangling intra-graph reference is a hard error). References to a consumer's code (binding locators) are not checked at registry time, since registry packages ship intent, not the consumer's code.
+A package advertises its release version and its `aim_version` (the language version it conforms to) through the catalog, not through any field inside the `.aim` files — `.aim` files carry no version (§3.2).
 
-The package's version is asserted by the index record, not by any field inside the `.aim` files — `.aim` files carry no version (§3.2).
+### 12.2 Single-Version Projects
 
-### 12.2 Local Installation
-
-Even when sources are fetched remotely, all implementation, review, and code generation runs against local files under `/aim/`. Fetched packages are installed into the canonical layout described in §4 so users can edit and rebuild without refetching.
-
-### 12.3 Multi-Version Coexistence
-
-The registry serves packages of multiple AIM versions simultaneously, selected per package by `aim_version` (and `legacy: true` for the v2.2 block-DSL form). A **working project**, however, is single-version: its `/aim/` tree is wholly one AIM version (graph-diff requires one consistent model). When a package of an older version is fetched into a newer-version project, the installer runs the migration chain at install time (§14) or refuses with a clear message — it never installs mixed versions into one project.
+A catalog may serve packages of multiple AIM versions side by side. A **working project**, however, is single-version: its `/aim/` tree is wholly one AIM version, because graph-diff requires one consistent model. Installing a package authored against an older version into a newer-version project requires migrating it first (§14) — a project never mixes versions. Installed sources live as local files under `/aim/` so all implementation, review, and code generation run locally.
 
 ---
 
@@ -1125,15 +1114,15 @@ A `clean` drift report (`status: clean`) means the declared and realized graphs 
 
 ## 14. Migration From v3.1
 
-v4 is a breaking change. Tools should ship a `sinth migrate` command that converts v3.1 sources to v4:
+v4 is a breaking change. Migration tooling (outside this specification) converts v3.1 sources to v4 by:
 
 1. **Relabel.** Update `AGENTS.md` frontmatter `aim_version: 3.1` → `4`; update the body's version references. The `.aim` extension does **not** change (unlike the v2.2→v3.1 `.intent`→`.aim` rename).
 2. **Strip per-file version/spec.** Remove any lingering `version:`/`spec:` keys from `.aim` frontmatter. Fully automatable.
 3. **Prose mentions → typed edges.** v3.1 already expresses the chain in recognizable patterns: backticked facet references inside `### Actions`, `### Ensures`, `### Emitted By`, `### Trigger`, and `CALL X.Y` lines in `### Steps`. A migration pass deterministically pre-extracts edges from these patterns and proposes them; edges implied only by free prose require an LLM-assisted pass with Architect confirmation. **Edges are never silently invented.**
 4. **Delete derived inverse blocks.** Remove `### Trigger` and `### Emitted By` once their forward edges are declared (§8.4).
-5. **Bindings are not generated by migration.** Migration leaves components at Level 1/2 (valid, §10.3). A separate code-reading pass (`sinth bind` or Developer-driven) proposes bindings against actual code afterward, raising a project to Level 3 without migration ever assuming code exists or is correct.
+5. **Bindings are not generated by migration.** Migration leaves components at Level 1/2 (valid, §10.3). A separate code-reading pass (Developer- or tool-driven) proposes bindings against actual code afterward, raising a project to Level 3 without migration ever assuming code exists or is correct.
 
-A project's `/aim/` tree must be wholly one AIM version (§12.3). The migration is one-shot per project. Projects still on v2.2 migrate v2.2 → v3.1 first (see the v3.1 spec), then v3.1 → v4.
+A project's `/aim/` tree must be wholly one AIM version (§12.2). The migration is one-shot per project. Projects still on v2.2 migrate v2.2 → v3.1 first (see the v3.1 spec), then v3.1 → v4.
 
 ---
 

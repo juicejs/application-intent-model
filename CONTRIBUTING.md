@@ -1,22 +1,22 @@
 # Contributing
 
-## Component Registry Publishing
+This repository is the **AIM language specification** and its reference material — nothing else. Tooling, the package catalog, and publishing live in separate repositories.
 
-Community component packages are published via pull requests to `registry/packages`.
+## What lives here
 
-1. Create a package directory: `registry/packages/<component>/`.
-2. Add exactly one root intent file: `<component>.aim` with valid v3.1 frontmatter (`aim:` + `facet: intent`). Per-file `version:` and `spec:` are not used.
-3. Add optional facet files (`<component>.<facet>.aim`) and sub-component intent files as needed.
-4. Add your package to the `packages` array in `registry/index.json`, with `aim_version: "3.1"`.
+- `specification.md` — the authoritative AIM v4 language spec
+- `examples/` — conformance example `.aim` files
+- `agents/`, `brain/`, `PROMPT.md` — role personas and prompt templates
+- `AGENTS.md` — the reference project-bootstrap file
+
+## Proposing spec changes
+
+1. Open an issue describing the problem the change solves.
+2. For accepted changes, edit `specification.md`. Keep section cross-references (`§N.M`) consistent, and update the `## 1.1 What Changed` table when the change is breaking.
+3. If the change affects authoring, update the personas (`agents/`, `brain/`) and `PROMPT.md` to match.
+4. Add or update a conformance example under `examples/` so the change is demonstrated.
 5. Open a pull request.
 
-CI validates package integrity and AIM header conventions using `scripts/validate_registry.py`.
+## Examples
 
-## Spec Changes
-
-Protocol changes should update:
-
-- `specification.md` (the canonical v3.1 language spec)
-- `README.md` (landing summary, if needed)
-
-If a spec change affects registry rules, update `scripts/validate_registry.py`.
+Examples must be valid against the current spec: correct frontmatter (`aim`, `facet`), typed edges that resolve, no orphan nodes or dangling references. Keep them small and focused — one component per example.
