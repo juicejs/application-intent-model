@@ -43,7 +43,7 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 - Mapping: `/aim/mappings/<component>/<component>.mapping.aim`
 - Binding (optional, intent→code): `/aim/bindings/<component>/<component>.binding.aim`
 
-Sub-component-first is the default. Collapse to a single file only when the component is genuinely small.
+Sub-component-first is the default. Collapse to a single file only when the component is genuinely small. Author shared facets (schemas/personas/views) as their own files or in `<app>.core`; the parent intent file is a lean index, not a container — don't dodge duplication by building a monolith.
 
 ## 6. Role dispatch
 

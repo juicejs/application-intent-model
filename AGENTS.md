@@ -53,6 +53,7 @@ Detailed prompts for each role: [PROMPT.md](./PROMPT.md). Persona files: [agents
 - **Never invent material behavior absent from intent.** When detail is missing, preserve documented intent and minimize assumptions. Surface ambiguity rather than guess.
 - **Never silently normalize drift.** When implementation and intent diverge, resolve the mismatch explicitly.
 - **Reuse, don't regenerate.** Before defining a shared entity (a `Schema` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across components belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
+- **Keep the parent lean; extract shared facets.** A parent intent file is an index, not a container — author shared schemas/personas/views as their own files (or in `<app>.core`). Don't dodge duplication by cramming everything into one file; a monolith is the dual failure.
 
 ## Project conventions
 

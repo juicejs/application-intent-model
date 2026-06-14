@@ -1119,6 +1119,7 @@ A catalog may serve packages of multiple AIM versions side by side. A **working 
 - **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.)
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
 - **Probable duplicate entity** — two nodes with the same facet-type and name in components not linked by an import or reference (e.g. `auth#Schema:User` and `billing#Schema:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§16.8), or to confirm they are genuinely distinct.
+- **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across components, instead of extracting them into sibling facet files or a `<app>.core` component (§16.2, §16.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
 
 ### 13.3 Graph-Diff Findings (Reviewer)
 
@@ -1208,12 +1209,13 @@ Start by splitting. Create the parent intent with the cross-cutting requirements
 
 ### 16.2 What Goes In The Parent
 
-- Shared schemas (entities referenced by multiple sub-components).
-- Shared personas and views.
-- Cross-cutting requirements that apply system-wide.
-- Index of sub-components.
+The parent intent file is a **lean index**, not a container:
 
-For entities shared *across* top-level components (not just within one subtree), use the canonical `<app>.core` convention in §16.8 rather than redefining them in each parent.
+- Cross-cutting requirements that apply system-wide.
+- The `## Subcomponents` index.
+- Dependencies.
+
+Shared **facets** — schemas, personas, views referenced by multiple components — are authored as their **own files**, never embedded en masse in the parent: a sibling facet file (`<component>.schema.aim`, `<component>.persona.aim`, `<component>.view.aim`) for what's shared within a subtree, or a `<app>.core` component (§16.8) for entities shared *across* top-level components. Embedding many facets into one intent file produces a **monolith** (§13.2) — the dual of the duplication problem, and just as damaging at scale.
 
 ### 16.3 What Goes In A Sub-Component
 
@@ -1253,3 +1255,5 @@ The fastest way a large project rots is duplication: the same `User` (as a `Sche
 - **Give cross-cutting entities one canonical home.** A parent holds what's shared within its subtree (§16.2). For entities shared *across* sibling top-level components (`auth`, `tasks`, `billing` all needing `User`), designate one shared component — by convention `<app>.core` — as the single definition site, and have the others import from it. One `User`, many references.
 
 Tooling supports this from both ends: the **probable-duplicate diagnostic** (§13.2) surfaces same-type-same-name nodes that are not reference-linked, and the derived graph lets you list every definition of an entity to spot drift. Detection plus discipline is what keeps identity from fragmenting as the system grows — and it is only possible *because* the graph turns "every entity in the project" into something you can query.
+
+Beware the **opposite trap**: do not dodge duplication by embedding every entity in one file. That just trades duplication for a monolith — equally damaging, and a real failure mode in practice (an agent told to avoid duplicate `User`s will happily cram all 20 schemas into one parent). The rule is *both*: don't duplicate **and** don't monolith. Shared facets live in their own files and the parent stays a lean index (§16.2); a canonical entity that consumers cannot reach by upward resolution must be importable (put it in an ancestor or `<app>.core`, not a sibling).

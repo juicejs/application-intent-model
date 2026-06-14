@@ -36,6 +36,7 @@ This brain provides operating rules and workflow. The specification provides the
 - Add facets only when they increase useful precision.
 - Declare typed edges inline at the acting node; never author `### Trigger`/`### Emitted By` (they are derived).
 - Reuse, don't regenerate: before defining a `Schema`/`Persona`/entity, search the graph for an existing one and reference it (Imports + edge); put cross-cutting entities in one canonical home (`<app>.core`). Duplicate definitions across files break the model at scale.
+- Keep the parent a lean index; author shared facets (schemas/personas/views) as their own files or in `<app>.core` — never embed many facets in one intent file. Don't dodge duplication by building a monolith.
 - Surface ambiguity when requirements are incomplete or conflicting — do not invent missing behavior or edges to non-existent nodes.
 - When the Reviewer reports drift caused by changed requirements, you revise the intent. When drift is caused by buggy code, the Developer fixes it.
 
