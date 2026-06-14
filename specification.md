@@ -834,7 +834,7 @@ There are ten **declared** verbs and two **derived** inverses. Each declared ver
 | `mutates` | contract, flow | schema | creates / updates / deletes an entity | declared |
 | `emits` | flow, contract | event | produces an event | declared |
 | `subscribes` | flow, contract, component | event | consumes an event | declared |
-| `accesses` | persona | view | a persona may reach a view | declared |
+| `accesses` | persona | view, component | a persona may reach a view, or a whole screen/route component | declared |
 | `navigates` | view | view | UI navigation between surfaces | declared |
 | `triggers` | trigger | contract, flow | a schedule, webhook, or external origin initiates a behavioral unit | declared |
 | `refs` | schema attr | schema attr | data-level foreign reference (the `ref()` modifier) | declared |
@@ -842,6 +842,8 @@ There are ten **declared** verbs and two **derived** inverses. Each declared ver
 | `emitted-by` | event | flow / contract | inverse of `emits` | derived |
 
 `requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1).
+
+An `accesses` edge may target a **View** (access to one surface) **or** a **component** (route/screen-level access — the persona may reach that whole feature). Use the component form for role-gated screens that aggregate several views; `[accesses](aim:app.profile)` is valid and means "this persona may reach the profile screen."
 
 ### 8.3 Declared vs Derived
 
@@ -1056,8 +1058,8 @@ The traceability chain is the set of typed declared edges through the behavioral
 Persona → View → Contract → Flow / Schema / Event
 ```
 
-- Entry points are a **Persona** (actor, `accesses` a View) **or** a **Trigger** (schedule/webhook/external, `triggers` a Flow/Contract).
-- `Persona` `accesses` `View`.
+- Entry points are a **Persona** (actor, `accesses` a View or screen component) **or** a **Trigger** (schedule/webhook/external, `triggers` a Flow/Contract).
+- `Persona` `accesses` `View` (or a whole screen component).
 - `View.Actions` `exposes` `Contract`.
 - `Contract` `invokes` `Flow`.
 - `Contract` and `Flow` `read`/`mutate` `Schema`.
@@ -1088,6 +1090,8 @@ A catalog may serve packages of multiple AIM versions side by side. A **working 
 ---
 
 ## 13. Tooling Diagnostics
+
+**Conformance and diagnostics are evaluated over the complete derived project graph** — every `.aim` file resolved together (§2.4) — never a single file. A component is "clean" only when the whole graph it participates in is: duplicate entities, dangling references, and orphans are cross-file properties, so judging one file in isolation is never sufficient.
 
 ### 13.1 Hard Errors
 

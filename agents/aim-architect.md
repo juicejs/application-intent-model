@@ -93,7 +93,7 @@ status: enum(open, completed, archived) required
 A cross-reference is `[verb](aim:<address>)` — a CommonMark link whose text is a verb and whose target is a node address (`#Facet:Name`, or `component#Facet:Name` across components). Declare the edge at the node that *acts*:
 
 - View → `exposes` Contract; View → `reads` Schema; View → `navigates` View
-- Persona → `accesses` View; Persona → `invokes` Contract
+- Persona → `accesses` View or screen component; Persona → `invokes` Contract
 - Contract/Flow → `invokes` Flow/Contract; `mutates`/`reads` Schema; `emits`/`subscribes` Event
 - Trigger → `triggers` Flow/Contract — a `## Trigger:` node for cron / webhook / external (non-actor) entry points
 
