@@ -1114,6 +1114,7 @@ A catalog may serve packages of multiple AIM versions side by side. A **working 
 - Unresolved `Import` alias (not blocking but flagged for repair).
 - **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.)
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
+- **Probable duplicate entity** — two nodes with the same facet-type and name in components not linked by an import or reference (e.g. `auth#Schema:User` and `billing#Schema:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§16.8), or to confirm they are genuinely distinct.
 
 ### 13.3 Graph-Diff Findings (Reviewer)
 
@@ -1208,6 +1209,8 @@ Start by splitting. Create the parent intent with the cross-cutting requirements
 - Cross-cutting requirements that apply system-wide.
 - Index of sub-components.
 
+For entities shared *across* top-level components (not just within one subtree), use the canonical `<app>.core` convention in §16.8 rather than redefining them in each parent.
+
 ### 16.3 What Goes In A Sub-Component
 
 - The intent, requirements, and tests for a single feature.
@@ -1237,3 +1240,12 @@ The intent is the contract. Code follows intent. When they diverge, one of them 
 - **Non-actor entry points** — cron jobs, schedules, polling loops, webhooks, external systems — are modeled with a `## Trigger:` facet (§7.7) and a `triggers` edge into the Flow or Contract they start. This is what gives a nightly job or an inbound webhook a place in the graph; without it, the flow it starts would look like an orphan.
 - **External events** need no new machinery: model the origin as a Trigger that `triggers` an ingest Flow, and let that Flow `emits` the internal Event. The event then has a real emitter and subscribers attach as usual.
 - **Sagas and long-running orchestration** are expressible with existing verbs: the orchestrator Flow `invokes` each step, `mutates` a saga-state Schema to track progress, and `emits`/`subscribes` compensation Events. AIM captures the *intent* of the orchestration, not the durable-timer/signal semantics of a workflow engine — those remain an implementation detail bound to code.
+
+### 16.8 Shared Entities And Canonicalization
+
+The fastest way a large project rots is duplication: the same `User` (as a `Schema` and as a `Persona`), the same `Money`, the same `Status` reborn in file after file as each component is authored in isolation — and then the copies drift and contradict. Two rules keep the graph single-sourced:
+
+- **Resolve-or-reference, never regenerate.** Before defining a `Schema`, `Persona`, or any entity, the Architect **searches the project graph** for an existing node of that kind and name. If one exists, reference it (a `## Dependencies → Imports` alias plus the edge) instead of defining a new one. The derived graph is a queryable index precisely so this lookup is cheap — use it. Agents default to *generating*; the discipline is to *look first*.
+- **Give cross-cutting entities one canonical home.** A parent holds what's shared within its subtree (§16.2). For entities shared *across* sibling top-level components (`auth`, `tasks`, `billing` all needing `User`), designate one shared component — by convention `<app>.core` — as the single definition site, and have the others import from it. One `User`, many references.
+
+Tooling supports this from both ends: the **probable-duplicate diagnostic** (§13.2) surfaces same-type-same-name nodes that are not reference-linked, and the derived graph lets you list every definition of an entity to spot drift. Detection plus discipline is what keeps identity from fragmenting as the system grows — and it is only possible *because* the graph turns "every entity in the project" into something you can query.

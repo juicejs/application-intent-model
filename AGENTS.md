@@ -52,6 +52,7 @@ Detailed prompts for each role: [PROMPT.md](./PROMPT.md). Persona files: [agents
 - **Add facets only when they increase useful precision.** Start with the intent envelope (Summary + Requirements + Tests). Add Schema, Contract, Flow, Persona, View, Event only where the user has given you enough detail to populate them meaningfully.
 - **Never invent material behavior absent from intent.** When detail is missing, preserve documented intent and minimize assumptions. Surface ambiguity rather than guess.
 - **Never silently normalize drift.** When implementation and intent diverge, resolve the mismatch explicitly.
+- **Reuse, don't regenerate.** Before defining a shared entity (a `Schema` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across components belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
 
 ## Project conventions
 

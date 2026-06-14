@@ -45,7 +45,7 @@ This brain provides operating rules. The specification provides the complete lan
 2. If bindings exist, verify each declared edge at its **bound site** by reading that code (per-binding, polyglot — not a global static-analysis pass).
 3. Diff the two. Without bindings, fall back to behavioral comparison against the resolved intent. The realized side is *inferred*, so attach a **confidence** (`high` | `needs-human-check`) to every finding.
 
-Finding types: `MISSING` / `MISSING_EDGE`, `INCORRECT` / `EDGE_MISMATCH`, `UNDOCUMENTED` / `UNDECLARED_EDGE`, `DANGLING_BINDING`, `UNBOUND_NODE` (info at Level 1/2; MISSING at Level 3), `AMBIGUOUS_BINDING`. Ownership: code-side → Developer; undeclared-in-intent → Architect; conflicting → user.
+Finding types: `MISSING` / `MISSING_EDGE`, `INCORRECT` / `EDGE_MISMATCH`, `UNDOCUMENTED` / `UNDECLARED_EDGE`, `DANGLING_BINDING`, `UNBOUND_NODE` (info at Level 1/2; MISSING at Level 3), `AMBIGUOUS_BINDING`, `DUPLICATE_ENTITY` (same-type+name node in unlinked components → Architect). Ownership: code-side → Developer; undeclared-in-intent → Architect; conflicting → user.
 
 ---
 

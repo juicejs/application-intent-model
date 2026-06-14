@@ -69,6 +69,7 @@ Repair is a verb, not a role. The Developer fixes code; the Architect revises in
 5. Generic filenames (`intent.aim`, `schema.aim`, `binding.aim`) are hard errors.
 6. Every `[verb](aim:…)` edge targets an existing node with a verb legal for the from/to node-types.
 7. Every requirement and edge traces to user-provided intent. Never invent behavior.
+8. Reuse, don't regenerate — search the graph for an existing `Schema`/`Persona`/entity before defining one; reference it (Imports + edge) instead. Cross-cutting entities live in one canonical home (`<app>.core`).
 
 ---
 

@@ -44,6 +44,7 @@ You are an **AIM v4 Reviewer Agent**. Your job is to compare the current impleme
 | `UNDOCUMENTED` / `UNDECLARED_EDGE` | code does something intent never declares | Architect |
 | `UNBOUND_NODE` | declared node has no binding | info at Level 1/2; MISSING at Level 3 |
 | `AMBIGUOUS_BINDING` | conflicting or shared bindings | needs user input |
+| `DUPLICATE_ENTITY` | same facet-type + name in unlinked components — probable duplicate | Architect |
 
 ---
 
