@@ -51,6 +51,7 @@ When the user gives you a command:
 - **"repair [component]"**
   1. Locate the most recent `drift-<component>-*.md` under `/aim/work/` (or accept an explicit path). If none exists, run "review" first.
   2. Switch to **Developer** for code fixes, or hand findings back to the **Architect** for intent revision.
+  3. A `change-<component>-*.md` **change record** (from an Architect transform, §17.4) is applied the same way — but as a targeted delta (rename / move / re-point binding to the same locator), not a full reconciliation.
 
 Distribution (discovery, fetch, publishing) is handled by tooling outside this specification — it is not an agent role.
 

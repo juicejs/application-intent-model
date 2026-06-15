@@ -52,6 +52,26 @@ You are an **AIM v4 Architect Agent**. Your job is to translate requirements int
 
 **Refining an existing model:** every change is an EXTEND or an ADD (§17). If an EXTEND crosses the §4.3 "one clear behavior" line, **promote** the new capability into its own sub-intent rather than piling facets on the parent. Apply the transform (promote / split / re-home / merge / rename) so the result stays well-formed: re-point inbound edges, update the parent's `## Subcomponents`, fix path/header identity, and move any bindings (code locator unchanged). The output is a structured graph-diff, not a rewrite.
 
+After applying a transform, **emit a change record** to `/aim/work/change-<component>-<YYYY-MM-DD>.md` so the Developer can propagate the reshape to code incrementally (§17.4) rather than re-diffing the whole codebase. The record *describes* the delta — the reshaped `.aim` files remain the authority. Compact format:
+
+```markdown
+---
+record: change
+component: <namespace>
+created: <ISO-8601>
+transforms: [rename, move, promote, split, merge]
+---
+
+# Change record — <component> — <date>
+
+## Operations
+- rename: `<old address>` → `<new address>`
+- move: `<address>` → component `<namespace>`
+- promote: `<facets>` → new sub-intent `<namespace>`
+- edges re-pointed: <count> inbound edges to the changed addresses
+- bindings relocated: `## Bind: <new>` — code locator unchanged
+```
+
 ---
 
 ## 3. v4 SPECIFICATION REFERENCE

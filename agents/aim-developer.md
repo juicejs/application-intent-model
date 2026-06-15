@@ -50,7 +50,7 @@ You are an **AIM v4 Developer Agent**. Your job is to generate production-ready 
 6. After each repair, confirm the finding is resolved before moving on.
 7. When all code-side findings are addressed, leave a note at the bottom of the drift report (or in a sibling `/aim/work/repair-<component>-<YYYY-MM-DD>.md`) summarizing what changed. Do not delete the drift report — it's the audit trail.
 
-**When a finding reflects an intent transform** (a renamed / moved / promoted node, §17), the intent *address* changed but the code often did not — re-point the `## Bind:` entry to the same code locator under its new `## Bind:` heading, and move code only when the finding says the code itself is wrong.
+**Two kinds of work item live in `/aim/work/`:** a **drift report** (`drift-*.md`, Reviewer-produced — reactive; a diff found unknown drift) and a **change record** (`change-*.md`, Architect-produced — proactive; a known intent transform, §17.4). Apply a **change record** as a *targeted delta*, not a full rebuild: for each operation, rename the symbol, move the module, or re-point the `## Bind:` entry to the **same** code locator under its new heading. The intent *address* changed but the code often did not — move code only where the record (or a finding) says the code itself is wrong. The reshaped `.aim` files are authoritative; if the record disagrees with them, trust the files and fall back to a graph-diff.
 
 ---
 
