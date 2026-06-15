@@ -841,7 +841,7 @@ There are ten **declared** verbs and two **derived** inverses. Each declared ver
 | `triggered-by` | flow, contract | contract / view / trigger | inverse of `invokes`/`exposes`/`triggers` | derived |
 | `emitted-by` | event | flow / contract | inverse of `emits` | derived |
 
-`requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1).
+`requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1). **Render/layout composition** — a screen displaying another view inline (a dashboard laying out widget-panels) — is **not** a graph verb either: a UI piece has fluid granularity (`### Display` prose in its host view when simple, a promoted sub-intent owning its own facets once it earns them, §16.9), and the inline arrangement is realization expressed in code and bindings (§1.3), not an intent edge.
 
 An `accesses` edge may target a **View** (access to one surface) **or** a **component** (route/screen-level access — the persona may reach that whole feature). Use the component form for role-gated screens that aggregate several views; `[accesses](aim:app.profile)` is valid and means "this persona may reach the profile screen."
 
@@ -1257,3 +1257,168 @@ The fastest way a large project rots is duplication: the same `User` (as a `Sche
 Tooling supports this from both ends: the **probable-duplicate diagnostic** (§13.2) surfaces same-type-same-name nodes that are not reference-linked, and the derived graph lets you list every definition of an entity to spot drift. Detection plus discipline is what keeps identity from fragmenting as the system grows — and it is only possible *because* the graph turns "every entity in the project" into something you can query.
 
 Beware the **opposite trap**: do not dodge duplication by embedding every entity in one file. That just trades duplication for a monolith — equally damaging, and a real failure mode in practice (an agent told to avoid duplicate `User`s will happily cram all 20 schemas into one parent). The rule is *both*: don't duplicate **and** don't monolith. Shared facets live in their own files and the parent stays a lean index (§16.2); a canonical entity that consumers cannot reach by upward resolution must be importable (put it in an ancestor or `<app>.core`, not a sibling).
+
+### 16.9 UI Composition And Fluid Granularity
+
+A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly like any other capability. It is not a fixed kind of node in the model; what it *is* depends on how much behavior it carries, and it moves between forms by the **promote** transform (§17):
+
+- **Trivial / behavior-less** — a static or host-fed panel with no contract, schema, or action of its own is **not a node**. It is a bullet in the host `## View:`'s `### Display`. Modeling it as its own facet adds a node the graph cannot check — nothing to dangle, nothing to impact — and earns it a false orphan diagnostic (§13.2).
+- **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own sub-intent (§5, §17.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
+
+**Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*, never its placement on the screen. This is the line §16.7 draws for orchestration: AIM captures intent, not rendering mechanics.
+
+**Worked example — the promote boundary.**
+
+*Simple.* An `AdminDashboard` shows a current-conditions panel. The reading is host-supplied; the panel has no behavior of its own. It is one line in the dashboard's `### Display`:
+
+```markdown
+## View: AdminDashboard
+
+### Summary
+
+The operator's control surface.
+
+### Display
+
+- System counters and a current-conditions panel.
+```
+
+*Grown.* The panel now fetches live weather and persists a reading — it has acquired a contract and a schema, crossing the §4.3 line. It is **promoted** to its own sub-intent, which owns the behavior:
+
+````markdown
+---
+aim: app.admin.weather
+facet: intent
+parent: app.admin
+---
+
+# Weather
+
+## Summary
+
+Current-conditions data for the operator console.
+
+## Requirements
+
+- The console can fetch and display the latest weather reading.
+
+## Contract: FetchWeather
+
+### Summary
+
+Fetch the latest reading for the operator's locale.
+
+### Ensures
+
+- Returns the latest reading — [reads](aim:#Schema:WeatherReading).
+
+## Schema: WeatherReading
+
+### Summary
+
+A single current-conditions reading.
+
+### Attributes
+
+```aim-attrs
+tempC: number required
+condition: string required
+observedAt: datetime required
+```
+````
+
+The dashboard surfaces that behavior with edges it already has — no composition verb required:
+
+```markdown
+## View: AdminDashboard
+
+### Display
+
+- System counters and a current-conditions panel from the latest [reads](aim:app.admin.weather#Schema:WeatherReading), refreshed via [exposes](aim:app.admin.weather#Contract:FetchWeather).
+```
+
+The promote boundary is the §4.3 test: display-only ⇒ prose in the host; owns data or operations ⇒ its own sub-intent. A promoted piece that is *only* ever embedded usually should **not** declare its own `## View:` — its surface is the host's — so it owns `Contract`/`Schema` and raises no orphan. If it genuinely needs its own reusable surface, the informational orphan diagnostic (§13.2) is the correct nudge: either a Persona `accesses` it, or its surface really belongs to the host.
+
+---
+
+## 17. Intent Evolution
+
+The static rules (§2–§13) define what a *well-formed* model looks like at rest. This section defines how a model *changes* while staying well-formed — the dynamics those rules imply but do not state.
+
+### 17.1 One Root Unit, Two Authoring Operations
+
+The root unit of authoring is the **intent** — a component or sub-component, each with its own intent file (§1, §5). Facets and typed edges are how an intent is *expressed*; they are never the unit an author works in. Everything an author does to a model is one of exactly two operations:
+
+- **EXTEND** an existing intent — add or refine its facets and the edges among them.
+- **ADD** a new intent — a new sub-component or capability (§5).
+
+These two operations are the surface a requirements author — often a non-developer, working through the Architect role (§1.2) — designs at; the facet, edge, and binding detail they expand into is where the Developer and Reviewer work. An author does not "move a node" or "rename a schema" as a primitive act; those are *transforms* (§17.2) the system performs to keep the model well-formed as the two operations push against the decomposition rules (§4.3).
+
+### 17.2 Validity-Preserving Transforms
+
+When an EXTEND or ADD would leave the model ill-formed — an intent grown past "one clear behavior" (§4.3), a node living in the wrong namespace, two nodes that are the same concept — the system reshapes the graph with a **transform**. A transform is not new syntax and not an author primitive: it is an operation **defined by the pre/post invariants of §17.3**, producing a spec-valid state from a spec-valid state. Tools and the Architect agent apply transforms; authors express intent.
+
+| Transform | What it does | Typically triggered by |
+|---|---|---|
+| **promote** | a capability grown inside an intent splits out into its own sub-intent (§5) | an EXTEND that crosses the §4.3 "one clear behavior" line |
+| **split** | one intent doing two things becomes two sibling sub-intents under an index parent | a component with multiple distinct behaviors (§16.4) |
+| **re-home / move** | a node moves to the intent whose namespace it belongs to | a node whose address namespace does not match where it is used |
+| **merge** | two nodes that are the same concept collapse into one canonical node | a probable-duplicate diagnostic (§13.2) confirmed as a true duplicate |
+| **rename** | a node's name — and therefore its address — changes | a clearer name, or a collision |
+
+Each transform changes one or more node **addresses** `<component>#<FacetType>:<Name>` (§2.2). `promote` is the bridge between the two operations: an EXTEND that trips §4.3 *resolves structurally into an ADD* — the new capability becomes its own sub-intent rather than more facets piled on the parent (§16.2).
+
+### 17.3 Transform Invariants (Normative)
+
+Because a transform changes addresses, it MUST re-establish every part of the model that addresses anchor. A transform that violates any of the following yields an ill-formed model and MUST NOT be applied as-is:
+
+1. **No dangling edges; legal triples preserved.** Every typed edge whose `to` address targets a moved or renamed node MUST be re-pointed to the node's new address. After the transform the graph MUST contain zero dangling references (§13.1) introduced by the change, and every re-pointed edge MUST still satisfy its `(verb, from, to)` schema (§8.2). Edges are declared at the acting end (§8.3), so inbound edges live in *other* nodes' blocks and MUST be found across the whole project graph (§13), not just the moved file.
+
+2. **Elided outbound addresses MUST be re-qualified on a cross-component move.** A node's own outbound edges travel with it, but any written in the elided unqualified form `#<FacetType>:<Name>` (§2.2) resolve against the *new* component after a move. Where that would change the target, the transform MUST re-qualify the address to its original fully-qualified target so the edge's meaning is preserved.
+
+3. **The parent index MUST be updated.** `promote`, `split`, and a cross-parent `move` change the set of sub-components; each affected parent's `## Subcomponents` index (§5.2) MUST be updated to match what is on disk, or auto-discovery (§5.3) diverges from the explicit list — a hard error.
+
+4. **Path/header identity MUST be re-established.** A node that becomes, or moves into, its own component MUST have its directory, filename, and `aim:`/`parent:` frontmatter brought back into agreement (§4.4); a path/header mismatch is a hard error.
+
+5. **Bindings follow the node.** Any `## Bind:` entry (§10.2) for a moved or renamed node MUST move to the binding file of the node's new component, with its `## Bind: <FacetType> <Name>` heading updated to the new name. The **code locator is unchanged** — the code did not move, only the intent address did. This is precisely why bindings are separate files (§1.3): an intent transform reshapes addresses without touching code.
+
+6. **`merge` is author-confirmed and collapses, never silently unifies.** Because same-name is not proof of same-entity (§13.2), `merge` MUST be confirmed by the Architect. On merge the duplicate node is removed, one node is designated canonical (§16.8), and every edge that targeted either node is re-pointed at the canonical node under invariant 1.
+
+### 17.4 A Transform Is a Graph-Diff
+
+A transform yields a **structured graph-diff** — nodes added / removed / moved, edges re-routed, bindings relocated — of exactly the kind the Reviewer already computes (§2.4, §13.3). This is the payoff of the derived graph: reshaping intent is a *traceable diff*, not an opaque rewrite. The Reviewer reports the diff; the Developer applies the corresponding code moves (a `rename` that changes a Contract's address tells the Developer, through the bindings, precisely which handlers and routes are implicated). The **impact set** (§13.3) of a transform is computable before it is applied.
+
+### 17.5 Choosing the Transform (SHOULD)
+
+- **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a sub-intent rather than piling facets onto the parent (§16.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§13.2).
+- **Re-home when the namespace doesn't fit.** If a node's address namespace does not match where it is used, **move** it to the intent it belongs to rather than referencing it across an unnatural boundary.
+- **Merge duplicates into a canonical home.** When the probable-duplicate diagnostic (§13.2) flags a true duplicate, **merge** to one canonical node (§16.8) — do not let the copies drift.
+- **A UI piece that earns behavior promotes.** A view fragment (tab, panel, widget) that acquires its own data or operations crosses the §4.3 line and is **promoted** into a sub-intent (§16.9) rather than remaining inline `### Display` prose.
+
+**Worked example — an EXTEND that promotes.** A CRM has `crm.customer_management`, one intent covering customer CRUD. New requirement: "add customer notes, with edit history." Notes are a distinct capability — their own `Note` schema, their own create/edit/list contracts, their own surface. Piling a `## Schema: Note`, three contracts, and a notes view onto the parent would push it past §4.3, so the EXTEND **promotes** into a new sub-intent:
+
+```
+/aim/crm.customer_management/
+  crm.customer_management.aim                    # parent index — ## Subcomponents now lists customer_notes
+  customer_notes/
+    crm.customer_management.customer_notes.aim   # new sub-intent: Note schema, contracts, view
+```
+
+The customer-detail view's reference to the notes surface is declared as a cross-reference to the promoted address; the parent's `## Subcomponents` index gains a `customer_notes` line (invariant 3).
+
+**Worked example — a split.** A flat `crm.customers` intent has accreted both per-customer CRUD *and* customer-group management — two distinct behaviors. **split** turns it into two sibling sub-intents under an index parent:
+
+```
+/aim/crm.customers/
+  crm.customers.aim              # was the flat file; now a lean index (§16.2)
+  records/
+    crm.customers.records.aim    # per-customer CRUD
+  groups/
+    crm.customers.groups.aim     # customer-group management
+```
+
+Every edge that pointed into the old flat file is re-pointed to whichever sub-intent now owns the target (invariant 1); shared schemas stay in the parent or move to a sibling facet file (§16.2); bindings for the moved contracts relocate to the new components' binding files with code locators unchanged (invariant 5).
+
+### 17.6 Diagnostics
+
+Intent Evolution adds **no new diagnostics**. A transform is correct exactly when the resulting graph raises no new hard error (§13.1) and no new orphan / shadow / duplicate / monolith smell (§13.2) attributable to the change. The invariants of §17.3 are the conditions under which that holds — which is the point: the static checks the spec already defines are the acceptance test for every transform.

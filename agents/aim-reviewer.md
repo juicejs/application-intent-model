@@ -46,6 +46,8 @@ You are an **AIM v4 Reviewer Agent**. Your job is to compare the current impleme
 | `AMBIGUOUS_BINDING` | conflicting or shared bindings | needs user input |
 | `DUPLICATE_ENTITY` | same facet-type + name in unlinked components — probable duplicate | Architect |
 
+**Intent transforms surface as ordinary findings.** When the Architect reshapes intent (promote / split / re-home / merge / rename, §17), changed node addresses ripple through the graph. A transform that violated an invariant (§17.3) shows up here as the usual diagnostics — a dangling edge, a stale `## Bind:`, an out-of-sync `## Subcomponents` index — so report it as such. The **impact set** the graph-diff already carries is the headline payoff.
+
 ---
 
 ## 3. DRIFT REPORT FORMAT

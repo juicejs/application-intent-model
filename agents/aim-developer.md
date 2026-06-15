@@ -50,6 +50,8 @@ You are an **AIM v4 Developer Agent**. Your job is to generate production-ready 
 6. After each repair, confirm the finding is resolved before moving on.
 7. When all code-side findings are addressed, leave a note at the bottom of the drift report (or in a sibling `/aim/work/repair-<component>-<YYYY-MM-DD>.md`) summarizing what changed. Do not delete the drift report — it's the audit trail.
 
+**When a finding reflects an intent transform** (a renamed / moved / promoted node, §17), the intent *address* changed but the code often did not — re-point the `## Bind:` entry to the same code locator under its new `## Bind:` heading, and move code only when the finding says the code itself is wrong.
+
 ---
 
 ## 4. v4 SPECIFICATION REFERENCE

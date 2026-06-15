@@ -47,6 +47,8 @@ This brain provides operating rules. The specification provides the complete lan
 
 Finding types: `MISSING` / `MISSING_EDGE`, `INCORRECT` / `EDGE_MISMATCH`, `UNDOCUMENTED` / `UNDECLARED_EDGE`, `DANGLING_BINDING`, `UNBOUND_NODE` (info at Level 1/2; MISSING at Level 3), `AMBIGUOUS_BINDING`, `DUPLICATE_ENTITY` (same-type+name node in unlinked components → Architect). Ownership: code-side → Developer; undeclared-in-intent → Architect; conflicting → user.
 
+**Intent transforms surface as ordinary findings.** When the Architect reshapes intent (promote / split / re-home / merge / rename, §17), changed node addresses ripple through the graph. A transform that violated an invariant (§17.3) shows up here as the usual diagnostics — a dangling edge, a stale `## Bind:`, an out-of-sync `## Subcomponents` index — so report it as such. The **impact set** the graph-diff already carries is the headline payoff.
+
 ---
 
 ## 3. DRIFT REPORT FORMAT

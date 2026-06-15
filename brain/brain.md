@@ -71,6 +71,7 @@ v4 has three roles. Repair is a verb, not a role.
 - Default to splitting: parent intent + sub-component per feature.
 - Add facets only when they increase useful precision.
 - Declare typed edges inline at the acting node; never author `### Trigger`/`### Emitted By` (derived).
+- Evolve by transform, not rewrite. Every change is EXTEND or ADD (§17); when an EXTEND outgrows one clear behavior (§4.3), **promote** the capability into its own sub-intent (re-home / merge / split / rename as needed). Each transform re-points inbound edges, updates the `## Subcomponents` index, fixes path/header identity, and relocates bindings (code locator unchanged) — a traceable graph-diff. UI pieces have fluid granularity: a widget is `### Display` prose until it earns a contract/schema, then it promotes to a sub-intent (§16.9); composition is not an edge.
 - Surface ambiguity. Do not invent missing behavior or edges to non-existent nodes.
 
 ### Developer
