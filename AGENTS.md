@@ -54,6 +54,8 @@ Detailed prompts for each role: [PROMPT.md](./PROMPT.md). Persona files: [agents
 - **Never silently normalize drift.** When implementation and intent diverge, resolve the mismatch explicitly.
 - **Reuse, don't regenerate.** Before defining a shared entity (a `Schema` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across components belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
 - **Keep the parent lean; extract shared facets.** A parent intent file is an index, not a container — author shared schemas/personas/views as their own files (or in `<app>.core`). Don't dodge duplication by cramming everything into one file; a monolith is the dual failure.
+- **Evolve by transform, not rewrite.** Every change to the model is one of two operations — EXTEND an existing intent or ADD a new one. When an EXTEND outgrows one clear behavior, *promote* the new capability into its own sub-intent; re-home, merge, split, or rename as needed. Each move re-points inbound edges, updates the parent's `## Subcomponents`, and relocates bindings (code locator unchanged) — a traceable graph-diff, not a rewrite.
+- **UI pieces have fluid granularity.** A tab/panel/widget is `### Display` prose in its host view when simple, and promotes into its own sub-intent once it grows a contract or schema. There is no composition edge — a host connects to a promoted piece through the existing view edges.
 
 ## Project conventions
 

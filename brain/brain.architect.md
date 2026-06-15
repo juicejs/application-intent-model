@@ -37,6 +37,8 @@ This brain provides operating rules and workflow. The specification provides the
 - Declare typed edges inline at the acting node; never author `### Trigger`/`### Emitted By` (they are derived).
 - Reuse, don't regenerate: before defining a `Schema`/`Persona`/entity, search the graph for an existing one and reference it (Imports + edge); put cross-cutting entities in one canonical home (`<app>.core`). Duplicate definitions across files break the model at scale.
 - Keep the parent a lean index; author shared facets (schemas/personas/views) as their own files or in `<app>.core` — never embed many facets in one intent file. Don't dodge duplication by building a monolith.
+- Evolve by transform, not rewrite. Every change is one of two operations — EXTEND an existing intent or ADD a new one (spec §17). When an EXTEND grows an intent past one clear behavior (§4.3), **promote** the new capability into its own sub-intent; re-home a misplaced node, merge a true duplicate, split a two-behavior intent, rename for clarity. Each transform re-points every inbound edge, updates the parent `## Subcomponents` index, re-establishes path/header identity, and relocates bindings (code locator unchanged) — so reshaping intent stays a traceable graph-diff (spec §17.3–§17.4), never an opaque rewrite.
+- UI pieces have fluid granularity. A tab/panel/widget is `### Display` prose in its host view when simple, and is **promoted** into its own sub-intent once it earns a contract/schema/action (spec §16.9). There is no composition (`embeds`) verb — a host connects to a promoted piece through the existing view edges (`reads`/`exposes`/`invokes`/`navigates`); inline layout is realization, not an intent edge.
 - Surface ambiguity when requirements are incomplete or conflicting — do not invent missing behavior or edges to non-existent nodes.
 - When the Reviewer reports drift caused by changed requirements, you revise the intent. When drift is caused by buggy code, the Developer fixes it.
 
@@ -56,6 +58,28 @@ This brain provides operating rules and workflow. The specification provides the
 6. Add facets only where you have enough detail to populate them meaningfully, declaring typed edges inline.
 7. When code exists and enforceable drift detection is wanted, author a `facet: binding` file mapping nodes to code sites.
 8. Present output and ask the user to confirm before finalizing.
+
+**Refining an existing model:** every change is an EXTEND or an ADD (spec §17). If an EXTEND crosses the §4.3 "one clear behavior" line, promote the new capability into its own sub-intent rather than piling facets on the parent. Apply the transform (promote / split / re-home / merge / rename) so the result stays well-formed: re-point inbound edges, update the parent's `## Subcomponents`, fix path/header identity, and move any bindings (code locator unchanged). The output is a structured graph-diff, not a rewrite.
+
+After applying a transform, **emit a change record** to `/aim/work/change-<component>-<YYYY-MM-DD>.md` so the Developer can propagate the reshape to code incrementally (spec §17.4) instead of re-diffing the whole codebase. The record *describes* the delta — the reshaped `.aim` files remain the authority. Compact format:
+
+```markdown
+---
+record: change
+component: <namespace>
+created: <ISO-8601>
+transforms: [rename, move, promote, split, merge]
+---
+
+# Change record — <component> — <date>
+
+## Operations
+- rename: `<old address>` → `<new address>`
+- move: `<address>` → component `<namespace>`
+- promote: `<facets>` → new sub-intent `<namespace>`
+- edges re-pointed: <count> inbound edges to the changed addresses
+- bindings relocated: `## Bind: <new>` — code locator unchanged
+```
 
 ---
 
@@ -97,7 +121,7 @@ One paragraph describing the intended behavior.
 - [feature_a](./feature_a/<namespace>.feature_a.aim)
 ```
 
-Typed-edge verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`. Declare each at the node that acts. `triggers` is declared on a `## Trigger:` node (cron / webhook / external entry points).
+Typed-edge verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`. Declare each at the node that acts. `triggers` is declared on a `## Trigger:` node (cron / webhook / external entry points). There is **no composition verb** — a screen rendering another view inline is realization (code/bindings), not an edge; a host connects to a promoted widget via `reads`/`exposes`/`invokes`/`navigates` (§16.9).
 
 ---
 
