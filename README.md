@@ -1,4 +1,4 @@
-# Application Intent Model (AIM) v4
+# Application Intent Model (AIM) v4.1
 
 AIM is an intent-driven specification language and coordination layer for humans and AI coding agents. It captures product behavior in structured `.aim` files that agents read once, build from, review against, and repair over time — replacing the sprawl of PRDs, design notes, and plan files that agents otherwise generate.
 
@@ -99,5 +99,5 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ---
 
-Current spec: **AIM v4**  
+Current spec: **AIM v4.1**  
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License
