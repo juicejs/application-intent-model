@@ -94,14 +94,14 @@ parent: <parent namespace>   # only on sub-components
 - Parent: `/aim/<component>/<component>.aim`
 - Sub-component: `/aim/<component>/<feature>/<component>.<feature>.aim`
 - Facet file: `/aim/<component>/<component>.<facet>.aim`
-- Mapping: `/aim/mappings/<component>/<component>.mapping.aim`
-- Binding: `/aim/bindings/<component>/<component>.binding.aim`
+- Mapping facet: `/aim/<component>/<component>.mapping.aim` (co-locates like any facet)
+- Binding facet: `/aim/<component>/<component>.binding.aim` (co-locates like any facet)
 
 ### 3.3 Heading Conventions
 - `# <Name>` — component display name (exactly one per file)
 - `## Summary` / `## Requirements` / `## Tests` / `## Subcomponents` / `## Dependencies`
 - `## Schema: <Name>` / `## Contract: <Name>` / `## Flow: <Name>` / `## Persona: <Name>` / `## View: <Name>` / `## Event: <Name>` / `## Trigger: <Name>`
-- `## Bind: <FacetType> <Name>` — in a `facet: binding` file
+- `## Bind: <FacetType>:<Name>` — in a `facet: binding` file (the node's in-component address minus `#`)
 - Every facet heading is immediately followed by `### Summary` (except a role/access-only Persona).
 
 ### 3.4 Attributes

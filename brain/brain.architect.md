@@ -121,7 +121,7 @@ One paragraph describing the intended behavior.
 - [feature_a](./feature_a/<namespace>.feature_a.aim)
 ```
 
-Typed-edge verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`. Declare each at the node that acts. `triggers` is declared on a `## Trigger:` node (cron / webhook / external entry points). There is **no composition verb** — a screen rendering another view inline is realization (code/bindings), not an edge; a host connects to a promoted widget via `reads`/`exposes`/`invokes`/`navigates` (§16.9).
+Typed-edge verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`, `satisfies`. Declare each at the node that acts. `triggers` is declared on a `## Trigger:` node (cron / webhook / external entry points); `satisfies` links a contract/flow/view to a `## Requirements` item (`aim:#Requirements[n]`). There is **no composition verb** — a screen rendering another view inline is realization (code/bindings), not an edge; a host connects to a promoted widget via `reads`/`exposes`/`invokes`/`navigates` (§16.9).
 
 ---
 

@@ -28,14 +28,12 @@ Requesters open support tickets from a form and track them. Agents work a shared
 aim/
   helpdesk.tickets/
     helpdesk.tickets.aim            # parent: index, shared User+Ticket, personas, views, notify + escalate flows, StaleSweep trigger, deps
+    helpdesk.tickets.mapping.aim    # Users capability → company.identity (facet: mapping)
+    helpdesk.tickets.binding.aim    # intent → code, raises the component to Level 3 (facet: binding)
     submit/  helpdesk.tickets.submit.aim    # SubmitForm + SubmitTicket + ExecuteSubmit + TicketSubmitted
     resolve/ helpdesk.tickets.resolve.aim   # ResolveTicket + ExecuteResolve + TicketResolved
   comms/
     comms.aim                       # SendEmail — the external capability the notify flow invokes
-  mappings/helpdesk.tickets/
-    helpdesk.tickets.mapping.aim    # Users capability → company.identity
-  bindings/helpdesk.tickets/
-    helpdesk.tickets.binding.aim    # intent → code (raises the component to Level 3)
 ```
 
 ## The graph

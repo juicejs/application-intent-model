@@ -29,10 +29,10 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 
 ## 4. Syntax rules
 
-- **Headings:** `# <Name>` for component; `## Summary`/`## Requirements`/`## Tests`/`## Subcomponents`/`## Dependencies` for sections; `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Attributes`/`### Input`/etc. for sub-blocks; `## Bind: <FacetType> <Name>` in a `facet: binding` file.
+- **Headings:** `# <Name>` for component; `## Summary`/`## Requirements`/`## Tests`/`## Subcomponents`/`## Dependencies` for sections; `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Attributes`/`### Input`/etc. for sub-blocks; `## Bind: <FacetType>:<Name>` in a `facet: binding` file.
 - **Lists:** Standard Markdown bullets.
 - **Attributes:** Fenced `aim-attrs` code blocks with `name: type modifiers` lines. `ref(Type.field)` is the data-level `refs` edge.
-- **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`. (`triggers` is declared on a `## Trigger:` node — cron / webhook / external entry points.) Never author `### Trigger`/`### Emitted By` inverse blocks — those are derived. There is **no composition verb**: a screen rendering another view inline is realization (code/bindings), not an edge — a host connects to a promoted widget through the existing view edges (§16.9).
+- **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`, `satisfies`. (`triggers` is declared on a `## Trigger:` node — cron / webhook / external entry points; `satisfies` links a contract/flow/view to a `## Requirements` item via `aim:#Requirements[n]`.) Never author `### Trigger`/`### Emitted By` inverse blocks — those are derived. There is **no composition verb**: a screen rendering another view inline is realization (code/bindings), not an edge — a host connects to a promoted widget through the existing view edges (§16.9).
 - **No v2.2 DSL.** `INTENT Name { ... }`, `SUMMARY:`, block syntax is invalid.
 
 ## 5. Layout
@@ -40,8 +40,8 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 - Parent component: `/aim/<component>/<component>.aim`
 - Sub-component: `/aim/<component>/<feature>/<component>.<feature>.aim`
 - Facet file: `/aim/<component>/<component>.<facet>.aim`
-- Mapping: `/aim/mappings/<component>/<component>.mapping.aim`
-- Binding (optional, intent→code): `/aim/bindings/<component>/<component>.binding.aim`
+- Mapping facet: `/aim/<component>/<component>.mapping.aim` (co-locates like any facet)
+- Binding facet (optional, intent→code): `/aim/<component>/<component>.binding.aim`
 
 Sub-component-first is the default. Collapse to a single file only when the component is genuinely small. Author shared facets (schemas/personas/views) as their own files or in `<app>.core`; the parent intent file is a lean index, not a container — don't dodge duplication by building a monolith.
 

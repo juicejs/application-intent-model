@@ -25,14 +25,14 @@ This project uses the **Application Intent Model (AIM) v4** to specify product b
 ├── AGENTS.md              # this file — agent onboarding
 ├── aim/
 │   ├── specs/spec.md      # cached AIM specification (reference)
-│   ├── mappings/          # capability-to-provider bindings
-│   ├── bindings/          # intent-to-code realization bindings (optional)
 │   └── <component>/       # one directory per component
-│       └── <component>.aim
+│       ├── <component>.aim
+│       ├── <component>.mapping.aim   # capability-to-provider bindings (facet: mapping)
+│       └── <component>.binding.aim   # intent-to-code realization (facet: binding, optional)
 └── ...                    # your application code
 ```
 
-Reserved directory names under `/aim/`: `specs/`, `mappings/`, `bindings/`. Everything else is a component namespace.
+Reserved directory name under `/aim/`: `specs/`. Everything else is a component namespace. Mapping and binding facets co-locate with their component — they are not separate top-level directories.
 
 ## Operating roles
 

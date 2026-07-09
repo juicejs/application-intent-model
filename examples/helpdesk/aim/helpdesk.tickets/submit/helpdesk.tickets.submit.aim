@@ -56,8 +56,8 @@ body: string required max(4000)
 ### Ensures
 
 - Orchestration is delegated to the submit flow — [invokes](aim:#Flow:ExecuteSubmit).
-- A new Ticket is persisted with status="open" — [mutates](aim:#Schema:Ticket).
-- A submission event is emitted — [emits](aim:#Event:TicketSubmitted).
+- A new Ticket is persisted with status="open" — [mutates](aim:#Schema:Ticket), [satisfies](aim:#Requirements[2]).
+- A submission event is emitted — [emits](aim:#Event:TicketSubmitted), [satisfies](aim:#Requirements[3]).
 
 ### Returns
 

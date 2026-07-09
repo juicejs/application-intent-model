@@ -5,27 +5,27 @@ facet: binding
 
 # Helpdesk Bindings
 
-Maps helpdesk intent nodes to their realization in code, so the Reviewer can diff the declared graph against the implementation (graph-diff). Bind targets are bare node names, unique across the `helpdesk.tickets` subtree. Bindings are optional and raise the component to Level 3; a project with none is still valid.
+Maps helpdesk intent nodes to their realization in code, so the Reviewer can diff the declared graph against the implementation (graph-diff). Each `## Bind: <FacetType>:<Name>` heading is the bound node's in-component address (§2.2, §3.6). Bindings are optional and raise the component to Level 3; a project with none is still valid.
 
-## Bind: Schema Ticket
+## Bind: Schema:Ticket
 
 - binds: `src/models/ticket.ts#Ticket` — kind: model
 - binds: `table:tickets` — kind: table
 
-## Bind: Contract SubmitTicket
+## Bind: Contract:SubmitTicket
 
 - binds: `src/tickets/submit.ts#submitTicket` — kind: handler
 - binds: `route:POST /api/tickets` — kind: route
 
-## Bind: Contract ResolveTicket
+## Bind: Contract:ResolveTicket
 
 - binds: `src/tickets/resolve.ts#resolveTicket` — kind: handler
 - binds: `route:POST /api/tickets/:id/resolve` — kind: route
 
-## Bind: Event TicketResolved
+## Bind: Event:TicketResolved
 
 - binds: `topic:helpdesk.tickets.resolved` — kind: topic
 
-## Bind: View TicketQueue
+## Bind: View:TicketQueue
 
 - binds: `src/views/TicketQueue.tsx#TicketQueue` — kind: component

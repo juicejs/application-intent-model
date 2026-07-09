@@ -1,6 +1,6 @@
 # Application Intent Model (AIM) v4
 
-Application Intent Model (AIM) is an intent-driven specification language for humans and AI coding agents. It captures product behavior in a form readable enough for product and design discussion and structured enough for implementation, review, repair, and deterministic code generation.
+Application Intent Model (AIM) is an intent-driven specification language for humans and AI coding agents. It captures product behavior in a form readable enough for product and design discussion and structured enough for implementation, review, repair, and repeatable code generation.
 
 AIM v4 is a **breaking change** from v3.1. v3.1 made AIM Markdown-native and self-bootstrapping; it succeeded at making intent *readable*, but it left AIM's highest-value job — the **linking** between the things a system is made of — almost entirely informal. Real applications are not trees; they are **graphs**. A View exposes an Action that invokes a Contract that reads or mutates a Schema and emits an Event that a Persona can reach. v3.1 expressed those relations in inconsistent prose ("Invoked by Contract: X", "TRIGGER: Contract.Y", "CALL Z"), demoted the traceability chain to "a useful target, not a requirement," and offered no way to traverse, check, or diff the relation graph.
 
@@ -13,6 +13,8 @@ The three structural shifts that drive v4:
 The design bar for all three is **LLM-parsability** — consistent conventions an LLM follows and traverses reliably, not a rigid grammar requiring a custom parser. AIM remains valid CommonMark that renders on GitHub with no special tooling.
 
 AIM is the authoritative shared artifact between humans and coding agents. Implementation, review, and repair all run against AIM. When implementation and intent disagree, the mismatch is resolved explicitly — either by fixing code or by revising intent.
+
+**Where AIM is going, and why the drift machinery exists.** AIM's destination is spec as source: the intent graph is what humans maintain, and code is a synthesized artifact regenerated from it — the same inversion every prior abstraction jump made, from assembly to compilers. Today that is not yet safe: synthesis is stochastic, agents and humans still edit code directly, and most systems predate their spec (§18). The binding layer, graph-diff, and repair loop (§10, §13) are the trust-building apparatus for exactly this transitional period — every clean drift report is evidence that spec → code is reliable for that component. The success criterion of that machinery is to make itself progressively unnecessary: for a component that is fully confirmed, Level 3, and repeatedly clean, regeneration replaces repair, and its binding file quietly changes meaning from review tool to build manifest. Readers and agents should treat this as the interpretive key for the rest of the document: the behavioral facets and the edge graph are the destination; the drift machinery is the road.
 
 **Who writes AIM, and when it is worth it.** In practice `.aim` files are authored by an agent (the Architect role, §1.2) from a human's requirements — not hand-written token by token. The typed structure of v4 therefore costs the author nothing and yields a more precise, checkable artifact. This answers the obvious objection — *if an agent writes the spec and an agent writes the code, why not generate the code directly?* The `.aim` file is the **durable, human-reviewable, machine-checkable contract** between intent and generated code: a small spec is something a human can read, correct, and diff — and the Reviewer can check code against — far more cheaply than the code itself, and it persists across sessions where a chat prompt does not. The corollary is a boundary worth stating plainly: AIM pays off when reading the spec is meaningfully easier than reading the code; for trivially small or throwaway work, generating code directly is the right call.
 
@@ -62,6 +64,8 @@ Normative behavior across all roles:
 - Assumptions are surfaced for review or converted into explicit intent updates by the Architect.
 - When implementation and intent disagree, the mismatch is resolved — Developer fixes code if implementation is wrong, Architect revises intent if specification is outdated.
 
+**Architect: validate before present.** Before presenting a proposal to the user or committing an EXTEND or ADD (§17.1), the Architect MUST derive the graph (§2.4) over the *proposed* state and **repair every hard error (§13.1) it can resolve autonomously** — a dangling edge left by a rename, an out-of-sync `## Subcomponents` index, a path/header mismatch, an illegal `(verb, from, to)` triple. Only diagnostics that genuinely need a human decision are surfaced: a confirmed-duplicate `merge` (§17.3 invariant 6), an unresolved canonical-home choice (§16.8), or an ambiguous binding (§13.3). A proposal presented with unrepaired hard errors is **non-conforming Architect behavior** — the graph must be well-formed before a human is asked to review it.
+
 ### 1.3 Project Authority Model
 
 AIM is Markdown-native by deliberate choice, but that choice creates a risk: AI agents already love to spawn `.md` plans, design notes, decision logs, and PRDs. Without a clear authority boundary, AIM becomes one more `.md` file in the pile instead of the artifact that displaces it. The following rules establish that boundary.
@@ -98,10 +102,10 @@ A node is any **addressable heading** in the resolved source. There are three ra
 | Rank | Markdown | Node-type | Example |
 |---|---|---|---|
 | Component | `aim:` frontmatter / H1 | `component` | `nemicko.demo.todo` |
-| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` (+ `requirement`) | `## Contract: CreateTodo` |
+| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` (+ `requirement` — the `## Requirement:` capability surface, §9.2; **not** a `## Requirements` list item) | `## Contract: CreateTodo` |
 | Facet sub-block | `### <Sub>` and its list items | `block` (addressable, not separately typed) | `### Ensures` item `[2]` |
 
-Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** — they are never the endpoint of a typed edge. Only `component` and the facet node-types participate in the edge graph. The node-type is read directly off the facet-heading keyword; there is no inference.
+Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** as sections — a section heading is never itself the endpoint of a typed edge. Only `component` and the facet node-types participate in the edge graph, with two defined sub-block exceptions: a **schema attribute** participates solely as an endpoint of a `refs` edge (§3.7, §8.2), and a **`## Requirements` list item** participates solely as the target of a `satisfies` edge (§8.2). Both are addressable sub-blocks, not separately typed nodes; no other sub-block is ever an edge endpoint, and `## Requirements` as a *section* stays edge-inert (only its individual items are `satisfies` targets). The node-type is read directly off the facet-heading keyword; there is no inference.
 
 ### 2.2 Node Addresses
 
@@ -112,10 +116,14 @@ The canonical address of a node is:
 ```
 
 - `<component>` — the dotted namespace from the file's `aim:` field. Present in any stored or derived address (fully qualified). **Elidable** at an inline reference site when the target resolves within the same component, yielding the unqualified form `#<FacetType>:<Name>`.
-- `#<FacetType>:<Name>` — the facet heading, verbatim. `FacetType` is capitalized exactly as in the heading (`Contract`, `View`, `Schema`, …).
+- `#<FacetType>:<Name>` — the facet heading, verbatim. `FacetType` is capitalized exactly as in the heading (`Contract`, `View`, `Schema`, …). Because facet names are constrained to `[A-Za-z][A-Za-z0-9_]*` (§3.6), the address is always a valid CommonMark link destination with no percent-encoding.
 - `→ ### <Sub> [<index>]` — optional finer pointer into a sub-block list item, 1-based, matching the Reviewer's drift-report convention.
 
 This is the address scheme drift reports already use (`## Contract: CreateTask → ### Ensures [2]`), promoted from a review artifact to the language's identity scheme.
+
+**Sub-block addresses are point-in-time, not durable.** A `→ ### <Sub> [<index>]` (or `→ ## Requirements [<index>]`) pointer is 1-based and positional: inserting or reordering a list item silently re-points every later index, so such an address is valid only relative to a *specific revision* of the file. Authored `.aim` source therefore MUST NOT use a sub-block address as an edge target — typed edges (§8) target facet-level nodes only (`#<FacetType>:<Name>`). Sub-block addresses appear only in point-in-time work artifacts (drift reports and change records under `/aim/work/`), which SHOULD additionally record the item's text as a **content anchor** so the reference re-resolves after the list shifts.
+
+The one durable sub-block target is a `## Requirements` list item referenced by a `satisfies` edge (§8.2). Because that reference lives in authored source, inserting or reordering requirement bullets is a `rename`-class transform (§17.2): every inbound `satisfies` edge MUST be re-pointed to the item's new index under §17.3 invariant 1.
 
 ### 2.3 Address Examples
 
@@ -176,6 +184,7 @@ Optional fields:
 - `parent` — the parent component namespace, present on sub-components
 - `display` — a human-readable display name (overrides the H1 heading for tooling)
 - `tags` — array of free-form tags for discovery
+- `provenance` — `inferred` on a file produced by re-encoding existing code and not yet human-accepted (§18). Absent (the default) or `confirmed` means authored/accepted intent. This is the only field that qualifies a file's authority.
 
 The frontmatter carries **no** per-file `version:` or `spec:` field. The project-wide AIM version and spec URL live in **`AGENTS.md` at the project root** (see §3.3) — a single source of truth that eliminates redundancy and drift between files. There is no per-file version anywhere in v4.
 
@@ -205,7 +214,7 @@ The frontmatter on `AGENTS.md` carries:
 - `aim_root` — where `.aim` files live (default `./aim/`)
 - `spec` — the canonical specification URL for the declared version
 
-The prose body explains AIM to a cold-start agent in natural language: what the roles are, where `.aim` files live, what conventions apply, that `.aim` files are a projection of a node-and-edge graph, and that bindings live under `aim/bindings/`. Anything an agent needs to know about working in this project — both AIM and non-AIM — belongs here.
+The prose body explains AIM to a cold-start agent in natural language: what the roles are, where `.aim` files live, what conventions apply, that `.aim` files are a projection of a node-and-edge graph, and that mapping and binding facets live alongside their component. Anything an agent needs to know about working in this project — both AIM and non-AIM — belongs here.
 
 **Why this works:**
 
@@ -224,9 +233,7 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 /aim/
   specs/
     spec.md          # the AIM specification (mirrored from spec: URL)
-  mappings/          # required-alias mappings
-  bindings/          # intent-to-code realization bindings
-  <component>/       # one directory per component
+  <component>/       # one directory per component (mapping/binding facets live inside it)
 ```
 
 **Required installer behavior:**
@@ -244,11 +251,7 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 
 **Reserved names under `/aim/`:**
 
-These directory names are reserved and must not be used as component namespaces:
-
-- `aim/specs/` — cached specifications (`.md` files)
-- `aim/mappings/` — capability-to-provider bindings (`.aim` files, `facet: mapping`)
-- `aim/bindings/` — intent-to-code realization bindings (`.aim` files, `facet: binding`)
+The `aim/specs/` directory name is reserved for cached specifications (`.md` files) and must not be used as a component namespace. Mapping and binding facets are **not** separate top-level directories — they are `facet: mapping` / `facet: binding` files that live inside their component's own directory (§4.2, §9.3, §10.2).
 
 Any other directory under `/aim/` that contains a `<name>.aim` file is a component.
 
@@ -276,10 +279,10 @@ Facet headings use the form `## <FacetType>: <Name>`:
 ## Trigger: NightlySweep
 ```
 
-Binding-facet files use `## Bind: <FacetType> <Name>` headings (see §10.2):
+Binding-facet files use `## Bind: <FacetType>:<Name>` headings — the payload after `Bind:` is exactly the bound node's in-component address minus the leading `#` (see §10.2):
 
 ```markdown
-## Bind: Contract CreateTask
+## Bind: Contract:CreateTask
 ```
 
 Top-level section headings use the bare form:
@@ -293,6 +296,8 @@ Top-level section headings use the bare form:
 ```
 
 The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.8). This keeps node boundaries deterministic.
+
+**Facet name grammar.** A facet `<Name>` MUST match `[A-Za-z][A-Za-z0-9_]*` (PascalCase recommended) — no spaces, no punctuation. A heading whose name violates the pattern (`## Schema: Todo Item`) is a hard error (§13.1). This constraint is what lets a name sit verbatim inside an `aim:` link destination and a `## Bind:` heading as a valid CommonMark link target without percent-encoding (§2.2).
 
 ### 3.7 Attribute Syntax
 
@@ -312,9 +317,11 @@ createdAt: datetime required
 
 Format per line: `<name>: <type> <modifier>*`
 
-Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`.
+Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<component>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`.
 
 `ref(<Type>.<field>)` is a **typed graph edge** (`refs`, §8.2): it links a schema attribute to another schema's attribute and is collected into the graph alongside inline edge tokens.
+
+**Resolving `ref()`.** The `<Type>` resolves as an unqualified facet name of type `Schema` through the canonical resolution algorithm (§11.1); if it resolves in more than one component along the resolution path, first-match-wins per §11.1 (a shadow diagnostic fires on the losing sources). To pin a specific provider, use the qualified form `ref(<component>#<Type>.<field>)`. It is a hard error (§13.1) if `<Type>` does not resolve to a Schema, or if `<field>` does not exist as an attribute on the resolved schema.
 
 ### 3.8 Allowed Markdown Features
 
@@ -366,6 +373,8 @@ The namespace hierarchy is the `extends` edge of the graph (parent ← child); i
   juice.tasks/
     juice.tasks.aim                  # parent: index + shared
     juice.tasks.schema.aim           # shared schemas (Task, User refs)
+    juice.tasks.mapping.aim          # capability mappings (facet: mapping)
+    juice.tasks.binding.aim          # code bindings (facet: binding)
     create_task/
       juice.tasks.create_task.aim
       juice.tasks.create_task.contract.aim
@@ -373,21 +382,15 @@ The namespace hierarchy is the `extends` edge of the graph (parent ← child); i
       juice.tasks.assign_task.aim
     complete_task/
       juice.tasks.complete_task.aim
-  mappings/
-    juice.tasks/
-      juice.tasks.mapping.aim
-  bindings/
-    juice.tasks/
-      juice.tasks.binding.aim
 ```
 
 Rules:
 
 - Each component lives in a directory named after its namespace.
 - The intent file filename matches `<component>.aim`.
-- Facet filenames match `<component>.<facet>.aim`.
+- Facet filenames match `<component>.<facet>.aim` — **including** mapping and binding facets, which co-locate with their component alongside every other facet.
 - Sub-components live in nested directories under the parent.
-- Mappings live under `/aim/mappings/<component>/`; bindings under `/aim/bindings/<component>/`.
+- Mapping and binding facets belong to the sub-component they realize: a facet for `juice.tasks.create_task` lives in the `create_task/` directory, not the parent's.
 - Generic filenames (`aim.aim`, `schema.aim`, `binding.aim`) are invalid.
 
 ### 4.3 When To Collapse Into A Single File
@@ -709,7 +712,7 @@ Actor identity, role semantics, and view access.
 ### Access
 
 - [accesses](aim:#View:TaskDashboard)
-- May invoke [invokes](aim:#Contract:CreateTask), [invokes](aim:#Contract:CompleteTask)
+- Create and complete tasks — [invokes](aim:#Contract:CreateTask), [invokes](aim:#Contract:CompleteTask)
 ```
 
 ### 7.5 View
@@ -812,6 +815,10 @@ A typed cross-reference is a standard CommonMark inline link whose link text is 
 
 An **authoring shorthand** is permitted for same-component references: the verb followed by a backticked address, `invokes` `` `#Contract:CreateTask` ``. Tools normalize the shorthand to the canonical link form when deriving the graph. The shorthand is the smallest possible delta from what v3.1 authors already typed (`` `Contract: CreateTask` ``): prepend the verb, switch to the address form.
 
+**Normalization is in-memory only.** Normalizing the shorthand to the canonical link form happens *during graph derivation*; a tool MUST NOT rewrite authored source as a side effect of deriving the graph (consistent with the §1.3 authority model — the author owns the file). Both the shorthand and the canonical link form are valid on disk indefinitely, and every conforming parser MUST accept both. A formatter or linter MAY offer canonicalization to the link form as an explicit, user-invoked operation, never as an automatic rewrite.
+
+**Prose convention.** The recommended style for an edge token inside a list item is *human label — [verb](aim:…)*: a plain-language label, an em-dash, then the token. The prose SHOULD NOT restate the verb the link text already carries (write `Create task — [exposes](aim:#Contract:CreateTask)`, not `Create task exposes [exposes](aim:…)`). A bare token with no label (`- [accesses](aim:#View:TaskDashboard)`) is equally valid where no label adds meaning.
+
 The **`from` node** of an edge is the nearest enclosing facet node of the line the token sits on (the Contract / Flow / View / Persona whose block contains it). The **`to` node** is the resolved address.
 
 For a cross-component reference, the address is fully qualified:
@@ -824,7 +831,7 @@ This subsumes the *use site* of a v3.1 `## Dependencies → Imports` alias: the 
 
 ### 8.2 Closed Verb Taxonomy
 
-There are ten **declared** verbs and two **derived** inverses. Each declared verb has a fixed from→to node-type schema. A verb used between disallowed node-types is a **hard error**.
+There are eleven **declared** verbs and three **derived** inverses. Each declared verb has a fixed from→to node-type schema. A verb used between disallowed node-types is a **hard error**.
 
 | Verb | from | to | Meaning | Kind |
 |---|---|---|---|---|
@@ -838,12 +845,22 @@ There are ten **declared** verbs and two **derived** inverses. Each declared ver
 | `navigates` | view | view | UI navigation between surfaces | declared |
 | `triggers` | trigger | contract, flow | a schedule, webhook, or external origin initiates a behavioral unit | declared |
 | `refs` | schema attr | schema attr | data-level foreign reference (the `ref()` modifier) | declared |
+| `satisfies` | contract, flow, view | requirement item | a behavioral unit realizes a `## Requirements` item | declared |
 | `triggered-by` | flow, contract | contract / view / trigger | inverse of `invokes`/`exposes`/`triggers` | derived |
 | `emitted-by` | event | flow / contract | inverse of `emits` | derived |
+| `satisfied-by` | requirement item | contract / flow / view | inverse of `satisfies` | derived |
 
 `requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1). **Render/layout composition** — a screen displaying another view inline (a dashboard laying out widget-panels) — is **not** a graph verb either: a UI piece has fluid granularity (`### Display` prose in its host view when simple, a promoted sub-intent owning its own facets once it earns them, §16.9), and the inline arrangement is realization expressed in code and bindings (§1.3), not an intent edge.
 
 An `accesses` edge may target a **View** (access to one surface) **or** a **component** (route/screen-level access — the persona may reach that whole feature). Use the component form for role-gated screens that aggregate several views; `[accesses](aim:app.profile)` is valid and means "this persona may reach the profile screen."
+
+**`exposes` vs `invokes` from a View.** Both are legal view→contract edges, and the choice carries meaning. Use **`exposes`** when the contract is reached through a *user-initiated action* on the view — a button, a form submit, a gesture. Use **`invokes`** when the view calls the contract *programmatically*, with no user initiation — an on-load data fetch, a poll, a prefetch. Either inbound edge counts as the contract being "reached" for the orphan check (§13.2); the distinction records whether the behavior is user-driven, which matters for reading intent and for realization.
+
+**`subscribes` from a `component`.** Almost every `subscribes` edge is declared at the consuming Flow or Contract. A `component`-level `subscribes` is a deliberate early-stage exception: it declares that a component consumes an event *without yet naming the internal handler* — `[subscribes](aim:#Event:TicketResolved)` written at the component root. It is valid at Level 1/2; at Level 3 it SHOULD be refined to a flow- or contract-level edge once the handler exists (an informational diagnostic flags a component-level `subscribes` that survives into a Level-3 component, §13.2).
+
+**`satisfies` and its target.** `satisfies` is the one edge that reaches a sub-block target: its `to` is a `## Requirements` list item, not a facet node. It is declared at the acting behavioral unit — the Contract, Flow, or View that realizes the requirement. The token URI form is `aim:[<component>]#Requirements[<n>]`: the reserved section-index address `#Requirements[<n>]` (1-based) carries **no** `FacetType:` colon, which is exactly what distinguishes it from the facet form `#<FacetType>:<Name>` and keeps it a valid CommonMark link destination (§2.2, §3.6). It is the URI projection of the canonical identity address `<component> → ## Requirements [<n>]` used in drift reports. Example inside a Contract block: `- [satisfies](aim:#Requirements[2])`, or fully qualified `aim:app.tasks#Requirements[2]` across components. This makes "which behavior satisfies requirement *n*?" a graph query, and the derived inverse `satisfied-by` (§8.4) makes the reverse computable. Because the target is a positional index, reordering requirement bullets is a `rename`-class transform that re-points every inbound `satisfies` edge (§2.2, §17.3 invariant 1).
+
+`satisfies` targets **only** a `## Requirements` list item. It never targets a `## Requirement:` capability surface (§9.2) — despite the near-identical spelling, that is a facet node resolved by a mapping, not a requirement statement; `[satisfies](aim:#Requirement:AssigneeUsers)` is a hard error (type mismatch, §13.1).
 
 ### 8.3 Declared vs Derived
 
@@ -854,7 +871,7 @@ This is the structural fix for v3.1's "three inconsistent expressions" problem: 
 
 ### 8.4 Inverse Derivation
 
-For every declared `invokes`/`exposes` edge `A → B`, the graph contains a derived `triggered-by` edge `B → A`. For every declared `emits` edge `A → E`, the graph contains a derived `emitted-by` edge `E → A`. Derived edges are computed during graph derivation (§2.4 step 4) and are available to tooling and reviewers exactly like declared edges, but they never appear in source.
+For every declared `invokes`/`exposes` edge `A → B`, the graph contains a derived `triggered-by` edge `B → A`. For every declared `emits` edge `A → E`, the graph contains a derived `emitted-by` edge `E → A`. For every declared `satisfies` edge `A → R` (R a `## Requirements` item), the graph contains a derived `satisfied-by` edge `R → A`. Derived edges are computed during graph derivation (§2.4 step 4) and are available to tooling and reviewers exactly like declared edges, but they never appear in source.
 
 If an author writes a `### Trigger` or `### Emitted By` block anyway (e.g. migrated content not yet cleaned up), tools reconcile it against the derived set and emit an informational "redundant inverse, possibly stale" diagnostic on mismatch.
 
@@ -924,7 +941,7 @@ Capability required to resolve user identities.
 
 ### 9.3 Mapping Files
 
-Mappings bind required aliases to concrete providers. They live under `/aim/mappings/<component>/` and use `facet: mapping`.
+Mappings bind required aliases to concrete providers. A mapping is a `facet: mapping` file that co-locates with its component, exactly like any other facet (§4.2).
 
 ```markdown
 ---
@@ -947,7 +964,7 @@ facet: mapping
 
 Unresolved `Requires` aliases are hard errors at validation time.
 
-**Mappings vs bindings.** A mapping is an **intent→intent** capability binding: it resolves a required-capability alias to a concrete provider *component*. A binding (§10) is an **intent→code** realization binding: it links an intent node to the *source code* that implements it. They are distinct facets with distinct directories (`mappings/` vs `bindings/`) and must not be confused.
+**Mappings vs bindings.** A mapping is an **intent→intent** capability binding: it resolves a required-capability alias to a concrete provider *component*. A binding (§10) is an **intent→code** realization binding: it links an intent node to the *source code* that implements it. They are distinct facets (`facet: mapping` vs `facet: binding`) — both co-locate with their component, and must not be confused with each other.
 
 ---
 
@@ -987,7 +1004,9 @@ A binding line is a normal Markdown bullet:
 
 `kind` (`handler | model | component | route | topic | test`) is optional and advisory. One node may declare multiple bindings (a Contract realized by both a route and a handler). Everything after the backticked locator is prose a tool may use but the parser may ignore.
 
-**Where bindings live: a dedicated `facet: binding` file under `/aim/bindings/<component>/`.** Realization is not behavior (§1.3), and code paths drift faster than intent — isolating bindings keeps the behavioral file's diffs meaningful and lets a binding go stale without the intent being wrong. This mirrors how `facet: mapping` separates capability bindings.
+Each bound node gets one `## Bind: <FacetType>:<Name>` heading — the same `<FacetType>:<Name>` that addresses the node in its component (§2.2, §3.6), so a binding heading is mechanically the node's in-component address minus the leading `#`. The `binds:` bullets under it list that node's code locators.
+
+**Where bindings live: a dedicated `facet: binding` file that co-locates with its component (§4.2).** Realization is not behavior (§1.3), and code paths drift faster than intent — keeping bindings in their *own file* is what keeps the behavioral file's diffs meaningful and lets a binding go stale without the intent being wrong. The isolation that matters is the *file/facet* boundary, not a separate directory tree: a component owns all its facets — schema, contract, mapping, binding — in one place, so a split or rename (§17) moves one coherent unit instead of reconciling parallel trees. This mirrors how `facet: mapping` co-locates capability bindings.
 
 ```markdown
 ---
@@ -997,17 +1016,17 @@ facet: binding
 
 # TaskManager Bindings
 
-## Bind: Contract CreateTodo
+## Bind: Contract:CreateTodo
 
 - binds: `src/todos/create.ts#createTodo` — kind: handler
 - binds: `route:POST /api/todos` — kind: route
 
-## Bind: Schema TodoItem
+## Bind: Schema:TodoItem
 
 - binds: `src/models/todo.ts#TodoItem` — kind: model
 - binds: `table:todo_items` — kind: table
 
-## Bind: Event TodoCreated
+## Bind: Event:TodoCreated
 
 - binds: `topic:todos.created` — kind: topic
 ```
@@ -1038,7 +1057,7 @@ For any reference within a component:
    5. **Required alias via mapping** — names declared under `## Dependencies → Requires`, resolved through a mapping file (§9.3).
    6. **Absent** — the name does not resolve. If it was required by another facet or edge, this is a hard error.
 3. **Type agreement.** If the reference is an address with a `FacetType` (e.g. `#Contract:X`), the resolved node's type must match. A `#Contract:X` that resolves to a `## Schema: X` is a hard error.
-4. **Sub-block part.** If the address carries `→ ### Sub [n]`, resolve within the facet node by heading text and 1-based list index. An out-of-range index is a hard error.
+4. **Sub-block part.** If the address carries `→ ### Sub [n]`, resolve within the facet node by heading text and 1-based list index. The reserved requirement-item form `#Requirements[n]` (equivalently `→ ## Requirements [n]`, §8.2) resolves against the resolved component's top-level `## Requirements` section by 1-based list index. An out-of-range index is a hard error.
 
 The first match wins. Lower-precedence sources for the same name emit an informational diagnostic ("shadowed by higher-precedence source"). Tools must implement this exact order — there are no implementation-defined variations.
 
@@ -1055,9 +1074,11 @@ The level affects expected implementation precision, expected code-generation pr
 The traceability chain is the set of typed declared edges through the behavioral facets:
 
 ```
+Requirement → Contract / Flow / View → … → Flow / Schema / Event
 Persona → View → Contract → Flow / Schema / Event
 ```
 
+- The **root** of the chain is a **`## Requirements` item**: a behavioral unit `satisfies` it (§8.2), so following `satisfied-by` from a requirement reaches the behavior that realizes it, and a requirement with no inbound `satisfies` is an unrealized-requirement gap (§13.2). This closes the loop from stated requirement to running behavior.
 - Entry points are a **Persona** (actor, `accesses` a View or screen component) **or** a **Trigger** (schedule/webhook/external, `triggers` a Flow/Contract).
 - `Persona` `accesses` `View` (or a whole screen component).
 - `View.Actions` `exposes` `Contract`.
@@ -1101,12 +1122,14 @@ A catalog may serve packages of multiple AIM versions side by side. A **working 
 - `parent:` declared but no parent intent file exists.
 - Missing H1 heading, missing `## Requirements`, or empty `## Requirements`.
 - Invalid facet type in heading (e.g. `## Data: X`).
+- Facet name violating the `[A-Za-z][A-Za-z0-9_]*` grammar (e.g. `## Schema: Todo Item`) (§3.6).
 - Duplicate facet definitions with the same name within the effective source.
 - Ambiguous sub-component authority (auto-discovered sub-component not in explicit `## Subcomponents` list).
 - Unresolved `Requires` aliases with no matching mapping.
 - Sub-component facet name collision with a parent facet name (when the parent definition is authoritative).
 - Generic filenames (`intent.aim`, `schema.aim`, `mapping.aim`, `binding.aim`).
-- **Dangling reference** — an edge token's `to` address resolves to Absent (§11.1). Same class as an unresolved `ref()`.
+- **Dangling reference** — an edge token's `to` address resolves to Absent (§11.1). Same class as an unresolved `ref()` (`<Type>` resolves to no Schema).
+- **Unresolved `ref()` field** — a `ref(<Type>.<field>)` whose `<Type>` resolves to a Schema but whose `<field>` is not an attribute of that schema (§3.7).
 - **Type-mismatch reference** — an edge target resolves but its node-type ≠ the address's `FacetType`, or the `(verb, from, to)` triple is not in the §8.2 schema.
 
 ### 13.2 Informational Diagnostics
@@ -1116,7 +1139,10 @@ A catalog may serve packages of multiple AIM versions side by side. A **working 
 - Lower-precedence facet source shadowed by a higher-precedence one.
 - Sub-component nesting exceeding three levels.
 - Unresolved `Import` alias (not blocking but flagged for repair).
-- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.)
+- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its component or any ancestor component — a component-level `accesses` (§8.2) grants reachability to every View in that subtree.
+- **Unrefined component subscription** — a `component`-level `subscribes` edge (§8.2) that survives into a Level-3 component without being refined to a flow- or contract-level edge. Valid at Level 1/2; informational at Level 3.
+- **Unrealized requirement** — a `## Requirements` list item with no inbound `satisfies` edge (§8.2): no declared behavior claims to realize it. Informational at Level 1/2; at Level 3 tools MAY promote it to a finding, since a full facet trace with no behavior for a stated requirement is a real gap.
+- **Unconfirmed provenance** — a `provenance: inferred` file (§18) not yet human-accepted. A project's confirmation coverage (fraction of nodes confirmed) is reported as an informational metric, never a hard error.
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
 - **Probable duplicate entity** — two nodes with the same facet-type and name in components not linked by an import or reference (e.g. `auth#Schema:User` and `billing#Schema:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§16.8), or to confirm they are genuinely distinct.
 - **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across components, instead of extracting them into sibling facet files or a `<app>.core` component (§16.2, §16.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
@@ -1149,6 +1175,8 @@ v4 is a breaking change. Migration tooling (outside this specification) converts
 5. **Bindings are not generated by migration.** Migration leaves components at Level 1/2 (valid, §10.3). A separate code-reading pass (Developer- or tool-driven) proposes bindings against actual code afterward, raising a project to Level 3 without migration ever assuming code exists or is correct.
 
 A project's `/aim/` tree must be wholly one AIM version (§12.2). The migration is one-shot per project. Projects still on v2.2 migrate v2.2 → v3.1 first (see the v3.1 spec), then v3.1 → v4.
+
+This section covers migration *within* AIM (an older model version to v4). Producing intent from a codebase that was **never** authored in AIM — reading code to infer the graph — is the reverse direction, defined in §18 (Re-Encoding).
 
 ---
 
@@ -1195,8 +1223,10 @@ A single-player snake game.
 - Sub-component file with `parent: juice.tasks` but no parent intent file exists.
 - Two `## Schema: Task` blocks in the same effective source.
 - Project missing `AGENTS.md` with declared `aim_version`.
-- A directory named `aim/specs/`, `aim/mappings/`, or `aim/bindings/` used as a component namespace.
+- A directory named `aim/specs/` used as a component namespace.
+- A `facet: binding` or `facet: mapping` file placed in a separate `aim/bindings/` or `aim/mappings/` tree instead of co-located with its component.
 - An edge token `[invokes](aim:#Schema:Task)` (invalid: `invokes` cannot target a `schema`).
+- An edge token `[satisfies](aim:#Requirement:AssigneeUsers)` (invalid: `satisfies` targets a `## Requirements` list item, never a `## Requirement:` capability surface, §8.2, §9.2).
 - An edge token whose target address resolves to no node (dangling reference).
 
 ---
@@ -1380,7 +1410,7 @@ Because a transform changes addresses, it MUST re-establish every part of the mo
 
 4. **Path/header identity MUST be re-established.** A node that becomes, or moves into, its own component MUST have its directory, filename, and `aim:`/`parent:` frontmatter brought back into agreement (§4.4); a path/header mismatch is a hard error.
 
-5. **Bindings follow the node.** Any `## Bind:` entry (§10.2) for a moved or renamed node MUST move to the binding file of the node's new component, with its `## Bind: <FacetType> <Name>` heading updated to the new name. The **code locator is unchanged** — the code did not move, only the intent address did. This is precisely why bindings are separate files (§1.3): an intent transform reshapes addresses without touching code.
+5. **Bindings follow the node.** Any `## Bind:` entry (§10.2) for a moved or renamed node MUST move to the binding file of the node's new component, with its `## Bind: <FacetType>:<Name>` heading updated to the new name. The **code locator is unchanged** — the code did not move, only the intent address did. This is precisely why bindings are separate files (§1.3): an intent transform reshapes addresses without touching code.
 
 6. **`merge` is author-confirmed and collapses, never silently unifies.** Because same-name is not proof of same-entity (§13.2), `merge` MUST be confirmed by the Architect. On merge the duplicate node is removed, one node is designated canonical (§16.8), and every edge that targeted either node is re-pointed at the canonical node under invariant 1.
 
@@ -1424,3 +1454,42 @@ Every edge that pointed into the old flat file is re-pointed to whichever sub-in
 ### 17.6 Diagnostics
 
 Intent Evolution adds **no new diagnostics**. A transform is correct exactly when the resulting graph raises no new hard error (§13.1) and no new orphan / shadow / duplicate / monolith smell (§13.2) attributable to the change. The invariants of §17.3 are the conditions under which that holds — which is the point: the static checks the spec already defines are the acceptance test for every transform.
+
+---
+
+## 18. Re-Encoding Existing Code (Code → Intent)
+
+§14 defines migration *within* the model (v3.1 → v4). This section defines the other direction: producing `.aim` intent by reading an **existing codebase** that was never authored in AIM. Re-encoding legacy systems is now a primary workflow, and it is the Reviewer's machinery (§10.1, §13.3) run in reverse — instead of diffing a declared graph against code, the agent *reads code and infers the declared graph*. Without spec support the inferred intent has no provenance, and the authority model (§1.3) silently degrades from "authored truth" to "a guess a tool made." This section keeps that boundary explicit.
+
+### 18.1 Definition
+
+Re-encoding produces `.aim` files by reading code. The producing agent acts as **Architect and Developer simultaneously** (§1.2): it authors the intent (facets, typed edges) and, because it has just read the implementing code, emits the bindings for it in the same pass.
+
+### 18.2 Provenance
+
+Every re-encoded facet node carries a provenance state:
+
+- **`inferred`** — agent-derived from code, not yet human-accepted.
+- **`confirmed`** — a human has reviewed and accepted it.
+
+The mechanism is the `provenance:` frontmatter field (§3.2): a re-encoded file is written `provenance: inferred` and the field is removed (or set to `confirmed`) on acceptance. **An absent field means `confirmed`** — authored intent is trusted by default, so hand-written files need no annotation. Per-node provenance (finer than per-file) is an optional tooling refinement; **per-file is the spec-level requirement.**
+
+### 18.3 Authority Of Inferred Intent
+
+`inferred` intent is **provisionally authoritative** for tooling: graph derivation, resolution, and diagnostics all treat it as real intent, so the graph is usable the moment it is encoded. But it MUST be visually and reportably distinguished from confirmed intent wherever intent is presented, and a project's **confirmation coverage** (fraction of nodes confirmed) is an informational metric (§13.2), never a hard error. Inferred intent is a strong draft, not yet ratified truth.
+
+### 18.4 Confidence
+
+Inferred nodes and edges carry the same confidence vocabulary as graph-diff findings (§13.3): `high` (the code clearly says so) or `needs-human-check` (dynamic, indirect, or ambiguous code the agent could not settle). Where recorded, confidence lives in the **encoding report** — a point-in-time work artifact under `/aim/work/`, the forward companion to the drift report and change record (§17.4) — **not** in the `.aim` file. The `.aim` file carries provenance; the work artifact carries confidence.
+
+### 18.5 Bindings Come Free
+
+The encoding agent read the code to infer each node, so it already knows the realization site. It therefore **MUST emit a binding** (§10.2) for every inferred node **that has a realization site** — a Contract, Schema, Event, Trigger, and any View that maps to a concrete UI component. Nodes with no code site are exempt: a **Persona** is a role, not a code location, and forcing a binding on it only produces a garbage locator. Modulo that exemption, a re-encoded component lands at **Level 3** immediately (§11.2). This is the payoff of the direction — re-encoding is the one workflow where bindings are a byproduct rather than extra work, so drift-checking is available from the first pass.
+
+### 18.6 Scope Discipline
+
+Encoding is **bounded per component**, mirroring §10.1's bounded construction of the realized graph — the agent reads a component's code, not the whole system, per pass. An agent MAY draft an entire component tree in one sweep, but **confirmation is granted per component**: a human ratifies one coherent unit at a time.
+
+### 18.7 Duplicates
+
+Re-encoding at scale surfaces §16.8 cases — the same entity (`User`, `Money`, `Status`) independently inferred in several components. The **probable-duplicate diagnostic** (§13.2) applies unchanged, and the remediation is `merge` (§17.2) with Architect confirmation (§17.3 invariant 6). Encoding agents SHOULD **resolve-or-reference** (§16.8) against already-encoded components before defining a new entity, so duplication is avoided during encoding rather than cleaned up after.

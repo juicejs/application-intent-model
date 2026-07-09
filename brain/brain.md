@@ -120,9 +120,9 @@ Required: `aim`, `facet`. Optional: `parent` (sub-components), `display`, `tags`
 ```
 /aim/<component>/<component>.aim
 /aim/<component>/<component>.<facet>.aim
+/aim/<component>/<component>.mapping.aim      # facet: mapping (co-located)
+/aim/<component>/<component>.binding.aim      # facet: binding (co-located)
 /aim/<component>/<feature>/<component>.<feature>.aim
-/aim/mappings/<component>/<component>.mapping.aim
-/aim/bindings/<component>/<component>.binding.aim
 ```
 
 Generic filenames are **hard errors**: `intent.aim`, `schema.aim`, `binding.aim` are invalid.
@@ -132,12 +132,12 @@ Generic filenames are **hard errors**: `intent.aim`, `schema.aim`, `binding.aim`
 - `# <Name>` — component display name (exactly one H1 per file).
 - `## Summary` / `## Requirements` / `## Tests` / `## Subcomponents` / `## Dependencies` — top-level sections.
 - `## Schema: <Name>` / `## Contract: <Name>` / etc. — facet blocks, each followed by `### Summary`.
-- `## Bind: <FacetType> <Name>` — in a `facet: binding` file.
+- `## Bind: <FacetType>:<Name>` — in a `facet: binding` file (the node's in-component address minus `#`).
 - Bullet lists for requirements, tests, steps. Fenced `aim-attrs` blocks for attributes.
 
 ### 3.5 Typed edges
 
-A cross-reference is `[verb](aim:<address>)` — declared at the acting node. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs` (`triggers` is declared on a `## Trigger:` node for cron/webhook/external entry points). Example: `- [accesses](aim:#View:TodoDashboard)`. The graph is derived by collecting these; inverse blocks are never authored.
+A cross-reference is `[verb](aim:<address>)` — declared at the acting node. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`, `satisfies` (`triggers` is declared on a `## Trigger:` node for cron/webhook/external entry points; `satisfies` links a contract/flow/view to a `## Requirements` item via `aim:#Requirements[n]`). Example: `- [accesses](aim:#View:TodoDashboard)`. The graph is derived by collecting these; inverse blocks are never authored.
 
 ### 3.6 Minimum valid intent file
 
