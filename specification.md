@@ -95,6 +95,10 @@ The whole point of AIM is to replace `.md` sprawl with a structured behavioral a
 
 v4 reinterprets the v3.1 file surface as the projection of a graph. No new file format and no new parser tier: every node already has a heading, and every edge is just a typed cross-reference. This section defines what a node is and how it is addressed; §8 defines edges.
 
+**Why a graph, and what kind.** An application's intent is not a document; it is a set of commitments and the relations among them. A facet is a **unit of intent**; a typed edge is **relational intent** — `[exposes](aim:#Contract:CreateTodo)` is itself a normative statement ("this surface shall offer this operation to users"), carrying the same authority as any requirement bullet. The graph is therefore **normative, not descriptive**. A code-analysis graph is derived from source and cannot disagree with it — it has no concept of *wrong*, only of structure. The intent graph is *authored*, so it can be wrong, unrealized, or drifted-from — and that capacity for disagreement is the point: drift (§10, §13) is only a meaningful concept because the declared graph is authoritative over what the system *should* do, independent of what the code *does*.
+
+**Why prose could not hold it.** Prose and headings are trees; application behavior is a graph. Serializing a graph into a tree forces every relation that crosses the hierarchy to be stated twice — once at each end ("Invoked by Contract: X" on the flow, "CALL X" in the steps) — and duplicated statements inevitably drift apart. v3.1's "three inconsistent expressions" problem (§8.3) was the structural symptom, not sloppy authoring. v4 re-normalizes: every relation is declared once, at the acting end, and inverse views are derived, never authored. The resulting division of labor is exact — **prose carries semantics** (what a commitment means, and why), **the graph carries structure** (how commitments compose into a system). Each holds precisely what the other cannot.
+
 ### 2.1 Nodes
 
 A node is any **addressable heading** in the resolved source. There are three ranks, all of which already exist as headings:
