@@ -17,7 +17,7 @@ This `GEMINI.md` provides operating rules and role dispatch. The specification p
 
 ## 2. The graph model
 
-An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an addressable node (`## Contract: CreateTask`); cross-references are typed edges. The graph is *derived* by collecting edges across files — never authored as a separate artifact, so `.aim` files stay the sole authority.
+An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an addressable node (`## Contract: CreateTask`); cross-references are typed edges. The graph is *derived* by collecting edges across files — never authored as a separate artifact, so `.aim` files stay the sole authority. Authoring **is graph design**: facets are units of intent and edges are relational intent, so writing facets without their edges is documentation, not architecture — the finished artifact is a connected graph, not a stack of files.
 
 ## 3. File format and extension
 

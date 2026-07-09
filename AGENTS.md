@@ -38,7 +38,7 @@ Reserved directory name under `/aim/`: `specs/`. Everything else is a component 
 
 AIM defines three mainstream roles. Any agent can take any role; the role is workflow guidance, not a language construct.
 
-- **Architect** — translates requirements into `.aim` files. Owns the specification. When drift is caused by changed requirements, the Architect revises intent.
+- **Architect** — designs the intent graph (facets + typed edges) and serializes it as `.aim` files. Owns the specification. When drift is caused by changed requirements, the Architect revises intent.
 - **Developer** — generates code and tests from intent. When drift is caused by buggy implementation, the Developer fixes code.
 - **Reviewer** — compares code against intent and reports drift. Identifies whether each finding belongs to the Developer or the Architect. Does not fix code or revise intent directly.
 

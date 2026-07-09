@@ -49,7 +49,7 @@ The intent file is the canonical entrypoint. All other detail attaches to it dir
 
 v4 keeps the three mainstream roles that map onto how real software teams already work:
 
-- **Architect** — translates requirements into intent files. Owns the specification. Declares typed edges between nodes and authors binding facets when realization is known.
+- **Architect** — **designs the intent graph**: translates requirements into intents, their facets, and the typed edges among them. The `.aim` files are the graph's serialization (§2), not the design itself — an Architect who writes facets without edges has not architected, only documented. Owns the specification. Authors binding facets when realization is known.
 - **Developer** — implements code and tests from the resolved graph. Emits or updates bindings for the code it writes. Fixes code when drift is found.
 - **Reviewer** — diffs the declared graph against the realized code graph and reports drift.
 
@@ -1239,7 +1239,11 @@ A single-player snake game.
 
 ### 16.1 Default Authoring Rule
 
-Start by splitting. Create the parent intent with the cross-cutting requirements and shared schemas. Create each feature as a sub-component. Keep each sub-component focused on a single observable behavior. Declare edges inline as you write each facet (a View's actions `expose` contracts; a Flow `mutates` schemas and `emits` events). Collapse into a single file only when the whole component is trivially small.
+**Architect the graph, then serialize it.** From the requirements, identify the nodes — who acts (Personas), what they reach (Views), what they do (Contracts), how it runs (Flows), what it changes (Schemas), what it announces (Events, Triggers) — and the typed relations among them: who `accesses` what, what `exposes`/`invokes` what, what `mutates`/`reads` what, what `emits` and who `subscribes`, what `satisfies` which requirement. That graph **is** the design; the files merely record it.
+
+Then write it down. Start by splitting: create the parent intent with the cross-cutting requirements and shared schemas, and each feature as a sub-component. Keep each sub-component focused on a single observable behavior. Declare the edges inline at the acting nodes as you serialize each facet. Collapse into a single file only when the whole component is trivially small.
+
+The test of a finished intent is graph-shaped, not prose-shaped: every requirement reachable via `satisfied-by`, every contract reachable from a persona or trigger, every event with an emitter — a connected graph, not a stack of well-written facets (§11.3, §13.2).
 
 ### 16.2 What Goes In The Parent
 
@@ -1267,7 +1271,7 @@ Add bindings once code exists and you want enforceable drift detection. Bind the
 
 ### 16.6 Closed-Loop Workflow
 
-1. Requirements → intent (sub-components first, parent as index), with typed edges declared inline.
+1. Requirements → **graph**: nodes (facets) and typed edges, serialized as intents (sub-components first, parent as index), edges declared inline at the acting nodes.
 2. Intent → implementation, reading the resolved graph; Developer emits bindings for the code it writes.
 3. Implementation → graph-diff validation against the declared graph through the bindings.
 4. Validation failures → code repair or intent revision, routed by the finding's owner.

@@ -63,7 +63,7 @@ v4 has three roles. Repair is a verb, not a role.
 
 ### Architect
 
-**Purpose:** Translate requirements into AIM intent files. Own the specification.
+**Purpose:** Design the intent graph — nodes, facets, and typed edges — and serialize it as AIM intent files. Own the specification.
 
 **Writes:** `.aim` files only — parent/sub-component intent files, facet files, and binding files.
 
