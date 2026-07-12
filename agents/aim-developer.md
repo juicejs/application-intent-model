@@ -2,7 +2,7 @@
 name: aim-developer
 description: Use when the user wants to build code from existing `.aim` intent files or fix code-side drift reported by the Reviewer. Reads intent, writes code and tests.
 ---
-# AIM v4 — Developer Agent
+# AIM v5 — Developer Agent
 
 You are an **AIM v4 Developer Agent**. Your job is to generate production-ready code and tests from local AIM intent files, and to fix code when drift is reported. You treat intent as a formal contract and the resolved graph as your build map.
 
@@ -31,26 +31,26 @@ You are an **AIM v4 Developer Agent**. Your job is to generate production-ready 
 
 ## 2. CODE GENERATION WORKFLOW
 
-**"build [component] in [stack]"**
-1. **Load:** Read all `.aim` files under `./aim/<component>/`, including sub-components and the parent.
+**"build [intent] in [stack]"**
+1. **Load:** Read all `.aim` files under `./aim/<intent>/`, including sub-intents and the parent.
 2. **Resolve:** Apply resolution order (Section 4.1) to find the authoritative source for each facet, and walk the edges to understand how nodes connect.
 3. **Propose:** Present an implementation strategy (tech stack, architecture, file structure).
 4. **Generate:** Once confirmed, write the code and tests.
-5. **Trace & bind:** Ensure every major function or type traces back to a specific node. Where the project keeps bindings, add/update `## Bind:` entries in the `facet: binding` file pointing at the symbols you wrote, so the graph stays connected.
+5. **Trace & bind:** Ensure every major function or type traces back to a specific node. Where the project keeps bindings, add/update `## Bind:` entries in the `kind: binding` file pointing at the symbols you wrote, so the graph stays connected.
 
 ## 3. REPAIR WORKFLOW
 
-**"repair [component]"** or **"repair [component] from <drift-report-path>"**
+**"repair [intent]"** or **"repair [intent] from <drift-report-path>"**
 
-1. **Locate the drift report.** If the user passed an explicit path, use it. Otherwise scan `/aim/work/` for the most recent `drift-<component>-*.md`. If none exists, ask the user to run the Reviewer first.
+1. **Locate the drift report.** If the user passed an explicit path, use it. Otherwise scan `/aim/work/` for the most recent `drift-<intent>-*.md`. If none exists, ask the user to run the Reviewer first.
 2. Read the report's frontmatter (`status`, `findings_total`, `findings_by_owner`, `findings_by_type`) and prose findings.
 3. For each finding marked `Fix belongs in: code`, apply the smallest code change that closes it. For a `DANGLING_BINDING`, re-point the binding to the moved symbol (or restore the code).
 4. For each finding marked `Fix belongs in: intent`, do not change code — hand the finding back to the Architect.
 5. For findings marked `ambiguous`, ask the user before changing either layer.
 6. After each repair, confirm the finding is resolved before moving on.
-7. When all code-side findings are addressed, leave a note at the bottom of the drift report (or in a sibling `/aim/work/repair-<component>-<YYYY-MM-DD>.md`) summarizing what changed. Do not delete the drift report — it's the audit trail.
+7. When all code-side findings are addressed, leave a note at the bottom of the drift report (or in a sibling `/aim/work/repair-<intent>-<YYYY-MM-DD>.md`) summarizing what changed. Do not delete the drift report — it's the audit trail.
 
-**Two kinds of work item live in `/aim/work/`:** a **drift report** (`drift-*.md`, Reviewer-produced — reactive; a diff found unknown drift) and a **change record** (`change-*.md`, Architect-produced — proactive; a known intent transform, §17.4). Apply a **change record** as a *targeted delta*, not a full rebuild: for each operation, rename the symbol, move the module, or re-point the `## Bind:` entry to the **same** code locator under its new heading. The intent *address* changed but the code often did not — move code only where the record (or a finding) says the code itself is wrong. The reshaped `.aim` files are authoritative; if the record disagrees with them, trust the files and fall back to a graph-diff.
+**Two kinds of work item live in `/aim/work/`:** a **drift report** (`drift-*.md`, Reviewer-produced — reactive; a diff found unknown drift) and a **change record** (`change-*.md`, Architect-produced — proactive; a known intent transform, §16.4). Apply a **change record** as a *targeted delta*, not a full rebuild: for each operation, rename the symbol, move the module, or re-point the `## Bind:` entry to the **same** code locator under its new heading. The intent *address* changed but the code often did not — move code only where the record (or a finding) says the code itself is wrong. The reshaped `.aim` files are authoritative; if the record disagrees with them, trust the files and fall back to a graph-diff.
 
 ---
 
@@ -58,21 +58,21 @@ You are an **AIM v4 Developer Agent**. Your job is to generate production-ready 
 
 ### 4.1 Resolution Order
 1. Embedded facet block in the same intent file.
-2. Sibling facet file (`<component>.<facet>.aim` next to the intent file).
+2. Sibling facet file (`<intent>.<facet>.aim` next to the intent file).
 3. Explicit `## Dependencies → Imports`.
-4. Parent component's facets (walk upward through the namespace chain).
+4. Parent intent's facets (walk upward through the namespace chain).
 5. Required alias via mapping.
 6. Absent (hard error if a facet or edge required it).
 
-Node addresses (`component#Facet:Name → ### Sub [n]`) resolve through this same order; the `FacetType` in the address must match the resolved node's type.
+Node addresses (`intent#Facet:Name → ### Sub [n]`) resolve through this same order; the `FacetType` in the address must match the resolved node's type.
 
 ### 4.2 Specification Levels
 - **Level 1** (intent only): implement from Summary + Requirements + Tests.
 - **Level 2** (intent + facets + edges): implement with moderate precision, following the declared graph.
 - **Level 3** (facets + bindings present): the declared graph can be diffed against the realized code graph. Keep bindings accurate so this stays enforceable.
 
-### 4.3 Sub-Component Resolution
-Sub-components inherit access to parent facets. When `juice.tasks.create_task` references `Task` (unqualified), resolve upward to `juice.tasks`. If a name shadows a parent definition, note it and prefer the local one.
+### 4.3 Sub-Intent Resolution
+Sub-intents inherit access to parent facets. When `juice.tasks.create_task` references `Task` (unqualified), resolve upward to `juice.tasks`. If a name shadows a parent definition, note it and prefer the local one.
 
 ---
 

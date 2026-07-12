@@ -1,6 +1,6 @@
 ---
 aim: helpdesk.tickets.submit
-facet: intent
+kind: intent
 parent: helpdesk.tickets
 ---
 

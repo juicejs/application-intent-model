@@ -1,12 +1,12 @@
 ---
-aim_version: 4.1
+aim_version: 5
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Application Intent Model (AIM) v4.1** to specify product behavior. Read this file before doing any work — it is the cold-start entry point for every AI coding agent that enters the project.
+This project uses the **Agentic Intent Model (AIM) v5** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
 
 ## How to read this project
 
@@ -25,36 +25,36 @@ This project uses the **Application Intent Model (AIM) v4.1** to specify product
 ├── AGENTS.md              # this file — agent onboarding
 ├── aim/
 │   ├── specs/spec.md      # cached AIM specification (reference)
-│   └── <component>/       # one directory per component
-│       ├── <component>.aim
-│       ├── <component>.mapping.aim   # capability-to-provider bindings (facet: mapping)
-│       └── <component>.binding.aim   # intent-to-code realization (facet: binding, optional)
+│   └── <intent>/       # one directory per intent
+│       ├── <intent>.aim
+│       ├── <intent>.mapping.aim   # capability-to-provider bindings (kind: mapping)
+│       └── <intent>.binding.aim   # intent-to-realization bindings (kind: binding, optional)
 └── ...                    # your application code
 ```
 
-Reserved directory name under `/aim/`: `specs/`. Everything else is a component namespace. Mapping and binding facets co-locate with their component — they are not separate top-level directories.
+Reserved directory name under `/aim/`: `specs/`. Everything else is a intent namespace. Mapping and binding facets co-locate with their intent — they are not separate top-level directories.
 
 ## Operating roles
 
 AIM defines three mainstream roles. Any agent can take any role; the role is workflow guidance, not a language construct.
 
 - **Architect** — designs the intent graph (facets + typed edges) and serializes it as `.aim` files. Owns the specification. When drift is caused by changed requirements, the Architect revises intent.
-- **Developer** — generates code and tests from intent. When drift is caused by buggy implementation, the Developer fixes code.
-- **Reviewer** — compares code against intent and reports drift. Identifies whether each finding belongs to the Developer or the Architect. Does not fix code or revise intent directly.
+- **Realizer** — makes reality match the model: generates code and tests, wires automations, performs the process. When drift is caused by a faulty realization, the Realizer fixes it. (In software this role is conventionally the **Developer**.)
+- **Reviewer** — compares reality against intent and reports drift. Identifies whether each finding belongs to the Realizer or the Architect. Does not fix the realization or revise intent directly.
 
-Repair is a verb, not a role — drift is resolved explicitly by Developer (code fix) or Architect (intent revision), never silently normalized.
+Repair is a verb, not a role — drift is resolved explicitly by the Realizer (realization fix) or the Architect (intent revision), never silently normalized.
 
 Detailed prompts for each role: [PROMPT.md](./PROMPT.md). Persona files: [agents/](./agents/).
 
 ## Authoring discipline
 
-- **Sub-component first.** Decompose components into focused sub-components by default. Collapse to a single file only when the component is genuinely small (one feature, one screen of content).
+- **Sub-intent first.** Decompose intents into focused sub-intents by default. Collapse to a single file only when the intent is genuinely small (one feature, one screen of content).
 - **Add facets only when they increase useful precision.** Start with the intent envelope (Summary + Requirements + Tests). Add Schema, Contract, Flow, Persona, View, Event only where the user has given you enough detail to populate them meaningfully.
 - **Never invent material behavior absent from intent.** When detail is missing, preserve documented intent and minimize assumptions. Surface ambiguity rather than guess.
 - **Never silently normalize drift.** When implementation and intent diverge, resolve the mismatch explicitly.
-- **Reuse, don't regenerate.** Before defining a shared entity (a `Schema` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across components belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
+- **Reuse, don't regenerate.** Before defining a shared entity (a `Schema` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across intents belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
 - **Keep the parent lean; extract shared facets.** A parent intent file is an index, not a container — author shared schemas/personas/views as their own files (or in `<app>.core`). Don't dodge duplication by cramming everything into one file; a monolith is the dual failure.
-- **Evolve by transform, not rewrite.** Every change to the model is one of two operations — EXTEND an existing intent or ADD a new one. When an EXTEND outgrows one clear behavior, *promote* the new capability into its own sub-intent; re-home, merge, split, or rename as needed. Each move re-points inbound edges, updates the parent's `## Subcomponents`, and relocates bindings (code locator unchanged) — a traceable graph-diff, not a rewrite.
+- **Evolve by transform, not rewrite.** Every change to the model is one of two operations — EXTEND an existing intent or ADD a new one. When an EXTEND outgrows one clear behavior, *promote* the new capability into its own sub-intent; re-home, merge, split, or rename as needed. Each move re-points inbound edges, updates the parent's `## Subintents`, and relocates bindings (locator unchanged — the realization did not move) — a traceable graph-diff, not a rewrite.
 - **UI pieces have fluid granularity.** A tab/panel/widget is `### Display` prose in its host view when simple, and promotes into its own sub-intent once it grows a contract or schema. There is no composition edge — a host connects to a promoted piece through the existing view edges.
 
 ## Project conventions

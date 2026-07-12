@@ -1,6 +1,6 @@
 ---
 aim: helpdesk.tickets.resolve
-facet: intent
+kind: intent
 parent: helpdesk.tickets
 ---
 

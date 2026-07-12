@@ -1,10 +1,10 @@
-# AIM v4 Core Mandates
+# AIM v5 Core Mandates
 
 These mandates are foundational. All agents working in this project MUST adhere to these rules without exception.
 
 ## 1. Required reading
 
-Before executing any command or writing any file, read the v4 specification.
+Before executing any command or writing any file, read the v5 specification.
 
 **Bootstrap order:**
 
@@ -23,29 +23,29 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 
 - **Extension:** Every AIM artifact MUST end in `.aim`.
 - **Format:** Markdown body with YAML frontmatter. Renders as Markdown anywhere.
-- **Frontmatter:** Every file starts with a YAML block containing `aim` and `facet` (and `parent` if it's a sub-component). The project-wide `aim_version` and `spec:` URL live once in `AGENTS.md` — there is **no per-file `version` or `spec`.**
+- **Frontmatter:** Every file starts with a YAML block containing `aim` and `facet` (and `parent` if it's a sub-intent). The project-wide `aim_version` and `spec:` URL live once in `AGENTS.md` — there is **no per-file `version` or `spec`.**
 - **Facet values:** `intent | schema | flow | contract | persona | view | event | trigger | mapping | binding`.
 - **Identity:** The `aim` namespace MUST match the filename and directory path.
 
 ## 4. Syntax rules
 
-- **Headings:** `# <Name>` for component; `## Summary`/`## Requirements`/`## Tests`/`## Subcomponents`/`## Dependencies` for sections; `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Attributes`/`### Input`/etc. for sub-blocks; `## Bind: <FacetType>:<Name>` in a `facet: binding` file.
+- **Headings:** `# <Name>` for intent; `## Summary`/`## Requirements`/`## Tests`/`## Subintents`/`## Dependencies` for sections; `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Attributes`/`### Input`/etc. for sub-blocks; `## Bind: <FacetType>:<Name>` in a `kind: binding` file.
 - **Lists:** Standard Markdown bullets.
 - **Attributes:** Fenced `aim-attrs` code blocks with `name: type modifiers` lines. `ref(Type.field)` is the data-level `refs` edge.
-- **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`, `satisfies`. (`triggers` is declared on a `## Trigger:` node — cron / webhook / external entry points; `satisfies` links a contract/flow/view to a `## Requirements` item via `aim:#Requirements[n]`.) Never author `### Trigger`/`### Emitted By` inverse blocks — those are derived. There is **no composition verb**: a screen rendering another view inline is realization (code/bindings), not an edge — a host connects to a promoted widget through the existing view edges (§16.9).
+- **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`, `satisfies`. (`triggers` is declared on a `## Trigger:` node — cron / webhook / external entry points; `satisfies` links a contract/flow/view to a `## Requirements` item via `aim:#Requirements[n]`.) Never author `### Trigger`/`### Emitted By` inverse blocks — those are derived. There is **no composition verb**: a screen rendering another view inline is realization (code/bindings), not an edge — a host connects to a promoted widget through the existing view edges (§15.9).
 - **No v2.2 DSL.** `INTENT Name { ... }`, `SUMMARY:`, block syntax is invalid.
 
 ## 5. Layout
 
-- Parent component: `/aim/<component>/<component>.aim`
-- Sub-component: `/aim/<component>/<feature>/<component>.<feature>.aim`
-- Facet file: `/aim/<component>/<component>.<facet>.aim`
-- Mapping facet: `/aim/<component>/<component>.mapping.aim` (co-locates like any facet)
-- Binding facet (optional, intent→code): `/aim/<component>/<component>.binding.aim`
+- Parent intent: `/aim/<intent>/<intent>.aim`
+- Sub-intent: `/aim/<intent>/<feature>/<intent>.<feature>.aim`
+- Facet file: `/aim/<intent>/<intent>.<kind>.aim`
+- Mapping facet: `/aim/<intent>/<intent>.mapping.aim` (co-locates like any facet)
+- Binding facet (optional, intent→code): `/aim/<intent>/<intent>.binding.aim`
 
-Sub-component-first is the default. Collapse to a single file only when the component is genuinely small. Author shared facets (schemas/personas/views) as their own files or in `<app>.core`; the parent intent file is a lean index, not a container — don't dodge duplication by building a monolith.
+Sub-intent-first is the default. Collapse to a single file only when the intent is genuinely small. Author shared facets (schemas/personas/views) as their own files or in `<app>.core`; the parent intent file is a lean index, not a container — don't dodge duplication by building a monolith.
 
-UI pieces have **fluid granularity**: a tab/panel/widget is `### Display` prose until it earns a contract/schema, then it promotes to its own sub-intent (§16.9). Reshape an existing model by **transform** (promote / split / re-home / merge / rename), which re-points edges, updates `## Subcomponents`, and relocates bindings (code locator unchanged) — a traceable graph-diff, not a rewrite (§17).
+UI pieces have **fluid granularity**: a tab/panel/widget is `### Display` prose until it earns a contract/schema, then it promotes to its own sub-intent (§15.9). Reshape an existing model by **transform** (promote / split / re-home / merge / rename), which re-points edges, updates `## Subintents`, and relocates bindings (code locator unchanged) — a traceable graph-diff, not a rewrite (§16).
 
 ## 6. Role dispatch
 
@@ -57,7 +57,7 @@ Repair is a verb, not a role. The Developer fixes code; the Architect revises in
 
 ## 7. Required minimum for any `.aim` file
 
-1. Valid YAML frontmatter with the required fields (`aim`, `facet`).
+1. Valid YAML frontmatter with the required fields (`aim`, `kind`).
 2. Exactly one H1 heading.
 3. A non-empty `## Requirements` section.
 4. File path matches the `aim` namespace.
@@ -67,7 +67,7 @@ Repair is a verb, not a role. The Developer fixes code; the Architect revises in
 1. Frontmatter present with `aim:` and `facet:` (per-file `version:`/`spec:` are not used — they live in `AGENTS.md`).
 2. Filename ends in `.aim` (never `.md`, `.yml`, `.yaml`, `.json`).
 3. Body is valid Markdown — no v2.2 DSL blocks.
-4. Sub-component files declare `parent:` matching an existing parent intent file.
+4. Sub-intent files declare `parent:` matching an existing parent intent file.
 5. Generic filenames (`intent.aim`, `schema.aim`, `binding.aim`) are hard errors.
 6. Every `[verb](aim:…)` edge targets an existing node with a verb legal for the from/to node-types.
 7. Every requirement and edge traces to user-provided intent. Never invent behavior.

@@ -1,15 +1,15 @@
 ---
 aim: comms
-facet: intent
+kind: intent
 ---
 
 # Comms
 
-A minimal shared messaging capability that other components depend on. It is included here so the helpdesk's cross-component edge (`NotifyRequester` → `SendEmail`) resolves against a real node rather than dangling.
+A minimal shared messaging capability that other intents depend on. It is included here so the helpdesk's cross-intent edge (`NotifyRequester` → `SendEmail`) resolves against a real node rather than dangling.
 
 ## Summary
 
-Sends transactional email. Exposed as a single contract that other components import and invoke.
+Sends transactional email. Exposed as a single contract that other intents import and invoke.
 
 ## Requirements
 

@@ -1,6 +1,6 @@
 ---
 aim: helpdesk.tickets
-facet: mapping
+kind: mapping
 ---
 
 # Helpdesk Mappings

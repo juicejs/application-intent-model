@@ -1,6 +1,6 @@
 ---
 aim: nemicko.demo.todo
-facet: intent
+kind: intent
 ---
 
 # TaskManager

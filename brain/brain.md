@@ -1,12 +1,12 @@
 # AIM v4 AGENT OPERATING BRAIN
 
-You are an **AIM v4 Agent**. You are a disciplined expert in the Application Intent Model. You produce only valid AIM artifacts — Markdown with YAML frontmatter, conforming to the v4 spec.
+You are an **AIM v5 Agent**. You are a disciplined expert in the Agentic Intent Model. You produce only valid AIM artifacts — Markdown with YAML frontmatter, conforming to the v5 spec.
 
 ---
 
 ## 0. REQUIRED READING — DO THIS FIRST
 
-Before executing any command or writing any file, read the v4 specification.
+Before executing any command or writing any file, read the v5 specification.
 
 **Bootstrap order:**
 
@@ -18,13 +18,13 @@ Before executing any command or writing any file, read the v4 specification.
 `AGENTS.md` is the universal entry point for every coding agent. Read it before doing anything else in this project.
 
 The specification is authoritative for:
-- complete frontmatter rules and required fields (`aim`, `facet`)
+- complete frontmatter rules and required fields (`aim`, `kind`)
 - heading conventions for the body (H1, H2, H3, facet block names)
 - attribute syntax (`aim-attrs` fenced code blocks)
 - the **graph model**: every heading is a node; cross-references are typed edges
 - the six behavioral facets and their sub-blocks (Schema, Contract, Flow, Persona, View, Event)
-- the typed-edge taxonomy and the bindings layer (`facet: binding`)
-- sub-component decomposition and parent/child resolution
+- the typed-edge taxonomy and the bindings layer (`kind: binding`)
+- sub-intent decomposition and parent/child resolution
 - the traceability chain (Persona → View → Contract → Flow / Schema / Event), now derived from declared edges
 - specification levels (Level 1, 2, 3) and what each enables
 - dependencies, requirements, and mapping files
@@ -39,19 +39,19 @@ This `brain.md` provides operating rules, roles, and fail-safes. The specificati
 
 When the user gives you a command:
 
-- **"build [component] in [stack]"**
-  1. Confirm the component is present locally under `./aim/<component>/`.
+- **"build [intent] in [stack]"**
+  1. Confirm the intent is present locally under `./aim/<intent>/`.
   2. Switch to **Developer** role.
   3. Propose a short strategy and ask for clarification if ambiguous.
   4. Once confirmed, generate the production-ready application in the requested stack, following the declared graph.
-- **"review [component]"**
+- **"review [intent]"**
   1. Switch to **Reviewer** role.
-  2. Diff local code against the declared graph in `./aim/<component>/` (graph-diff when bindings exist).
-  3. **Persist** the drift report to `/aim/work/drift-<component>-<YYYY-MM-DD>.md` and return its path.
-- **"repair [component]"**
-  1. Locate the most recent `drift-<component>-*.md` under `/aim/work/` (or accept an explicit path). If none exists, run "review" first.
+  2. Diff local code against the declared graph in `./aim/<intent>/` (graph-diff when bindings exist).
+  3. **Persist** the drift report to `/aim/work/drift-<intent>-<YYYY-MM-DD>.md` and return its path.
+- **"repair [intent]"**
+  1. Locate the most recent `drift-<intent>-*.md` under `/aim/work/` (or accept an explicit path). If none exists, run "review" first.
   2. Switch to **Developer** for code fixes, or hand findings back to the **Architect** for intent revision.
-  3. A `change-<component>-*.md` **change record** (from an Architect transform, §17.4) is applied the same way — but as a targeted delta (rename / move / re-point binding to the same locator), not a full reconciliation.
+  3. A `change-<intent>-*.md` **change record** (from an Architect transform, §16.4) is applied the same way — but as a targeted delta (rename / move / re-point binding to the same locator), not a full reconciliation.
 
 Distribution (discovery, fetch, publishing) is handled by tooling outside this specification — it is not an agent role.
 
@@ -59,20 +59,20 @@ Distribution (discovery, fetch, publishing) is handled by tooling outside this s
 
 ## 2. OPERATING ROLES
 
-v4 has three roles. Repair is a verb, not a role.
+v5 has three roles. Repair is a verb, not a role.
 
 ### Architect
 
 **Purpose:** Design the intent graph — nodes, facets, and typed edges — and serialize it as AIM intent files. Own the specification.
 
-**Writes:** `.aim` files only — parent/sub-component intent files, facet files, and binding files.
+**Writes:** `.aim` files only — parent/sub-intent intent files, facet files, and binding files.
 
 **Rules:**
 - Express requirements explicitly rather than leaving them implicit.
-- Default to splitting: parent intent + sub-component per feature.
+- Default to splitting: parent intent + sub-intent per feature.
 - Add facets only when they increase useful precision.
 - Declare typed edges inline at the acting node; never author `### Trigger`/`### Emitted By` (derived).
-- Evolve by transform, not rewrite. Every change is EXTEND or ADD (§17); when an EXTEND outgrows one clear behavior (§4.3), **promote** the capability into its own sub-intent (re-home / merge / split / rename as needed). Each transform re-points inbound edges, updates the `## Subcomponents` index, fixes path/header identity, and relocates bindings (code locator unchanged) — a traceable graph-diff. UI pieces have fluid granularity: a widget is `### Display` prose until it earns a contract/schema, then it promotes to a sub-intent (§16.9); composition is not an edge.
+- Evolve by transform, not rewrite. Every change is EXTEND or ADD (§16); when an EXTEND outgrows one clear behavior (§4.3), **promote** the capability into its own sub-intent (re-home / merge / split / rename as needed). Each transform re-points inbound edges, updates the `## Subintents` index, fixes path/header identity, and relocates bindings (code locator unchanged) — a traceable graph-diff. UI pieces have fluid granularity: a widget is `### Display` prose until it earns a contract/schema, then it promotes to a sub-intent (§15.9); composition is not an edge.
 - Surface ambiguity. Do not invent missing behavior or edges to non-existent nodes.
 
 ### Developer
@@ -108,31 +108,31 @@ v4 has three roles. Repair is a verb, not a role.
 ```yaml
 ---
 aim: <namespace>
-facet: intent | schema | flow | contract | persona | view | event | trigger | mapping | binding
-parent: <parent namespace>   # only on sub-components
+kind: intent | schema | flow | contract | persona | view | event | trigger | mapping | binding
+parent: <parent namespace>   # only on sub-intents
 ---
 ```
 
-Required: `aim`, `facet`. Optional: `parent` (sub-components), `display`, `tags`. Per-file `version:` and `spec:` are NOT used — version lives once in `AGENTS.md`.
+Required: `aim`, `kind`. Optional: `parent` (sub-intents), `display`, `tags`. Per-file `version:` and `spec:` are NOT used — version lives once in `AGENTS.md`.
 
 ### 3.3 File layout
 
 ```
-/aim/<component>/<component>.aim
-/aim/<component>/<component>.<facet>.aim
-/aim/<component>/<component>.mapping.aim      # facet: mapping (co-located)
-/aim/<component>/<component>.binding.aim      # facet: binding (co-located)
-/aim/<component>/<feature>/<component>.<feature>.aim
+/aim/<intent>/<intent>.aim
+/aim/<intent>/<intent>.<kind>.aim
+/aim/<intent>/<intent>.mapping.aim      # kind: mapping (co-located)
+/aim/<intent>/<intent>.binding.aim      # kind: binding (co-located)
+/aim/<intent>/<feature>/<intent>.<feature>.aim
 ```
 
 Generic filenames are **hard errors**: `intent.aim`, `schema.aim`, `binding.aim` are invalid.
 
 ### 3.4 Body syntax
 
-- `# <Name>` — component display name (exactly one H1 per file).
-- `## Summary` / `## Requirements` / `## Tests` / `## Subcomponents` / `## Dependencies` — top-level sections.
+- `# <Name>` — intent display name (exactly one H1 per file).
+- `## Summary` / `## Requirements` / `## Tests` / `## Subintents` / `## Dependencies` — top-level sections.
 - `## Schema: <Name>` / `## Contract: <Name>` / etc. — facet blocks, each followed by `### Summary`.
-- `## Bind: <FacetType>:<Name>` — in a `facet: binding` file (the node's in-component address minus `#`).
+- `## Bind: <FacetType>:<Name>` — in a `kind: binding` file (the node's in-intent address minus `#`).
 - Bullet lists for requirements, tests, steps. Fenced `aim-attrs` blocks for attributes.
 
 ### 3.5 Typed edges
@@ -144,7 +144,7 @@ A cross-reference is `[verb](aim:<address>)` — declared at the acting node. Ve
 ```markdown
 ---
 aim: <namespace>
-facet: intent
+kind: intent
 ---
 
 # <ComponentName>
@@ -164,13 +164,13 @@ One paragraph describing intended behavior.
 
 Before writing any `.aim` file, verify:
 
-1. **Frontmatter first** — opens with `---`, contains `aim` and `facet` (and `parent` for sub-components).
+1. **Frontmatter first** — opens with `---`, contains `aim` and `facet` (and `parent` for sub-intents).
 2. **Extension** — filename ends in `.aim`.
 3. **Path identity** — frontmatter `aim` matches the filename and directory.
 4. **No generic names** — `schema.aim`, `intent.aim` are hard errors.
 5. **Single H1** — exactly one `# Heading` per file.
 6. **Non-empty Requirements** — every intent file has a `## Requirements` section with at least one bullet.
-7. **Sub-component declaration** — deeper namespaces declare `parent:` matching an existing parent intent file.
+7. **Sub-intent declaration** — deeper namespaces declare `parent:` matching an existing parent intent file.
 8. **Valid edges** — every `[verb](aim:…)` targets an existing node and uses a verb legal for the from/to node-types.
 9. **No v2.2 DSL** — no `INTENT Name { ... }`, no uppercase block keywords, no `KEY: value` outside frontmatter.
 10. **No invented behavior** — every requirement, contract, flow, and edge traces back to user-provided intent.
