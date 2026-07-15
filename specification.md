@@ -103,6 +103,8 @@ v4 reinterprets the v3.1 file surface as the projection of a graph. No new file 
 
 **Who reads which projection.** The model carries two structures for two audiences, superimposed in the same files. The **tree** — namespaces, `## Subintents`, headings — is the *human* projection: hierarchy gives progressive disclosure (a handful of children per level, drill down), and the parent–child edge carries explanation — descending answers *how*, ascending answers *why*. Humans navigate, review, and understand the model through the tree. The **graph** — the typed edges — is the *machine* substrate: complete, queryable, and never meant to be read whole. Humans consume the graph only as **answers**: an impact set, a satisfies-coverage report, a calendar of every Trigger, one role's operations. Tools SHOULD surface the graph as such views and queries, and SHOULD NOT require a human to comprehend the global graph — no human can, and the design never asks them to. A `.aim` file is both projections at once: its headings are the tree, its edge tokens are the graph, and each reader takes their half (§18). And the two structures are independent by design: the tree may nest intents to whatever depth they earn (§5.5 recommends staying shallow), while the typed edges form **one global graph** that crosses tree levels and intent boundaries freely (§8.1) — tree position never limits what an edge may connect; it only decides who owns the node.
 
+The split rests on a hard asymmetry: a human can hold a tree in mind; no one holds a graph. That makes the tree not a convenience view but the model's **entire human interface** — and its *shape* a first-class quality property. Every intent SHOULD read as a short table of contents for the level below; an intent that degenerates into a flat bag of technical nodes has failed its audience even while the graph beneath it validates perfectly. The noun-cluster diagnostic (§12.2) and the `promote` transform (§16.2) exist to restore the ladder.
+
 ### 2.1 Nodes
 
 A node is any **addressable heading** in the resolved source. There are three ranks, all of which already exist as headings:
@@ -1187,6 +1189,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." In v4 it 
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
 - **Probable duplicate entity** — two nodes with the same facet-type and name in intents not linked by an import or reference (e.g. `auth#Schema:User` and `billing#Schema:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§15.8), or to confirm they are genuinely distinct.
 - **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across intents, instead of extracting them into sibling facet files or a `<app>.core` intent (§15.2, §15.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
+- **Noun-cluster (a sub-intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Schema plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` schema with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own sub-intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Schema whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
 
 ### 12.3 Graph-Diff Findings (Reviewer)
 
@@ -1328,6 +1331,8 @@ Shared **facets** — schemas, personas, views referenced by multiple intents �
 ### 15.4 When To Split A Sub-Intent Further
 
 When a sub-intent itself has multiple distinct behaviors with their own contracts. Example: a `payments` intent might split into `charge`, `refund`, `dispute` sub-intents, and `dispute` itself might split into `open_dispute`, `respond_to_dispute`, `resolve_dispute` if each has its own contract. Three nesting levels is the practical maximum.
+
+The signal is often a **noun-cluster** (§12.2) rather than a planned decision: one noun quietly claims a schema plus several like-named contracts inside a mixed intent. Promote the whole cluster — existing facets included — the next time a change touches it (§16.5).
 
 ### 15.5 When To Add Bindings
 
@@ -1483,7 +1488,7 @@ Each transform changes one or more node **addresses** `<intent>#<FacetType>:<Nam
 
 ### 16.3 Transform Invariants (Normative)
 
-Because a transform changes addresses, it MUST re-establish every part of the model that addresses anchor. A transform that violates any of the following yields an ill-formed model and MUST NOT be applied as-is:
+A transform reshapes **addresses, never commitments**: after re-pointing (and, for `merge`, de-duplication) the model states the same requirements, the same behavior, the same relations — only structure and naming have moved. Because a transform changes addresses, it MUST re-establish every part of the model that addresses anchor. A transform that violates any of the following yields an ill-formed model and MUST NOT be applied as-is:
 
 1. **No dangling edges; legal triples preserved.** Every typed edge whose `to` address targets a moved or renamed node MUST be re-pointed to the node's new address. After the transform the graph MUST contain zero dangling references (§12.1) introduced by the change, and every re-pointed edge MUST still satisfy its `(verb, from, to)` schema (§8.2). Edges are declared at the acting end (§8.3), so inbound edges live in *other* nodes' blocks and MUST be found across the whole project graph (§12), not just the moved file.
 
@@ -1506,6 +1511,7 @@ Because the transform knows *exactly* what changed at the intent level, this dif
 ### 16.5 Choosing the Transform (SHOULD)
 
 - **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a sub-intent rather than piling facets onto the parent (§15.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§12.2).
+- **Clusters accrete; promote them whole.** The §4.3 line is usually crossed *gradually*: no single EXTEND introduces "a distinct capability," but change by change one noun accumulates a Schema, several Contracts, a View — until a cohesive capability lies flat inside a mixed intent (the noun-cluster smell, §12.2). The next EXTEND that touches the cluster is the moment to **promote** it, and the promotion takes the *existing* facets along with the new ones. Preservation discipline is never a reason to leave a cluster flat: a transform changes addresses, never commitments (§16.3) — moving a node removes nothing.
 - **Re-home when the namespace doesn't fit.** If a node's address namespace does not match where it is used, **move** it to the intent it belongs to rather than referencing it across an unnatural boundary.
 - **Merge duplicates into a canonical home.** When the probable-duplicate diagnostic (§12.2) flags a true duplicate, **merge** to one canonical node (§15.8) — do not let the copies drift.
 - **A UI piece that earns behavior promotes.** A view fragment (tab, panel, widget) that acquires its own data or operations crosses the §4.3 line and is **promoted** into a sub-intent (§15.9) rather than remaining inline `### Display` prose.

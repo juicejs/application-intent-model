@@ -1,6 +1,6 @@
 {
   "name": "application-intent-model",
-  "version": "4.0.0",
-  "description": "Eliminates AI hallucinations and logic drift by grounding code generation in versioned .aim files. AIM v4 treats each .aim file as a projection of a node-and-edge graph: typed edges — [verb](aim:#Facet:Name) — connect Views, Contracts, Flows, Schemas, and Events, and optional bindings map intent to code so review becomes a graph-diff. Three roles: Architect, Developer, Reviewer. Any agent self-bootstraps from the spec: URL declared in AGENTS.md.",
+  "version": "5.0.0",
+  "description": "Eliminates AI hallucinations and logic drift by grounding code generation in versioned .aim files. AIM v5 treats each .aim file as a projection of a node-and-edge graph: typed edges \u2014 [verb](aim:#Facet:Name) \u2014 connect Views, Contracts, Flows, Schemas, and Events, and optional bindings map intent to code so review becomes a graph-diff. Roles: Architect, Developer, Reviewer \u2014 plus an Encoder that reverse-engineers existing systems into intent (\u00a717). Any agent self-bootstraps from the spec: URL declared in AGENTS.md.",
   "contextFileName": "GEMINI.md"
 }

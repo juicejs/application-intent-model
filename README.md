@@ -94,10 +94,10 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 - **[specification.md](./specification.md)** — the authoritative AIM v4 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
-- **[agents/](./agents/)** — Architect, Developer, Reviewer persona files.
+- **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
 - **[brain/](./brain/)** — the shared and per-role operating-brain instructions.
 - **[examples/](./examples/)** — conformance examples: a single-file intent and the multi-file [helpdesk](./examples/helpdesk/) app.
-- **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension: core mandates and manifest exposing the three roles as `@aim-architect` / `@aim-developer` / `@aim-reviewer`.
+- **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension: core mandates and manifest exposing the roles as `@aim-architect` / `@aim-developer` / `@aim-reviewer` / `@aim-encoder`.
 
 ---
 

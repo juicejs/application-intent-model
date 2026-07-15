@@ -52,6 +52,7 @@ UI pieces have **fluid granularity**: a tab/panel/widget is `### Display` prose 
 - **@aim-architect**: Requirements → Intent. Writes `.aim` files and declares the graph (typed edges, optional bindings).
 - **@aim-developer**: Intent → Code/Tests. Builds from the resolved graph, keeps bindings current, and handles code-side repair when the Reviewer flags drift caused by buggy code.
 - **@aim-reviewer**: Code → Drift Report. Diffs the declared graph against the realized code graph (graph-diff when bindings exist); routes each finding to code or intent.
+- **@aim-encoder**: Reality → Intent (§17). The Architect run in reverse: reverse-engineers an existing codebase into an intent model — tree designed first and approved by the human, `provenance: inferred`, bindings for every site read, findings reported, no code changed.
 
 Repair is a verb, not a role. The Developer fixes code; the Architect revises intent. Never silently normalize drift. Distribution (discovery, fetch, publishing) is handled by external tooling, not an agent role.
 
