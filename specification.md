@@ -51,15 +51,23 @@ The intent file is the canonical entrypoint. All other detail attaches to it dir
 | Code linkage | None | Optional `kind: binding`; drift becomes graph-diff |
 | Per-file `version`/`spec` | Contradictory in v3.1 (frontmatter omitted them, but version-inheritance, registry, and diagnostics still required them) | Removed everywhere; version lives only in `AGENTS.md` (and the external catalog) |
 
-### 1.2 Agent Roles
+### 1.2 Roles And Capabilities
 
-Three roles, mapping onto how real teams already work — in software: architect, developer, reviewer; in operations: process designer, operators and automations, audit:
+AIM is operated through three **capabilities**, each defined by what it may write — not by a roster of agents a human must choose between. In software they read as architect, developer, reviewer; in operations, as process designer, operators and automations, audit. They are **operating modes, not a menu**: one agent may hold all three, and a mature tool classifies the human's request and enters the right mode itself rather than asking which role to use.
 
-- **Architect** — **designs the intent graph**: translates a human's narration into intents, their facets, and the typed edges among them. The `.aim` files are the graph's serialization (§2), not the design itself — an Architect who writes facets without edges has not architected, only documented. Owns the model. Authors binding facets when realization is known.
+| Capability | Writes intent (`.aim`) | Writes realization | Certifies match |
+|---|---|---|---|
+| **Architect** | ✓ | — | — |
+| **Realizer** (Developer) | — | ✓ | — |
+| **Reviewer** | — | — | ✓ (writes nothing) |
+
+- **Architect** — **designs the intent graph**: translates a human's narration into intents, their facets, and the typed edges among them. The `.aim` files are the graph's serialization (§2), not the design itself — an Architect who writes facets without edges has not architected, only documented. Owns the model; authors binding facets when realization is known. The Architect works in two **directions**: *forward*, designing intent from requirements, and *reverse*, recovering intent from a system that already exists (**Encoding**, §17). The reverse direction is the same capability with one difference — its output carries `provenance: inferred` (§17.2) and awaits human confirmation, because it is read off reality rather than authored. Direction and provenance are variations of authoring, not a separate role.
 - **Realizer** — makes reality match the model: a development team implementing code and tests, an ops team wiring automations, an agent performing a process. Emits or updates bindings for what it realizes. Fixes the realization when drift is found. (In the software domain this role is conventionally called the **Developer**, and the shipped prompt templates use that name.) A realization is either an **artifact** produced once (code, a configuration) or a **performance** repeated per instance (a process executed by people or agents). In the performed case realization work happens at execution time, so the performer wears this role — an agent executing a process is a Realizer, and the conduct rules below bind it: that is precisely what forbids it from improvising behavior the model does not state.
-- **Reviewer** — diffs the declared graph against the realized graph recovered from reality (code, configuration, execution logs — §10.1) and reports drift.
+- **Reviewer** — diffs the declared graph against the realized graph recovered from reality (code, configuration, execution logs — §10.1) and reports drift, writing nothing.
 
-Roles are workflow guidance, not language constructs — they do not appear in `.aim` source files. A single agent may perform multiple roles, and multiple agents may share one role. See [`PROMPT.md`](./PROMPT.md) and [`agents/`](./agents/) for concrete prompt templates for the software domain.
+**Verification must be independent.** The Reviewer capability MUST run in a context that cannot write what it judges — a cold evaluation with read-only access to the model and the realization. An agent that both produces a realization and certifies it against intent will pass its own work; drift detection is only meaningful when something with no stake in the output re-derives the graph and diffs it. Independence is a property of the *context and its permissions*, not of the model in use: the same agent re-invoked cold and denied write access is a valid Reviewer; that agent continuing in the session that just wrote the code is not.
+
+Roles are workflow guidance, not language constructs — they do not appear in `.aim` source files. A single agent may hold multiple capabilities and multiple agents may share one; the only separation that is normative is Reviewer independence, above. See [`PROMPT.md`](./PROMPT.md) and [`agents/`](./agents/) for concrete prompt templates for the software domain.
 
 Repair is a verb, not a separate role. When the Reviewer flags drift, either the Realizer fixes the realization or the Architect revises the intent. The decision is explicit, not silent.
 
