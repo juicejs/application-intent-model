@@ -5,7 +5,7 @@ kind: intent
 
 # Helpdesk
 
-A small support-ticket system. Requesters open tickets; agents work a shared queue and resolve them. This parent file is the **index** for the intent and the home for everything shared across features: the schemas, the personas, the dashboard views, the external dependencies, and the resolved-ticket notification flow. Each lifecycle action is a sub-intent.
+A small support-ticket system. Requesters open tickets; agents work a shared queue and resolve them. This parent file is the **index** for the intent and the home for everything shared across features: the schemas, the personas, the dashboard views, the external dependencies, and the resolved-ticket notification flow. Each lifecycle action is a child intent.
 
 ## Summary
 
@@ -18,7 +18,7 @@ Requesters submit support tickets and track their status. Agents see the whole q
 - Requesters see only their own tickets; agents see the whole queue.
 - Resolving a ticket notifies the requester.
 
-## Subintents
+## Children
 
 - [submit](./submit/helpdesk.tickets.submit.aim) — a requester opens a ticket
 - [resolve](./resolve/helpdesk.tickets.resolve.aim) — an agent resolves a ticket

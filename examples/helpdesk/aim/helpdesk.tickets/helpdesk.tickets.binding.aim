@@ -5,7 +5,7 @@ kind: binding
 
 # Helpdesk Bindings
 
-Maps helpdesk intent nodes to their realization in code, so the Reviewer can diff the declared graph against the implementation (graph-diff). Each `## Bind: <FacetType>:<Name>` heading is the bound node's in-intent address (§2.2, §3.6); sub-intents carry their own co-located binding files (§4.2). Bindings are optional and raise the intent to Level 3; a project with none is still valid.
+Maps helpdesk intent nodes to their realization in code, so the Reviewer can diff the declared graph against the implementation (graph-diff). Each `## Bind: <FacetType>:<Name>` heading is the bound node's in-intent address (§2.2, §3.6); child intents carry their own co-located binding files (§4.2). Bindings are optional and raise the intent to Level 3; a project with none is still valid.
 
 ## Bind: Schema:Ticket
 

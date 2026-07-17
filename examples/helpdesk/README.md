@@ -1,6 +1,6 @@
-# Example: Helpdesk (multi-file, full v4 showcase)
+# Example: Helpdesk (multi-file, full v5 showcase)
 
-A small support-ticket app that exercises **every** AIM v4 feature in one connected graph. It is intentionally split across files, because the point of v4 is that the relation graph *spans files* — and you can still traverse, check, and diff it.
+A small support-ticket app that exercises **every** AIM v5 feature in one connected graph. It is intentionally split across files, because the point of the graph model is that the relation graph *spans files* — and you can still traverse, check, and diff it.
 
 > The single-file [`nemicko.demo.todo.aim`](../nemicko.demo.todo.aim) shows the basics in one file. This example shows the graph at scale.
 
@@ -10,13 +10,13 @@ Requesters open support tickets from a form and track them. Agents work a shared
 
 ## What it showcases
 
-| v4 feature | Where |
+| Feature | Where |
 |---|---|
 | All seven facets | `Schema` ×2, `Contract` ×3, `Flow` ×4, `Persona` ×2, `View` ×3, `Event` ×2, `Trigger` ×1 |
-| Sub-components + parent-as-index | `submit/` and `resolve/` under `helpdesk.tickets`; parent holds shared schema, personas, views |
+| Child intents + parent-as-index | `submit/` and `resolve/` under `helpdesk.tickets`; parent holds shared schema, personas, views |
 | All ten typed edges | `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs` |
 | Non-actor entry point | `Trigger: StaleSweep` (cron) `triggers` `Flow: EscalateStale` — a scheduled sweep with no Persona or View |
-| Upward resolution | sub-components write `[mutates](aim:#Schema:Ticket)` — `Ticket` resolves up to the parent |
+| Upward resolution | child intents write `[mutates](aim:#Schema:Ticket)` — `Ticket` resolves up to the parent |
 | Cross-component edges | parent → child (`...resolve#Contract:ResolveTicket`) and → external (`comms#Contract:SendEmail`) |
 | Dependencies + mapping | `Imports`/`Requires` in the parent; `helpdesk.tickets.mapping.aim` binds the `Users` capability |
 | Intent↔code bindings | `helpdesk.tickets.binding.aim` maps nodes to `file#symbol`, `route:`, `table:`, `topic:` |
@@ -96,7 +96,7 @@ graph LR
 
 A standalone vector version of the same graph (facet columns, left-to-right) lives in [`graph.svg`](./graph.svg):
 
-![AIM v4 helpdesk relation graph](./graph.svg)
+![AIM helpdesk relation graph](./graph.svg)
 
 ## Reading the graph
 

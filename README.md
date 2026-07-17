@@ -12,16 +12,16 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 
 - **Ground agents in explicit, versioned intent** instead of loose chat context that evaporates between sessions.
 - **A reviewable contract between intent and reality.** `.aim` files are normally agent-authored from a human's narration, but a small model is something a human can read, correct, and diff — and a Reviewer can check reality against (code, configurations, execution logs) — far more cheaply than inspecting the realization itself.
-- **A relation graph, not just a tree.** v4 treats every `.aim` file as a projection of a node-and-edge graph: a View *exposes* a Contract, a Flow *mutates* a Schema and *emits* an Event. That graph is derived, traversable, and checkable.
+- **A relation graph, not just a tree.** AIM treats every `.aim` file as a projection of a node-and-edge graph: a View *exposes* a Contract, a Flow *mutates* a Schema and *emits* an Event. That graph is derived, traversable, and checkable.
 - **Drift as graph-diff.** With optional intent↔realization bindings, review becomes a diff between the declared graph and the realized graph — recovered from code for software, from logs and configurations for processes.
 
 AIM pays off when reading the model is meaningfully easier than inspecting the realization. For trivially small or throwaway work, acting directly is the right call.
 
 ---
 
-## What's new in v4
+## The graph foundation (the v4 break)
 
-v4 is a breaking change from v3.1. The three shifts:
+v4 was the breaking change from v3.1 that founded the language on a graph; v5 generalizes it beyond software and finishes the naming (spec §13.3). The three shifts:
 
 1. **Graph-founded model.** The `.aim` Markdown file is a *projection* of an underlying node-and-edge graph. Every heading is an addressable node.
 2. **Typed edge taxonomy.** One CommonMark-native token — `[verb](aim:<address>)` — replaces v3.1's inconsistent prose cross-references. Dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
@@ -64,7 +64,7 @@ The `[exposes](aim:#Contract:CreateTodo)` token is a typed edge: `View → expos
 
 Two worked examples ship with the spec:
 - [examples/nemicko.demo.todo.aim](./examples/nemicko.demo.todo.aim) — a complete intent in a single file.
-- [examples/helpdesk/](./examples/helpdesk/) — a multi-file app (sub-intents, a mapping, and a binding file) whose graph spans files, exercising **every** facet and the closed verb set end to end. Start with its [README](./examples/helpdesk/README.md) for the rendered graph.
+- [examples/helpdesk/](./examples/helpdesk/) — a multi-file app (an intent tree, a mapping, and a binding file) whose graph spans files, exercising **every** facet and the closed verb set end to end. Start with its [README](./examples/helpdesk/README.md) for the rendered graph.
 
 ---
 
@@ -91,7 +91,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v4 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v5 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.

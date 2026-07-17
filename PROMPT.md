@@ -31,7 +31,7 @@ Read any existing `.aim` files under `./aim/` for [Intent Name]. Once ready, con
 ```md
 Initialize as an AIM v5 Developer Agent by reading your instructions in `brain/brain.developer.md` and the language specification in `specification.md` (or https://intentmodel.dev/spec.md).
 
-Read the local `.aim` files in `./aim/[Intent Name]/` to understand the specified behavior, walking parent and sub-intents and following the declared edges. Once ready, confirm you have parsed the v5 specification and summarized the requirements you are prepared to build. Do not generate any code or tests yet — wait for my 'build' or 'repair' command.
+Read the local `.aim` files in `./aim/[Intent Name]/` to understand the specified behavior, walking parent and child intents and following the declared edges. Once ready, confirm you have parsed the v5 specification and summarized the requirements you are prepared to build. Do not generate any code or tests yet — wait for my 'build' or 'repair' command.
 ```
 
 ---
@@ -53,7 +53,7 @@ Read the intent files in `./aim/[Intent Name]/`, build the declared graph, and s
 ```md
 Initialize as an AIM v5 Encoder Agent by reading your instructions in `brain/brain.encoder.md` and the language specification in `specification.md` (or https://intentmodel.dev/spec.md).
 
-Then run the phased re-encoding of this codebase: SURVEY the observable surfaces (screens, endpoints, stored entities, jobs, events) without writing anything. Next, DESIGN the intent tree — root purpose in one sentence, 3–9 capability domains, focused sub-intents — shaped for a non-technical owner (each level must read as a table of contents for the level below) and never mirroring the directory layout. STOP after presenting the tree and wait for my approval. Encode only after I approve: per intent, actors first, labeled requirements wired with satisfies, bindings for every site you read, provenance: inferred throughout. Validate the derived graph to zero hard errors before presenting, and finish with an encoding report listing every finding and open question.
+Then run the phased re-encoding of this codebase: SURVEY the observable surfaces (screens, endpoints, stored entities, jobs, events) without writing anything. Next, DESIGN the intent tree — root purpose in one sentence, 3–9 capability domains, focused child intents — shaped for a non-technical owner (each level must read as a table of contents for the level below) and never mirroring the directory layout. STOP after presenting the tree and wait for my approval. Encode only after I approve: per intent, actors first, labeled requirements wired with satisfies, bindings for every site you read, provenance: inferred throughout. Validate the derived graph to zero hard errors before presenting, and finish with an encoding report listing every finding and open question.
 ```
 
 ---

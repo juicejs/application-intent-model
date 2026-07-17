@@ -4,7 +4,7 @@ This repository is the **AIM language specification** and its reference material
 
 ## What lives here
 
-- `specification.md` — the authoritative AIM v4 language spec
+- `specification.md` — the authoritative AIM v5 language spec
 - `examples/` — conformance example `.aim` files
 - `agents/`, `brain/`, `PROMPT.md` — role personas and prompt templates
 - `AGENTS.md` — the reference project-bootstrap file

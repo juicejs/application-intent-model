@@ -2,39 +2,41 @@
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It captures the **intent** of a system — an application's behavior, a business process, an organization's commitments — in a form readable enough for the people who own it and structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
-AIM v4 is a **breaking change** from v3.1. v3.1 made AIM Markdown-native and self-bootstrapping; it succeeded at making intent *readable*, but it left AIM's highest-value job — the **linking** between the things a system is made of — almost entirely informal. Real applications are not trees; they are **graphs**. A View exposes an Action that invokes a Contract that reads or mutates a Schema and emits an Event that a Persona can reach. v3.1 expressed those relations in inconsistent prose ("Invoked by Contract: X", "TRIGGER: Contract.Y", "CALL Z"), demoted the traceability chain to "a useful target, not a requirement," and offered no way to traverse, check, or diff the relation graph.
+AIM v4 was a **breaking change** from v3.1. v3.1 made AIM Markdown-native and self-bootstrapping; it succeeded at making intent *readable*, but it left AIM's highest-value job — the **linking** between the things a system is made of — almost entirely informal. Real applications are not trees; they are **graphs**. A View exposes an Action that invokes a Contract that reads or mutates a Schema and emits an Event that a Persona can reach. v3.1 expressed those relations in inconsistent prose ("Invoked by Contract: X", "TRIGGER: Contract.Y", "CALL Z"), demoted the traceability chain to "a useful target, not a requirement," and offered no way to traverse, check, or diff the relation graph.
 
-The three structural shifts that drive v4:
+The three structural shifts of the v4 break — still the spine of the language:
 
 1. **Graph-founded model.** The `.aim` Markdown file is understood as a *projection* of an underlying node-and-edge graph. Every heading is an addressable node; every cross-reference is a typed, directed edge. The graph is *derived* by collecting edges across files — it is never authored as a separate artifact, so `.aim` files remain the sole authority.
 2. **Typed edge taxonomy.** A single CommonMark-native edge token replaces the prose. Each edge carries a verb from a closed set and points at a canonical node address. This makes the relation graph traversable and checkable: dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
 3. **Intent↔realization binding layer.** Intent nodes may bind to their realization sites — in code (`file#symbol`, `route:…`, `table:…`), in operations (`system:…`, `agent:…`, `workflow:…`). Drift detection then becomes a **graph-diff** between the declared intent graph and the realized graph recovered from reality, yielding precise, owner-routed findings.
 
+v5 keeps that foundation intact and generalizes it: the unit is named the **intent**, the tree reads parent/children (§2.1), and nothing in the language is specific to software (§13.3, §18).
+
 The design bar for all three is **LLM-parsability** — consistent conventions an LLM follows and traverses reliably, not a rigid grammar requiring a custom parser. AIM remains valid CommonMark that renders on GitHub with no special tooling.
 
 AIM is the authoritative shared artifact between humans and agents. Realization, review, and repair all run against AIM. When reality and intent disagree, the mismatch is resolved explicitly — either by fixing the realization or by revising intent.
 
-**Where AIM is going, and why the drift machinery exists.** AIM's destination is intent as source: the model is what humans maintain, and the realization — code, automations, agent behavior — is synthesized or performed from it, the same inversion every prior abstraction jump made, from assembly to compilers. Today that is not yet safe: synthesis is stochastic, humans still change reality directly, and most systems predate their model (§17). The binding layer, graph-diff, and repair loop (§10, §12) are the trust-building apparatus for exactly this transitional period — every clean report is evidence that intent → reality is reliable for that intent. The success criterion of that machinery is to make itself progressively unnecessary: for a intent that is fully confirmed, Level 3, and repeatedly clean, regeneration replaces repair, and its binding file quietly changes meaning from review tool to build manifest. Readers and agents should treat this as the interpretive key for the rest of the document: the behavioral facets and the edge graph are the destination; the drift machinery is the road.
+**Where AIM is going, and why the drift machinery exists.** AIM's destination is intent as source: the model is what humans maintain, and the realization — code, automations, agent behavior — is synthesized or performed from it, the same inversion every prior abstraction jump made, from assembly to compilers. Today that is not yet safe: synthesis is stochastic, humans still change reality directly, and most systems predate their model (§17). The binding layer, graph-diff, and repair loop (§10, §12) are the trust-building apparatus for exactly this transitional period — every clean report is evidence that intent → reality is reliable for that intent. The success criterion of that machinery is to make itself progressively unnecessary: for an intent that is fully confirmed, Level 3, and repeatedly clean, regeneration replaces repair, and its binding file quietly changes meaning from review tool to build manifest. Readers and agents should treat this as the interpretive key for the rest of the document: the behavioral facets and the edge graph are the destination; the drift machinery is the road.
 
-**Who writes AIM, and when it is worth it.** In practice `.aim` files are authored by an agent (the Architect role, §1.2) from a human's narration — not hand-written token by token. The typed structure of v4 therefore costs the author nothing and yields a more precise, checkable artifact. This answers the obvious objection — *if an agent writes the model and an agent produces the realization, why not act directly?* The `.aim` file is the **durable, human-reviewable, machine-checkable contract** between intent and reality: a small model is something a human can read, correct, and diff — and a Reviewer can check reality against — far more cheaply than inspecting the realization itself, and it persists across sessions where a chat prompt does not. The corollary is a boundary worth stating plainly: AIM pays off when reading the model is meaningfully easier than inspecting the realization; for trivially small or throwaway work, acting directly is the right call.
+**Who writes AIM, and when it is worth it.** In practice `.aim` files are authored by an agent (the Architect role, §1.2) from a human's narration — not hand-written token by token. The typed structure therefore costs the author nothing and yields a more precise, checkable artifact. This answers the obvious objection — *if an agent writes the model and an agent produces the realization, why not act directly?* The `.aim` file is the **durable, human-reviewable, machine-checkable contract** between intent and reality: a small model is something a human can read, correct, and diff — and a Reviewer can check reality against — far more cheaply than inspecting the realization itself, and it persists across sessions where a chat prompt does not. The corollary is a boundary worth stating plainly: AIM pays off when reading the model is meaningfully easier than inspecting the realization; for trivially small or throwaway work, acting directly is the right call.
 
 ---
 
 ## 1. Core Model
 
-A intent is identified by a dotted namespace such as `juice.tasks` or `game.snake`. Sub-intents extend the namespace: `juice.tasks.create_task` is a sub-intent of `juice.tasks`.
+An intent is identified by a dotted namespace such as `juice.tasks` or `game.snake`. Child intents extend the namespace: `juice.tasks.create_task` is a child of `juice.tasks`.
 
 Each intent has:
 
 - one required **intent file** (a `.aim` file with `kind: intent`)
 - zero or more optional **facets**: `schema`, `flow`, `contract`, `persona`, `view`, `event`
-- zero or more optional **sub-intents** (each is a intent in its own right)
+- zero or more optional **child intents** (each is an intent in its own right)
 - zero or more optional **mapping files** (`kind: mapping`) — capability-to-provider bindings
 - zero or more optional **binding files** (`kind: binding`) — intent-to-realization bindings
 
-The intent file is the canonical entrypoint. All other detail attaches to it directly (embedded), indirectly (sibling facet files), or through sub-intents.
+The intent file is the canonical entrypoint. All other detail attaches to it directly (embedded), indirectly (sibling facet files), or through child intents.
 
-### 1.1 What Changed From v3.1
+### 1.1 What Changed From v3.1 (The v4 Break)
 
 | Concern | v3.1 | v4 |
 |---|---|---|
@@ -64,7 +66,7 @@ Normative behavior across all roles:
 - Assumptions are surfaced for review or converted into explicit intent updates by the Architect.
 - When reality and intent disagree, the mismatch is resolved — the Realizer fixes the realization if it is wrong, the Architect revises intent if the model is outdated.
 
-**Architect: validate before present.** Before presenting a proposal to the user or committing an EXTEND or ADD (§16.1), the Architect MUST derive the graph (§2.4) over the *proposed* state and **repair every hard error (§12.1) it can resolve autonomously** — a dangling edge left by a rename, an out-of-sync `## Subintents` index, a path/header mismatch, an illegal `(verb, from, to)` triple. Only diagnostics that genuinely need a human decision are surfaced: a confirmed-duplicate `merge` (§16.3 invariant 6), an unresolved canonical-home choice (§15.8), or an ambiguous binding (§12.3). A proposal presented with unrepaired hard errors is **non-conforming Architect behavior** — the graph must be well-formed before a human is asked to review it.
+**Architect: validate before present.** Before presenting a proposal to the user or committing an EXTEND or ADD (§16.1), the Architect MUST derive the graph (§2.4) over the *proposed* state and **repair every hard error (§12.1) it can resolve autonomously** — a dangling edge left by a rename, an out-of-sync `## Children` index, a path/header mismatch, an illegal `(verb, from, to)` triple. Only diagnostics that genuinely need a human decision are surfaced: a confirmed-duplicate `merge` (§16.3 invariant 6), an unresolved canonical-home choice (§15.8), or an ambiguous binding (§12.3). A proposal presented with unrepaired hard errors is **non-conforming Architect behavior** — the graph must be well-formed before a human is asked to review it.
 
 ### 1.3 Project Authority Model
 
@@ -95,13 +97,13 @@ The whole point of AIM is to replace `.md` sprawl with a structured behavioral a
 
 ## 2. Graph Model
 
-v4 reinterprets the v3.1 file surface as the projection of a graph. No new file format and no new parser tier: every node already has a heading, and every edge is just a typed cross-reference. This section defines what a node is and how it is addressed; §8 defines edges.
+v4 reinterpreted the v3.1 file surface as the projection of a graph. No new file format and no new parser tier: every node already has a heading, and every edge is just a typed cross-reference. This section defines what a node is and how it is addressed; §8 defines edges.
 
 **Why a graph, and what kind.** An application's intent is not a document; it is a set of commitments and the relations among them. A facet is a **unit of intent**; a typed edge is **relational intent** — `[exposes](aim:#Contract:CreateTodo)` is itself a normative statement ("this surface shall offer this operation to users"), carrying the same authority as any requirement bullet. The graph is therefore **normative, not descriptive**. A code-analysis graph is derived from source and cannot disagree with it — it has no concept of *wrong*, only of structure. The intent graph is *authored*, so it can be wrong, unrealized, or drifted-from — and that capacity for disagreement is the point: drift (§10, §12) is only a meaningful concept because the declared graph is authoritative over what the system *should* do, independent of what the code *does*.
 
-**Why prose could not hold it.** Prose and headings are trees; application behavior is a graph. Serializing a graph into a tree forces every relation that crosses the hierarchy to be stated twice — once at each end ("Invoked by Contract: X" on the flow, "CALL X" in the steps) — and duplicated statements inevitably drift apart. v3.1's "three inconsistent expressions" problem (§8.3) was the structural symptom, not sloppy authoring. v4 re-normalizes: every relation is declared once, at the acting end, and inverse views are derived, never authored. The resulting division of labor is exact — **prose carries semantics** (what a commitment means, and why), **the graph carries structure** (how commitments compose into a system). Each holds precisely what the other cannot.
+**Why prose could not hold it.** Prose and headings are trees; application behavior is a graph. Serializing a graph into a tree forces every relation that crosses the hierarchy to be stated twice — once at each end ("Invoked by Contract: X" on the flow, "CALL X" in the steps) — and duplicated statements inevitably drift apart. v3.1's "three inconsistent expressions" problem (§8.3) was the structural symptom, not sloppy authoring. v4 re-normalized this: every relation is declared once, at the acting end, and inverse views are derived, never authored. The resulting division of labor is exact — **prose carries semantics** (what a commitment means, and why), **the graph carries structure** (how commitments compose into a system). Each holds precisely what the other cannot.
 
-**Who reads which projection.** The model carries two structures for two audiences, superimposed in the same files. The **tree** — namespaces, `## Subintents`, headings — is the *human* projection: hierarchy gives progressive disclosure (a handful of children per level, drill down), and the parent–child edge carries explanation — descending answers *how*, ascending answers *why*. Humans navigate, review, and understand the model through the tree. The **graph** — the typed edges — is the *machine* substrate: complete, queryable, and never meant to be read whole. Humans consume the graph only as **answers**: an impact set, a satisfies-coverage report, a calendar of every Trigger, one role's operations. Tools SHOULD surface the graph as such views and queries, and SHOULD NOT require a human to comprehend the global graph — no human can, and the design never asks them to. A `.aim` file is both projections at once: its headings are the tree, its edge tokens are the graph, and each reader takes their half (§18). And the two structures are independent by design: the tree may nest intents to whatever depth they earn (§5.5 recommends staying shallow), while the typed edges form **one global graph** that crosses tree levels and intent boundaries freely (§8.1) — tree position never limits what an edge may connect; it only decides who owns the node.
+**Who reads which projection.** The model carries two structures for two audiences, superimposed in the same files. The **tree** — namespaces, `## Children`, headings — is the *human* projection: hierarchy gives progressive disclosure (a handful of children per level, drill down), and the parent–child edge carries explanation — descending answers *how*, ascending answers *why*. Humans navigate, review, and understand the model through the tree. The **graph** — the typed edges — is the *machine* substrate: complete, queryable, and never meant to be read whole. Humans consume the graph only as **answers**: an impact set, a satisfies-coverage report, a calendar of every Trigger, one role's operations. Tools SHOULD surface the graph as such views and queries, and SHOULD NOT require a human to comprehend the global graph — no human can, and the design never asks them to. A `.aim` file is both projections at once: its headings are the tree, its edge tokens are the graph, and each reader takes their half (§18). And the two structures are independent by design: the tree may nest intents to whatever depth they earn (§5.5 — every level re-earns the shape rules), while the typed edges form **one global graph** that crosses tree levels and intent boundaries freely (§8.1) — tree position never limits what an edge may connect; it only decides who owns the node.
 
 The split rests on a hard asymmetry: a human can hold a tree in mind; no one holds a graph. That makes the tree not a convenience view but the model's **entire human interface** — and its *shape* a first-class quality property. Every intent SHOULD read as a short table of contents for the level below; an intent that degenerates into a flat bag of technical nodes has failed its audience even while the graph beneath it validates perfectly. The noun-cluster diagnostic (§12.2) and the `promote` transform (§16.2) exist to restore the ladder.
 
@@ -116,6 +118,8 @@ A node is any **addressable heading** in the resolved source. There are three ra
 | Facet sub-block | `### <Sub>` and its list items | `block` (addressable, not separately typed) | `### Ensures` item `[2]` |
 
 Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** as sections — a section heading is never itself the endpoint of a typed edge. Only `intent` and the facet node-types participate in the edge graph, with two defined sub-block exceptions: a **schema attribute** participates solely as an endpoint of a `refs` edge (§3.7, §8.2), and a **`## Requirements` list item** participates solely as the target of a `satisfies` edge (§8.2). Both are addressable sub-blocks, not separately typed nodes; no other sub-block is ever an edge endpoint, and `## Requirements` as a *section* stays edge-inert (only its individual items are `satisfies` targets). The node-type is read directly off the facet-heading keyword; there is no inference.
+
+Intents form a **tree**: hierarchy is a *property*, not a kind. There is exactly one intent node-type — an intent with a `parent:` (§3.2, §5) is the same kind of node as the root, and a node's tree position never changes what it is: the tree is a projection (§2.4). The relational vocabulary this spec uses for tree position is **parent**, **child** (plural **children**), **root intent**, **leaf**, and **siblings**.
 
 ### 2.2 Node Addresses
 
@@ -168,7 +172,7 @@ The result lives only in tool/LLM memory or a build artifact. The `.aim` files r
 
 ### 3.1 Extension
 
-All AIM v4 source files use the `.aim` extension. The extension is a brand and discipline marker: a file named `*.aim` is an authoritative AIM artifact, not a generic note. (Legacy v2.2 sources used `.intent`. v3.1 and v4 both use `.aim`; the v3.1→v4 break does **not** change the extension.)
+All AIM source files use the `.aim` extension. The extension is a brand and discipline marker: a file named `*.aim` is an authoritative AIM artifact, not a generic note. (Legacy v2.2 sources used `.intent`. Every version since v3.1 uses `.aim`; neither the v3.1→v4 nor the v4→v5 break changed the extension.)
 
 Files are valid CommonMark Markdown with YAML frontmatter. Any Markdown renderer will display them correctly.
 
@@ -191,7 +195,7 @@ Required fields:
 
 Optional fields:
 
-- `parent` — the parent intent namespace, present on sub-intents
+- `parent` — the parent intent namespace, present on child intents
 - `display` — a human-readable display name (overrides the H1 heading for tooling)
 - `tags` — array of free-form tags for discovery
 - `provenance` — `inferred` on a file produced by re-encoding existing code and not yet human-accepted (§17). Absent (the default) or `confirmed` means authored/accepted intent. This is the only field that qualifies a file's authority.
@@ -201,7 +205,7 @@ Optional fields:
 
 **Frontmatter is an open set with reserved keys.** Keys this spec does not define are permitted: conforming tools MUST ignore keys they do not recognize (an informational diagnostic at most, §12.2), and project-specific keys MUST NOT redefine the spec-defined keys. Two consistency rules bind the defined keys: `provenance: inferred` combined with `status: approved` or a present `approved_by` is a contradiction (informational diagnostic, §12.2) — accepting an inferred file flips `provenance` and records `approved_by` in the same act — and `provenance` remains the only field that qualifies a file's *authority* (§17.3); `owner`, `status`, and `approved_by` are accountability and lifecycle metadata and never change how tools treat the file's content. The boundary all these fields sit on — what belongs to the system versus what belongs to the work on the system — is defined in §1.3.
 
-The frontmatter carries **no** per-file `version:` or `spec:` field. The project-wide AIM version and spec URL live in **`AGENTS.md` at the project root** (see §3.3) — a single source of truth that eliminates redundancy and drift between files. There is no per-file version anywhere in v4.
+The frontmatter carries **no** per-file `version:` or `spec:` field. The project-wide AIM version and spec URL live in **`AGENTS.md` at the project root** (see §3.3) — a single source of truth that eliminates redundancy and drift between files. There is no per-file version anywhere in the language.
 
 ### 3.3 `AGENTS.md` — Project Bootstrap
 
@@ -266,16 +270,16 @@ Many agents operate without network access (sandboxed environments, CI runners, 
 
 **Reserved names under `/aim/`:**
 
-The `aim/specs/` directory name is reserved for cached specifications (`.md` files) and must not be used as a intent namespace. Mapping and binding facets are **not** separate top-level directories — they are `kind: mapping` / `kind: binding` files that live inside their intent's own directory (§4.2, §9.3, §10.2).
+The `aim/specs/` directory name is reserved for cached specifications (`.md` files) and must not be used as an intent namespace. Mapping and binding facets are **not** separate top-level directories — they are `kind: mapping` / `kind: binding` files that live inside their intent's own directory (§4.2, §9.3, §10.2).
 
-Any other directory under `/aim/` that contains a `<name>.aim` file is a intent.
+Any other directory under `/aim/` that contains a `<name>.aim` file is an intent.
 
 ### 3.5 Body (Markdown)
 
 The body of the file is Markdown. Structure is conveyed by heading levels:
 
 - **H1** — the intent's display name (exactly one per file)
-- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Subintents`, `## Dependencies`) and facet blocks (`## Schema: Task`, `## Contract: CreateTask`, etc.)
+- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Children`, `## Dependencies`) and facet blocks (`## Schema: Task`, `## Contract: CreateTask`, etc.)
 - **H3** — facet sub-blocks (`### Attributes`, `### Input`, `### Ensures`, `### Steps`, etc.)
 - **Bulleted lists** — for requirements, tests, steps, attributes, and any enumeration
 - **Fenced code blocks** — for attribute definitions, type expressions, and code samples
@@ -306,9 +310,11 @@ Top-level section headings use the bare form:
 ## Summary
 ## Requirements
 ## Tests
-## Subintents
+## Children
 ## Dependencies
 ```
+
+Tooling MUST accept `## Subintents` and `## Subcomponents` — the headings earlier versions wrote — as deprecated aliases for `## Children`.
 
 The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.8). This keeps node boundaries deterministic.
 
@@ -368,14 +374,14 @@ The edge token is a standard CommonMark inline link whose destination uses the `
 
 ## 4. Project Layout
 
-### 4.1 Sub-Intent-First Default
+### 4.1 Decomposition-First Default
 
-AIM decomposes real applications into focused sub-intents. Each sub-intent is a real intent with its own intent file, its own namespace, and its own facets. The parent intent serves as an index plus a home for cross-cutting requirements and shared facets.
+AIM decomposes real applications into focused child intents. Each child is a real intent with its own intent file, its own namespace, and its own facets. The parent intent serves as an index plus a home for cross-cutting requirements and shared facets.
 
 Reasons this is the default:
 
 - LLMs reason better over small focused files than large ones
-- Multiple agents can work on different sub-intents in parallel without merge conflicts
+- Multiple agents can work on different children in parallel without merge conflicts
 - Diffs are meaningful when each file has a single concern
 - Synthesis maps cleanly to small focused code modules
 
@@ -404,13 +410,13 @@ Rules:
 - Each intent lives in a directory named after its namespace.
 - The intent file filename matches `<intent>.aim`.
 - Sidecar filenames match `<intent>.<kind>.aim` — facet files (schema, contract, …) and the mapping/binding files alike, all co-located with their intent.
-- Sub-intents live in nested directories under the parent.
-- Mapping and binding facets belong to the sub-intent they realize: a facet for `juice.tasks.create_task` lives in the `create_task/` directory, not the parent's.
+- Child intents live in nested directories under the parent.
+- Mapping and binding facets belong to the child they realize: a facet for `juice.tasks.create_task` lives in the `create_task/` directory, not the parent's.
 - Generic filenames (`aim.aim`, `schema.aim`, `binding.aim`) are invalid.
 
 ### 4.3 When To Collapse Into A Single File
 
-A intent should stay in a single `.aim` file (no sub-intents, facets embedded inline) only when **all** of the following hold:
+An intent should stay in a single `.aim` file (no children, facets embedded inline) only when **all** of the following hold:
 
 - Total content fits comfortably in a single screen of reading.
 - There is one clear behavior, not a set of distinct features.
@@ -428,11 +434,11 @@ A working project is **single-version**: its `/aim/` tree conforms wholly to one
 
 ---
 
-## 5. Sub-Intents
+## 5. The Intent Tree
 
 ### 5.1 Definition
 
-A sub-intent is a intent whose namespace extends a parent intent's namespace by exactly one segment:
+A child intent is an intent whose namespace extends its parent's namespace by exactly one segment:
 
 - Parent: `juice.tasks`
 - Child:  `juice.tasks.create_task`
@@ -447,14 +453,18 @@ parent: juice.tasks
 ---
 ```
 
-A sub-intent is a real intent: it has its own intent file, its own facets, and is independently addressable. The `parent:` relation is the graph's `extends` edge.
+A child is a real intent: it has its own intent file, its own facets, and is independently addressable. The `parent:` relation is the graph's `extends` edge.
+
+**The constraint is on the name, never the count.** "Exactly one segment" defines the shape of a single parent→child *edge* — it does not limit fan-out or depth. A parent has as many children as its capabilities demand (3–9 per level is the healthy band, §5.5), and a child nests further the moment its own behaviors earn children of their own (§15.4). One segment per edge; any number of edges.
+
+Why one segment: it keeps the namespace an honest tree coordinate. The parent chain and the namespace walk are the same walk (§5.4, §11.1); no level can exist without its own intent file and Summary; and discovery (§5.3) stays mechanical. A grouping that wants to skip a level is either a real intermediate intent or a compound leaf name (`admin_reports`) — never an unnamed level.
 
 ### 5.2 Parent As Index
 
 The parent intent's intent file serves two purposes:
 
-1. **Index of sub-intents** — either auto-discovered from sibling directories or explicitly listed.
-2. **Home for cross-cutting concerns** — shared requirements, shared schemas, shared personas, shared events that apply across all sub-intents.
+1. **Index of children** — either auto-discovered from sibling directories or explicitly listed.
+2. **Home for cross-cutting concerns** — shared requirements, shared schemas, shared personas, shared events that apply across all children.
 
 Example parent intent:
 
@@ -470,7 +480,7 @@ A task management subsystem. Users create, assign, and complete tasks tied to pr
 
 ## Summary
 
-The tasks subsystem owns the full task lifecycle: creation, assignment, state transitions, and archival. All sub-intents share the `Task` schema and emit events on the `tasks.*` channel.
+The tasks subsystem owns the full task lifecycle: creation, assignment, state transitions, and archival. All child intents share the `Task` schema and emit events on the `tasks.*` channel.
 
 ## Requirements
 
@@ -478,7 +488,7 @@ The tasks subsystem owns the full task lifecycle: creation, assignment, state tr
 - State transitions are auditable.
 - Soft-delete is preferred over hard-delete.
 
-## Subintents
+## Children
 
 - [create_task](./create_task/juice.tasks.create_task.aim) — create a new task
 - [assign_task](./assign_task/juice.tasks.assign_task.aim) — assign a task to a user
@@ -488,7 +498,7 @@ The tasks subsystem owns the full task lifecycle: creation, assignment, state tr
 
 ### Summary
 
-The shared task record used by all sub-intents.
+The shared task record used by all children.
 
 ### Attributes
 
@@ -503,27 +513,29 @@ updatedAt: datetime required
 ```
 ```
 
-### 5.3 Sub-Intent Discovery
+### 5.3 Child Discovery
 
-By default, sub-intents are **auto-discovered**: any sibling directory containing a `<namespace>.aim` file with a matching `parent:` field is treated as a sub-intent of the parent.
+By default, children are **auto-discovered**: any sibling directory containing a `<namespace>.aim` file with a matching `parent:` field is treated as a child of the parent.
 
-The parent may override discovery with an explicit `## Subintents` block. When the explicit list is present:
+The parent may override discovery with an explicit `## Children` block. When the explicit list is present:
 
-- listed sub-intents must exist on disk
-- discovered sub-intents not in the list emit a hard error (ambiguous authority)
-- the explicit list is authoritative for the order in which sub-intents are presented to agents and tooling
+- listed children must exist on disk
+- discovered children not in the list emit a hard error (ambiguous authority)
+- the explicit list is authoritative for the order in which children are presented to agents and tooling
 
 ### 5.4 Upward Facet Resolution
 
-A sub-intent may reference facets defined in the parent without qualification. The complete precedence rules are defined once in §11.1 — sub-intents add one detail: the **parent chain** step walks the namespace upward (parent → grandparent → root) until a match is found or the chain ends.
+A child intent may reference facets defined in the parent without qualification. The complete precedence rules are defined once in §11.1 — children add one detail: the **parent chain** step walks the namespace upward (parent → grandparent → root) until a match is found or the chain ends.
 
-Tools emit an informational diagnostic when a sub-intent defines a facet that shadows one already defined in a parent. This is usually a sign that either the shared definition should move up, or the sub-intent name should be more specific.
+Tools emit an informational diagnostic when a child defines a facet that shadows one already defined in a parent. This is usually a sign that either the shared definition should move up, or the child's name should be more specific.
 
-### 5.5 Nesting Depth
+### 5.5 Tree Shape
 
-Sub-intents may nest, but the spec recommends a maximum effective depth of **three levels** (e.g. `app.module.feature.sub_feature`). Beyond this, comprehension drops and traceability becomes hard to follow. Tools should warn when nesting exceeds three levels.
+**Breadth:** 3–9 children per level is the healthy band. A parent's children should read as a short table of contents for the level below — that is the tree's job as the human projection (§2). One child is a smell (§15.2 — no single-child parents); a dozen or more means an intermediate level wants to exist or siblings want merging.
 
-There is no version inheritance in v4: `.aim` files carry no version, so a sub-intent is automatically consistent with its parent. (This removes the v3.1 "version inheritance" rule entirely.)
+**Depth:** depth is **earned level by level, never capped**. Every level must itself hold the breadth band and read as a table of contents for the level below; depth follows from scale alone — a focused tool may need one level, a whole-organization model (§18) many. The stopping rule is content, never a count: decomposition stops where an intent holds **one clear behavior** (§4.3) — while an intent's Summary still says "and", it needs children. Level count is never a reason to stop, and never a reason to split. What tools flag is not absolute depth but *accidental* depth: a chain of single-child levels (§15.2), or a level outside the breadth band. A dotted address grown unreadable is usually breadth debt surfacing as depth, not a depth problem itself.
+
+There is no version inheritance: `.aim` files carry no version, so a child is automatically consistent with its parent. (v4 removed the v3.1 "version inheritance" rule entirely.)
 
 ---
 
@@ -560,7 +572,7 @@ Recommended:
 - `## Tests` section with observable behavior bullets.
 - One or more facets when the intent has stable interfaces.
 
-### 6.2 Extended Intent Example (Sub-Intent)
+### 6.2 Extended Intent Example (Child Intent)
 
 ```markdown
 ---
@@ -623,7 +635,7 @@ Note: `Task` and `User` are not defined in this file — they resolve upward to 
 
 ## 7. Precision Facets
 
-The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 adds a seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks.
+The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 added the seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks.
 
 ### 7.1 Schema
 
@@ -880,13 +892,13 @@ There are eleven **declared** verbs and three **derived** inverses. Each declare
 | `emitted-by` | event | flow / contract | inverse of `emits` | derived |
 | `satisfied-by` | requirement item | contract / flow / view / trigger | inverse of `satisfies` | derived |
 
-`requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1). **Render/layout composition** — a screen displaying another view inline (a dashboard laying out widget-panels) — is **not** a graph verb either: a UI piece has fluid granularity (`### Display` prose in its host view when simple, a promoted sub-intent owning its own facets once it earns them, §15.9), and the inline arrangement is realization expressed in code and bindings (§1.3), not an intent edge.
+`requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1). **Render/layout composition** — a screen displaying another view inline (a dashboard laying out widget-panels) — is **not** a graph verb either: a UI piece has fluid granularity (`### Display` prose in its host view when simple, a promoted child intent owning its own facets once it earns them, §15.9), and the inline arrangement is realization expressed in code and bindings (§1.3), not an intent edge.
 
 An `accesses` edge may target a **View** (access to one surface) **or** a **intent** (route/screen-level access — the persona may reach that whole feature). Use the intent form for role-gated screens that aggregate several views; `[accesses](aim:app.profile)` is valid and means "this persona may reach the profile screen."
 
 **`exposes` vs `invokes` from a View.** Both are legal view→contract edges, and the choice carries meaning. Use **`exposes`** when the contract is reached through a *user-initiated action* on the view — a button, a form submit, a gesture. Use **`invokes`** when the view calls the contract *programmatically*, with no user initiation — an on-load data fetch, a poll, a prefetch. Either inbound edge counts as the contract being "reached" for the orphan check (§12.2); the distinction records whether the behavior is user-driven, which matters for reading intent and for realization.
 
-**`subscribes` from a `intent`.** Almost every `subscribes` edge is declared at the consuming Flow or Contract. A `intent`-level `subscribes` is a deliberate early-stage exception: it declares that a intent consumes an event *without yet naming the internal handler* — `[subscribes](aim:#Event:TicketResolved)` written at the intent root. It is valid at Level 1/2; at Level 3 it SHOULD be refined to a flow- or contract-level edge once the handler exists (an informational diagnostic flags a intent-level `subscribes` that survives into a Level-3 intent, §12.2).
+**`subscribes` from a `intent`.** Almost every `subscribes` edge is declared at the consuming Flow or Contract. A `intent`-level `subscribes` is a deliberate early-stage exception: it declares that an intent consumes an event *without yet naming the internal handler* — `[subscribes](aim:#Event:TicketResolved)` written at the intent root. It is valid at Level 1/2; at Level 3 it SHOULD be refined to a flow- or contract-level edge once the handler exists (an informational diagnostic flags an intent-level `subscribes` that survives into a Level-3 intent, §12.2).
 
 **`satisfies` and its target.** `satisfies` is the one edge that reaches a sub-block target: its `to` is a `## Requirements` list item, not a facet node. It is declared at the acting unit — the Contract, Flow, or View that realizes the requirement, or the deadline Trigger that enforces a time policy (§7.7). The token URI form is `aim:[<intent>]#Requirements[<key>]`: the reserved section address carries **no** `FacetType:` colon, which is exactly what distinguishes it from the facet form `#<FacetType>:<Name>` and keeps it a valid CommonMark link destination (§2.2, §3.6). The `<key>` takes two forms, discriminated by grammar:
 
@@ -910,7 +922,7 @@ Cross-intent targets are fully qualified either way: `aim:app.tasks#Requirements
 ### 8.3 Declared vs Derived
 
 - **Declared once, at the acting end.** The node that performs the verb owns the edge: a View declares `exposes`/`navigates`/`reads`, a Flow declares `invokes`/`emits`/`reads`/`mutates`, a Persona declares `accesses`/`invokes`, a Contract declares `emits`/`mutates`/`invokes`, a Trigger declares `triggers`, a Schema attribute declares `refs`.
-- **Inverse views are derived, never authored.** The v3.1 blocks `### Trigger` ("Invoked by Contract: X") on a Flow and `### Emitted By` on an Event are inverse projections of `invokes`/`emits` edges. v4 removes them from authored source. A tool may render them as read-only views.
+- **Inverse views are derived, never authored.** The v3.1 blocks `### Trigger` ("Invoked by Contract: X") on a Flow and `### Emitted By` on an Event are inverse projections of `invokes`/`emits` edges. v4 removed them from authored source. A tool may render them as read-only views.
 
 This is the structural fix for v3.1's "three inconsistent expressions" problem: there is now exactly one authoritative direction per relation, so the forward and backward statements can never fall out of sync.
 
@@ -922,7 +934,7 @@ If an author writes a `### Trigger` or `### Emitted By` block anyway (e.g. migra
 
 ### 8.5 Before / After
 
-The `View: TodoDashboard` facet from the canonical example, v3.1 prose vs v4 graph projection:
+The `View: TodoDashboard` facet from the canonical example, v3.1 prose vs the graph form (v4 onward):
 
 **v3.1:**
 
@@ -933,7 +945,7 @@ The `View: TodoDashboard` facet from the canonical example, v3.1 prose vs v4 gra
 - Tapping the checkbox on a PENDING task → invokes `Contract: CompleteTodo`.
 ```
 
-**v4:**
+**Graph form:**
 
 ```markdown
 ### Actions
@@ -942,7 +954,7 @@ The `View: TodoDashboard` facet from the canonical example, v3.1 prose vs v4 gra
 - Tapping the checkbox on a PENDING task — [exposes](aim:#Contract:CompleteTodo)
 ```
 
-Both forms render on GitHub. The v4 form additionally yields two first-class edges `View:TodoDashboard → exposes → Contract:CreateTodo|CompleteTodo`, so renaming a contract dangles the edge (hard error), an orphan check confirms every contract is exposed, and the impact set of either contract now formally includes the view. The free prose ("Submitting the New Task form") survives as the human label; only the edge is now machine-recognizable.
+Both forms render on GitHub. The graph form additionally yields two first-class edges `View:TodoDashboard → exposes → Contract:CreateTodo|CompleteTodo`, so renaming a contract dangles the edge (hard error), an orphan check confirms every contract is exposed, and the impact set of either contract now formally includes the view. The free prose ("Submitting the New Task form") survives as the human label; only the edge is now machine-recognizable.
 
 ### 8.6 Extending The Verb Set
 
@@ -1027,7 +1039,7 @@ Unresolved `Requires` aliases are hard errors at validation time.
 
 ## 10. Binding Layer
 
-A binding records *where* an intent node is realized — in code, in a system configuration, in an automation, in an agent — so the Reviewer can diff the declared intent graph against the realized graph (§12). Bindings are optional: a intent with no bindings is a valid Level 1/2 intent (§11.2). Bindings raise fidelity, exactly as facets do.
+A binding records *where* an intent node is realized — in code, in a system configuration, in an automation, in an agent — so the Reviewer can diff the declared intent graph against the realized graph (§12). Bindings are optional: an intent with no bindings is a valid Level 1/2 intent (§11.2). Bindings raise fidelity, exactly as facets do.
 
 ### 10.1 Drift As Graph-Diff
 
@@ -1065,7 +1077,7 @@ A binding line is a normal Markdown bullet:
 
 Each bound node gets one `## Bind: <FacetType>:<Name>` heading — the same `<FacetType>:<Name>` that addresses the node in its intent (§2.2, §3.6), so a binding heading is mechanically the node's in-intent address minus the leading `#`. The `binds:` bullets under it list that node's code locators.
 
-**Where bindings live: a dedicated `kind: binding` file that co-locates with its intent (§4.2).** Realization is not behavior (§1.3), and realization drifts faster than intent — keeping bindings in their *own file* is what keeps the behavioral file's diffs meaningful and lets a binding go stale without the intent being wrong. The isolation that matters is the *file/facet* boundary, not a separate directory tree: a intent owns all its facets — schema, contract, mapping, binding — in one place, so a split or rename (§16) moves one coherent unit instead of reconciling parallel trees. This mirrors how `kind: mapping` co-locates capability bindings.
+**Where bindings live: a dedicated `kind: binding` file that co-locates with its intent (§4.2).** Realization is not behavior (§1.3), and realization drifts faster than intent — keeping bindings in their *own file* is what keeps the behavioral file's diffs meaningful and lets a binding go stale without the intent being wrong. The isolation that matters is the *file/facet* boundary, not a separate directory tree: an intent owns all its facets — schema, contract, mapping, binding — in one place, so a split or rename (§16) moves one coherent unit instead of reconciling parallel trees. This mirrors how `kind: mapping` co-locates capability bindings.
 
 ```markdown
 ---
@@ -1094,7 +1106,7 @@ kind: binding
 
 ### 10.3 Optional-Capability Invariant
 
-- A intent with no binding facet is fully valid (Level 1/2). Binding coverage is reported as informational, never a hard error.
+- An intent with no binding facet is fully valid (Level 1/2). Binding coverage is reported as informational, never a hard error.
 - Bindings become load-bearing only at Level 3 graph-diff — which the author opted into by writing the bindings. You are never punished for a binding you did not write.
 
 ---
@@ -1103,11 +1115,11 @@ kind: binding
 
 ### 11.1 Canonical Resolution Algorithm
 
-This algorithm is **authoritative**. All other sections that describe resolution (notably §5.4 for sub-intents and §9.3 for mappings) defer to this order. It resolves both unqualified facet names and full node addresses (§2.2).
+This algorithm is **authoritative**. All other sections that describe resolution (notably §5.4 for child intents and §9.3 for mappings) defer to this order. It resolves both unqualified facet names and full node addresses (§2.2).
 
-For any reference within a intent:
+For any reference within an intent:
 
-1. **Intent part.** If the address carries a intent prefix, resolve to that exact namespace (which must exist). If absent, the intent is the current one.
+1. **Intent part.** If the address carries an intent prefix, resolve to that exact namespace (which must exist). If absent, the intent is the current one.
 2. **Facet name**, resolved within the chosen intent in this precedence order:
    1. **Embedded** — a facet block in the same intent file.
    2. **Sibling facet file** — `<intent>.<kind>.aim` next to the intent file.
@@ -1126,7 +1138,7 @@ The first match wins. Lower-precedence sources for the same name emit an informa
 - **Level 2** — Intent plus some facets and edges. Most production intents.
 - **Level 3** — Full facet trace **with bindings present**, so the declared graph can be diffed against the realized graph. Highest fidelity for implementation and review.
 
-The level affects expected implementation precision, expected code-generation precision, and strictness of traceability and graph-diff checks. Tools may report a intent's level as an informational diagnostic. Level 3 is the precise condition under which an unbound declared node becomes an enforceable finding (§12). Level-3 graph-diff is enforced by the Reviewer verifying each edge at its bound site with a confidence (§10.1, §12.3), or by a supplied realized-graph manifest.
+The level affects expected implementation precision, expected code-generation precision, and strictness of traceability and graph-diff checks. Tools may report an intent's level as an informational diagnostic. Level 3 is the precise condition under which an unbound declared node becomes an enforceable finding (§12). Level-3 graph-diff is enforced by the Reviewer verifying each edge at its bound site with a confidence (§10.1, §12.3), or by a supplied realized-graph manifest.
 
 ### 11.3 Traceability Chain
 
@@ -1145,13 +1157,13 @@ Persona → View → Contract → Flow / Schema / Event
 - `Contract` and `Flow` `read`/`mutate` `Schema`.
 - `Contract`/`Flow` `emits` `Event`.
 
-In v3.1 this chain was prose and "a useful target, not a requirement." In v4 it is **derived from the declared edges** and therefore checkable: a Level-3 intent is exactly one whose chain has no orphan nodes and no dangling edges (§12). Intent-only intents remain valid; tools emit a reduced-fidelity informational note.
+In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 it is **derived from the declared edges** and therefore checkable: a Level-3 intent is exactly one whose chain has no orphan nodes and no dangling edges (§12). Intent-only intents remain valid; tools emit a reduced-fidelity informational note.
 
 ---
 
 ## 12. Tooling Diagnostics
 
-**Conformance and diagnostics are evaluated over the complete derived project graph** — every `.aim` file resolved together (§2.4) — never a single file. A intent is "clean" only when the whole graph it participates in is: duplicate entities, dangling references, and orphans are cross-file properties, so judging one file in isolation is never sufficient.
+**Conformance and diagnostics are evaluated over the complete derived project graph** — every `.aim` file resolved together (§2.4) — never a single file. An intent is "clean" only when the whole graph it participates in is: duplicate entities, dangling references, and orphans are cross-file properties, so judging one file in isolation is never sufficient.
 
 ### 12.1 Hard Errors
 
@@ -1163,9 +1175,9 @@ In v3.1 this chain was prose and "a useful target, not a requirement." In v4 it 
 - Invalid facet type in heading (e.g. `## Data: X`).
 - Facet name violating the `[A-Za-z][A-Za-z0-9_]*` grammar (e.g. `## Schema: Todo Item`) (§3.6).
 - Duplicate facet definitions with the same name within the effective source.
-- Ambiguous sub-intent authority (auto-discovered sub-intent not in explicit `## Subintents` list).
+- Ambiguous child-intent authority (auto-discovered child not in explicit `## Children` list).
 - Unresolved `Requires` aliases with no matching mapping.
-- Sub-intent facet name collision with a parent facet name (when the parent definition is authoritative).
+- Child-intent facet name collision with a parent facet name (when the parent definition is authoritative).
 - Generic filenames (`intent.aim`, `schema.aim`, `mapping.aim`, `binding.aim`).
 - **Dangling reference** — an edge token's `to` address resolves to Absent (§11.1). Same class as an unresolved `ref()` (`<Type>` resolves to no Schema).
 - **Unresolved `ref()` field** — a `ref(<Type>.<field>)` whose `<Type>` resolves to a Schema but whose `<field>` is not an attribute of that schema (§3.7).
@@ -1177,9 +1189,9 @@ In v3.1 this chain was prose and "a useful target, not a requirement." In v4 it 
 - Missing optional `## Tests`.
 - Intent-only intent (no facets).
 - Lower-precedence facet source shadowed by a higher-precedence one.
-- Sub-intent nesting exceeding three levels.
+- Tree-shape smell (§5.5): a level outside the 3–9 breadth band, or a chain of single-child parents (§15.2).
 - Unresolved `Import` alias (not blocking but flagged for repair).
-- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — a intent-level `accesses` (§8.2) grants reachability to every View in that subtree.
+- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — an intent-level `accesses` (§8.2) grants reachability to every View in that subtree.
 - **Unrefined intent subscription** — a `intent`-level `subscribes` edge (§8.2) that survives into a Level-3 intent without being refined to a flow- or contract-level edge. Valid at Level 1/2; informational at Level 3.
 - **Unrealized requirement** — a `## Requirements` list item with no inbound `satisfies` edge (§8.2): no declared behavior claims to realize it. Informational at Level 1/2; at Level 3 tools MAY promote it to a finding, since a full facet trace with no behavior for a stated requirement is a real gap.
 - **Positional `satisfies` reference** — a `satisfies` edge targeting a requirement by index rather than by label (§8.2). Fragile under reordering; labels are the durable form.
@@ -1189,7 +1201,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." In v4 it 
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
 - **Probable duplicate entity** — two nodes with the same facet-type and name in intents not linked by an import or reference (e.g. `auth#Schema:User` and `billing#Schema:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§15.8), or to confirm they are genuinely distinct.
 - **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across intents, instead of extracting them into sibling facet files or a `<app>.core` intent (§15.2, §15.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
-- **Noun-cluster (a sub-intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Schema plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` schema with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own sub-intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Schema whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
+- **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Schema plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` schema with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Schema whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
 
 ### 12.3 Graph-Diff Findings (Reviewer)
 
@@ -1242,7 +1254,7 @@ v5 is the **generalization release**: the language that specified software now s
 1. **Frontmatter key `facet:` → `kind:`.** The old key named the file's *role*, colliding with "facet" the node concept (§2.1). Sed-able: `facet: intent` → `kind: intent` across the tree. Tools SHOULD dual-read (`kind` falling back to `facet`) through the transition.
 2. **`## Requirement:` → `## Capability:`** (§9.2). Ends the near-collision with `## Requirements` items that `satisfies` targets (§8.2).
 3. **Binding advisory suffix `— kind:` → `— as:`** (§10.2), freeing `kind` for the frontmatter key.
-4. **The core unit is named what it is: *intent*.** Since v3.1 the unit was called *intent* — software heritage in a language named the Intent Model. v5 names it the **intent** everywhere: the tree is intents and **sub-intents**, the parent index heading `## Subintents` → `## Subintents`, the node-type `intent` → `intent`, addresses read `<intent>#<FacetType>:<Name>`.
+4. **The core unit is named what it is: *intent*.** Since v3.1 the unit was called the *component* — software heritage in a language named the Intent Model. v5 names it the **intent** everywhere: the tree is intents all the way down (§2.1, §5), the parent index heading `## Subcomponents` → `## Children` (the old spellings remain deprecated aliases, §3.6), the node-type `component` → `intent`, addresses read `<intent>#<FacetType>:<Name>`.
 
 Identity and structure: the language was renamed **Agentic Intent Model** (formerly *Application* Intent Model); the roles generalized to Architect / **Realizer** / Reviewer (§1.2); the Distribution section was removed (single-version rule now §4.5) and later sections renumbered accordingly.
 
@@ -1273,7 +1285,7 @@ A single-player snake game.
 - Wall and self-collision end the run.
 ```
 
-### 14.2 Intent With Sub-Intents
+### 14.2 Intent With Children
 
 ```
 /aim/game.snake/
@@ -1291,10 +1303,10 @@ A single-player snake game.
 
 - Frontmatter missing `aim:` or `kind:` field.
 - `## Data: Foo` heading (invalid facet type).
-- Sub-intent file with `parent: juice.tasks` but no parent intent file exists.
+- Child intent file with `parent: juice.tasks` but no parent intent file exists.
 - Two `## Schema: Task` blocks in the same effective source.
 - Project missing `AGENTS.md` with declared `aim_version`.
-- A directory named `aim/specs/` used as a intent namespace.
+- A directory named `aim/specs/` used as an intent namespace.
 - A `kind: binding` or `kind: mapping` file placed in a separate `aim/bindings/` or `aim/mappings/` tree instead of co-located with its intent.
 - An edge token `[invokes](aim:#Schema:Task)` (invalid: `invokes` cannot target a `schema`).
 - An edge token `[satisfies](aim:#Capability:AssigneeUsers)` (invalid: `satisfies` targets a `## Requirements` list item, never a `## Capability:` surface, §8.2, §9.2).
@@ -1308,7 +1320,7 @@ A single-player snake game.
 
 **Architect the graph, then serialize it.** From the requirements, identify the nodes — who acts (Personas), what they reach (Views), what they do (Contracts), how it runs (Flows), what it changes (Schemas), what it announces (Events, Triggers) — and the typed relations among them: who `accesses` what, what `exposes`/`invokes` what, what `mutates`/`reads` what, what `emits` and who `subscribes`, what `satisfies` which requirement. That graph **is** the design; the files merely record it.
 
-Then write it down. Start by splitting: create the parent intent with the cross-cutting requirements and shared schemas, and each feature as a sub-intent. Keep each sub-intent focused on a single observable behavior. Declare the edges inline at the acting nodes as you serialize each facet. Collapse into a single file only when the whole intent is trivially small.
+Then write it down. Start by splitting: create the parent intent with the cross-cutting requirements and shared schemas, and each feature as a child intent. Keep each child focused on a single observable behavior. Declare the edges inline at the acting nodes as you serialize each facet. Collapse into a single file only when the whole intent is trivially small.
 
 The test of a finished intent is graph-shaped, not prose-shaped: every requirement reachable via `satisfied-by`, every contract reachable from a persona or trigger, every event with an emitter — a connected graph, not a stack of well-written facets (§11.3, §12.2).
 
@@ -1317,34 +1329,34 @@ The test of a finished intent is graph-shaped, not prose-shaped: every requireme
 The parent intent file is a **lean index**, not a container:
 
 - Cross-cutting requirements that apply system-wide.
-- The `## Subintents` index.
+- The `## Children` index.
 - Dependencies.
 
 Shared **facets** — schemas, personas, views referenced by multiple intents — are authored as their **own files**, never embedded en masse in the parent: a sibling facet file (`<intent>.schema.aim`, `<intent>.persona.aim`, `<intent>.view.aim`) for what's shared within a subtree, or a `<app>.core` intent (§15.8) for entities shared *across* top-level intents. Embedding many facets into one intent file produces a **monolith** (§12.2) — the dual of the duplication problem, and just as damaging at scale.
 
-### 15.3 What Goes In A Sub-Intent
+### 15.3 What Goes In A Child Intent
 
 - The intent, requirements, and tests for a single feature.
 - Contracts and flows specific to that feature, with their edges.
-- Sub-intent-specific events.
+- Child-specific events.
 
-### 15.4 When To Split A Sub-Intent Further
+### 15.4 When To Split A Child Further
 
-When a sub-intent itself has multiple distinct behaviors with their own contracts. Example: a `payments` intent might split into `charge`, `refund`, `dispute` sub-intents, and `dispute` itself might split into `open_dispute`, `respond_to_dispute`, `resolve_dispute` if each has its own contract. Three nesting levels is the practical maximum.
+When a child itself has multiple distinct behaviors with their own contracts. Example: a `payments` intent might split into `charge`, `refund`, `dispute` children, and `dispute` itself might split into `open_dispute`, `respond_to_dispute`, `resolve_dispute` if each has its own contract. Split as long as each new level re-earns the shape rules (§5.5) — and no further.
 
 The signal is often a **noun-cluster** (§12.2) rather than a planned decision: one noun quietly claims a schema plus several like-named contracts inside a mixed intent. Promote the whole cluster — existing facets included — the next time a change touches it (§16.5).
 
 ### 15.5 When To Add Bindings
 
-Add bindings once code exists and you want enforceable drift detection. Bind the stable nodes first (Contracts to handlers/routes, Schemas to models/tables, Events to topics). A binding facet turns the Reviewer's drift report from prose comparison into a graph-diff (§12). Skip bindings while a intent is still exploratory — Level 1/2 is valid.
+Add bindings once code exists and you want enforceable drift detection. Bind the stable nodes first (Contracts to handlers/routes, Schemas to models/tables, Events to topics). A binding facet turns the Reviewer's drift report from prose comparison into a graph-diff (§12). Skip bindings while an intent is still exploratory — Level 1/2 is valid.
 
 ### 15.6 Closed-Loop Workflow
 
-1. Requirements → **graph**: nodes (facets) and typed edges, serialized as intents (sub-intents first, parent as index), edges declared inline at the acting nodes.
+1. Requirements → **graph**: nodes (facets) and typed edges, serialized as intents (children first, parent as index), edges declared inline at the acting nodes.
 2. Intent → realization, reading the resolved graph; the Realizer emits bindings for what it realizes.
 3. Implementation → graph-diff validation against the declared graph through the bindings.
 4. Validation failures → code repair or intent revision, routed by the finding's owner.
-5. New requirements → new sub-intent or revised parent; new edges declared at the acting nodes.
+5. New requirements → new child intent or revised parent; new edges declared at the acting nodes.
 
 The intent is the contract. Code follows intent. When they diverge, one of them is wrong and the divergence is resolved explicitly.
 
@@ -1370,7 +1382,7 @@ Beware the **opposite trap**: do not dodge duplication by embedding every entity
 A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly like any other capability. It is not a fixed kind of node in the model; what it *is* depends on how much behavior it carries, and it moves between forms by the **promote** transform (§16):
 
 - **Trivial / behavior-less** — a static or host-fed panel with no contract, schema, or action of its own is **not a node**. It is a bullet in the host `## View:`'s `### Display`. Modeling it as its own facet adds a node the graph cannot check — nothing to dangle, nothing to impact — and earns it a false orphan diagnostic (§12.2).
-- **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own sub-intent (§5, §16.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
+- **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own child intent (§5, §16.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
 
 **Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*, never its placement on the screen. This is the line §15.7 draws for orchestration: AIM captures intent, not rendering mechanics.
 
@@ -1390,7 +1402,7 @@ The operator's control surface.
 - System counters and a current-conditions panel.
 ```
 
-*Grown.* The panel now fetches live weather and persists a reading — it has acquired a contract and a schema, crossing the §4.3 line. It is **promoted** to its own sub-intent, which owns the behavior:
+*Grown.* The panel now fetches live weather and persists a reading — it has acquired a contract and a schema, crossing the §4.3 line. It is **promoted** to its own child intent, which owns the behavior:
 
 ````markdown
 ---
@@ -1444,7 +1456,7 @@ The dashboard surfaces that behavior with edges it already has — no compositio
 - System counters and a current-conditions panel from the latest [reads](aim:app.admin.weather#Schema:WeatherReading), refreshed via [exposes](aim:app.admin.weather#Contract:FetchWeather).
 ```
 
-The promote boundary is the §4.3 test: display-only ⇒ prose in the host; owns data or operations ⇒ its own sub-intent. A promoted piece that is *only* ever embedded usually should **not** declare its own `## View:` — its surface is the host's — so it owns `Contract`/`Schema` and raises no orphan. If it genuinely needs its own reusable surface, the informational orphan diagnostic (§12.2) is the correct nudge: either a Persona `accesses` it, or its surface really belongs to the host.
+The promote boundary is the §4.3 test: display-only ⇒ prose in the host; owns data or operations ⇒ its own child intent. A promoted piece that is *only* ever embedded usually should **not** declare its own `## View:` — its surface is the host's — so it owns `Contract`/`Schema` and raises no orphan. If it genuinely needs its own reusable surface, the informational orphan diagnostic (§12.2) is the correct nudge: either a Persona `accesses` it, or its surface really belongs to the host.
 
 ### 15.10 Proxy Verification — When The Outcome Cannot Be Checked
 
@@ -1465,10 +1477,10 @@ The static rules (§2–§12) define what a *well-formed* model looks like at re
 
 ### 16.1 One Root Unit, Two Authoring Operations
 
-The root unit of authoring is the **intent** — root or nested (a **sub-intent**), each with its own envelope file (§1, §5). Facets and typed edges are how an intent is *expressed*; they are never the unit an author works in. Everything an author does to a model is one of exactly two operations:
+The root unit of authoring is the **intent** — root or nested (a **child intent**), each with its own envelope file (§1, §5). Facets and typed edges are how an intent is *expressed*; they are never the unit an author works in. Everything an author does to a model is one of exactly two operations:
 
 - **EXTEND** an existing intent — add or refine its facets and the edges among them.
-- **ADD** a new intent — a new sub-intent or capability (§5).
+- **ADD** a new intent — a new child intent or capability (§5).
 
 These two operations are the surface a requirements author — often a non-developer, working through the Architect role (§1.2) — designs at; the facet, edge, and binding detail they expand into is where the Realizer and Reviewer work. An author does not "move a node" or "rename a schema" as a primitive act; those are *transforms* (§16.2) the system performs to keep the model well-formed as the two operations push against the decomposition rules (§4.3).
 
@@ -1478,13 +1490,13 @@ When an EXTEND or ADD would leave the model ill-formed — an intent grown past 
 
 | Transform | What it does | Typically triggered by |
 |---|---|---|
-| **promote** | a capability grown inside an intent splits out into its own sub-intent (§5) | an EXTEND that crosses the §4.3 "one clear behavior" line |
-| **split** | one intent doing two things becomes two sibling sub-intents under an index parent | a intent with multiple distinct behaviors (§15.4) |
+| **promote** | a capability grown inside an intent splits out into its own child intent (§5) | an EXTEND that crosses the §4.3 "one clear behavior" line |
+| **split** | one intent doing two things becomes two siblings under an index parent | an intent with multiple distinct behaviors (§15.4) |
 | **re-home / move** | a node moves to the intent whose namespace it belongs to | a node whose address namespace does not match where it is used |
 | **merge** | two nodes that are the same concept collapse into one canonical node | a probable-duplicate diagnostic (§12.2) confirmed as a true duplicate |
 | **rename** | a node's name — and therefore its address — changes | a clearer name, or a collision |
 
-Each transform changes one or more node **addresses** `<intent>#<FacetType>:<Name>` (§2.2). `promote` is the bridge between the two operations: an EXTEND that trips §4.3 *resolves structurally into an ADD* — the new capability becomes its own sub-intent rather than more facets piled on the parent (§15.2).
+Each transform changes one or more node **addresses** `<intent>#<FacetType>:<Name>` (§2.2). `promote` is the bridge between the two operations: an EXTEND that trips §4.3 *resolves structurally into an ADD* — the new capability becomes its own child intent rather than more facets piled on the parent (§15.2).
 
 ### 16.3 Transform Invariants (Normative)
 
@@ -1494,7 +1506,7 @@ A transform reshapes **addresses, never commitments**: after re-pointing (and, f
 
 2. **Elided outbound addresses MUST be re-qualified on a cross-intent move.** A node's own outbound edges travel with it, but any written in the elided unqualified form `#<FacetType>:<Name>` (§2.2) resolve against the *new* intent after a move. Where that would change the target, the transform MUST re-qualify the address to its original fully-qualified target so the edge's meaning is preserved.
 
-3. **The parent index MUST be updated.** `promote`, `split`, and a cross-parent `move` change the set of sub-intents; each affected parent's `## Subintents` index (§5.2) MUST be updated to match what is on disk, or auto-discovery (§5.3) diverges from the explicit list — a hard error.
+3. **The parent index MUST be updated.** `promote`, `split`, and a cross-parent `move` change the set of children; each affected parent's `## Children` index (§5.2) MUST be updated to match what is on disk, or auto-discovery (§5.3) diverges from the explicit list — a hard error.
 
 4. **Path/header identity MUST be re-established.** A node that becomes, or moves into, its own intent MUST have its directory, filename, and `aim:`/`parent:` frontmatter brought back into agreement (§4.4); a path/header mismatch is a hard error.
 
@@ -1510,24 +1522,24 @@ Because the transform knows *exactly* what changed at the intent level, this dif
 
 ### 16.5 Choosing the Transform (SHOULD)
 
-- **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a sub-intent rather than piling facets onto the parent (§15.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§12.2).
+- **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a child intent rather than piling facets onto the parent (§15.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§12.2).
 - **Clusters accrete; promote them whole.** The §4.3 line is usually crossed *gradually*: no single EXTEND introduces "a distinct capability," but change by change one noun accumulates a Schema, several Contracts, a View — until a cohesive capability lies flat inside a mixed intent (the noun-cluster smell, §12.2). The next EXTEND that touches the cluster is the moment to **promote** it, and the promotion takes the *existing* facets along with the new ones. Preservation discipline is never a reason to leave a cluster flat: a transform changes addresses, never commitments (§16.3) — moving a node removes nothing.
 - **Re-home when the namespace doesn't fit.** If a node's address namespace does not match where it is used, **move** it to the intent it belongs to rather than referencing it across an unnatural boundary.
 - **Merge duplicates into a canonical home.** When the probable-duplicate diagnostic (§12.2) flags a true duplicate, **merge** to one canonical node (§15.8) — do not let the copies drift.
-- **A UI piece that earns behavior promotes.** A view fragment (tab, panel, widget) that acquires its own data or operations crosses the §4.3 line and is **promoted** into a sub-intent (§15.9) rather than remaining inline `### Display` prose.
+- **A UI piece that earns behavior promotes.** A view fragment (tab, panel, widget) that acquires its own data or operations crosses the §4.3 line and is **promoted** into a child intent (§15.9) rather than remaining inline `### Display` prose.
 
-**Worked example — an EXTEND that promotes.** A CRM has `crm.customer_management`, one intent covering customer CRUD. New requirement: "add customer notes, with edit history." Notes are a distinct capability — their own `Note` schema, their own create/edit/list contracts, their own surface. Piling a `## Schema: Note`, three contracts, and a notes view onto the parent would push it past §4.3, so the EXTEND **promotes** into a new sub-intent:
+**Worked example — an EXTEND that promotes.** A CRM has `crm.customer_management`, one intent covering customer CRUD. New requirement: "add customer notes, with edit history." Notes are a distinct capability — their own `Note` schema, their own create/edit/list contracts, their own surface. Piling a `## Schema: Note`, three contracts, and a notes view onto the parent would push it past §4.3, so the EXTEND **promotes** into a new child intent:
 
 ```
 /aim/crm.customer_management/
-  crm.customer_management.aim                    # parent index — ## Subintents now lists customer_notes
+  crm.customer_management.aim                    # parent index — ## Children now lists customer_notes
   customer_notes/
-    crm.customer_management.customer_notes.aim   # new sub-intent: Note schema, contracts, view
+    crm.customer_management.customer_notes.aim   # new child intent: Note schema, contracts, view
 ```
 
-The customer-detail view's reference to the notes surface is declared as a cross-reference to the promoted address; the parent's `## Subintents` index gains a `customer_notes` line (invariant 3).
+The customer-detail view's reference to the notes surface is declared as a cross-reference to the promoted address; the parent's `## Children` index gains a `customer_notes` line (invariant 3).
 
-**Worked example — a split.** A flat `crm.customers` intent has accreted both per-customer CRUD *and* customer-group management — two distinct behaviors. **split** turns it into two sibling sub-intents under an index parent:
+**Worked example — a split.** A flat `crm.customers` intent has accreted both per-customer CRUD *and* customer-group management — two distinct behaviors. **split** turns it into two siblings under an index parent:
 
 ```
 /aim/crm.customers/
@@ -1538,7 +1550,7 @@ The customer-detail view's reference to the notes surface is declared as a cross
     crm.customers.groups.aim     # customer-group management
 ```
 
-Every edge that pointed into the old flat file is re-pointed to whichever sub-intent now owns the target (invariant 1); shared schemas stay in the parent or move to a sibling facet file (§15.2); bindings for the moved contracts relocate to the new intents' binding files with locators unchanged (invariant 5).
+Every edge that pointed into the old flat file is re-pointed to whichever child now owns the target (invariant 1); shared schemas stay in the parent or move to a sibling facet file (§15.2); bindings for the moved contracts relocate to the new intents' binding files with locators unchanged (invariant 5).
 
 ### 16.6 Diagnostics
 
@@ -1548,7 +1560,7 @@ Intent Evolution adds **no new diagnostics**. A transform is correct exactly whe
 
 ## 17. Re-Encoding Existing Systems (Reality → Intent)
 
-§13 defines migration *within* the model (v3.1 → v4). This section defines the other direction: producing `.aim` intent from a **system that already exists** and was never authored in AIM — a codebase, a running process, an organization's way of working. Re-encoding is a primary workflow, and it is the Reviewer's machinery (§10.1, §12.3) run in reverse — instead of diffing a declared graph against reality, the agent *reads reality and infers the declared graph*. Without spec support the inferred intent has no provenance, and the authority model (§1.3) silently degrades from "authored truth" to "a guess a tool made." This section keeps that boundary explicit.
+§13 defines migration *within* the model (v3.1 → v4 → v5). This section defines the other direction: producing `.aim` intent from a **system that already exists** and was never authored in AIM — a codebase, a running process, an organization's way of working. Re-encoding is a primary workflow, and it is the Reviewer's machinery (§10.1, §12.3) run in reverse — instead of diffing a declared graph against reality, the agent *reads reality and infers the declared graph*. Without spec support the inferred intent has no provenance, and the authority model (§1.3) silently degrades from "authored truth" to "a guess a tool made." This section keeps that boundary explicit.
 
 ### 17.1 Definition And Sources
 
@@ -1596,12 +1608,12 @@ Nothing in this language is specific to software. A facet is a unit of commitmen
 
 **The root is a purpose.** Model an organization as one project whose root intent states *why it exists* — its Summary is the mission in plain words, and its `## Requirements` are the existential commitments ("every delivered hour is attributable to an engagement and billed", "no work begins before countersignature"). The root also serves as the canonical home (§15.8) for the organization's shared entities: the personas everyone references, the artifacts every process touches.
 
-**The tree is a why/how ladder.** Each sub-intent exists to fulfill commitments of its parent; each level down answers *how*, each level up answers *why*. Wire that justification with `satisfies`: a sub-intent's contracts and flows carry `[satisfies](aim:<root-or-ancestor>#Requirements[<Label>])` edges into the commitments that justify their existence — and at organizational scale, **label the requirements** (§8.2): an org model lives for years, its requirement lists get edited by many hands, and labeled references are the form that survives it. Tree completeness then stops being rhetorical and becomes checkable — an unrealized requirement at the root (§12.2) means *a stated purpose that nothing in the organization actually does*.
+**The tree is a why/how ladder.** Each child intent exists to fulfill commitments of its parent; each level down answers *how*, each level up answers *why*. Wire that justification with `satisfies`: a child's contracts and flows carry `[satisfies](aim:<root-or-ancestor>#Requirements[<Label>])` edges into the commitments that justify their existence — and at organizational scale, **label the requirements** (§8.2): an org model lives for years, its requirement lists get edited by many hands, and labeled references are the form that survives it. Tree completeness then stops being rhetorical and becomes checkable — an unrealized requirement at the root (§12.2) means *a stated purpose that nothing in the organization actually does*.
 
-**Sub-intents may be different kinds of thing.** A company tree legitimately mixes a software application, a billing process, and a compliance obligation as siblings — the language does not distinguish; only the reading differs. The cross-kind edges are where the value concentrates: a process step that `reads` an application's View, an application Event a process `subscribes` to. Those edges are the organization's integration map, and a process step with no edge into any system and no binding is, precisely, the digitalization backlog.
+**Siblings may be different kinds of thing.** A company tree legitimately mixes a software application, a billing process, and a compliance obligation as siblings — the language does not distinguish; only the reading differs. The cross-kind edges are where the value concentrates: a process step that `reads` an application's View, an application Event a process `subscribes` to. Those edges are the organization's integration map, and a process step with no edge into any system and no binding is, precisely, the digitalization backlog.
 
-**Content leads; structure follows.** Two authoring motions are valid, and they are the same rule seen from both ends: bottom-up, enumerate commitments and actors flat and let the clusters name the sub-intents (§15.1 — the graph is the design); or top-down, narrate the purpose and grow children by asking "how do we fulfill this?". The failure mode is deciding *structure before content* — organizing sub-intents before the commitments they would own exist. Structure decisions are deliberately cheap (§16 transforms reshape the tree while the graph survives unchanged); missing commitments are the only expensive omission.
+**Content leads; structure follows.** Two authoring motions are valid, and they are the same rule seen from both ends: bottom-up, enumerate commitments and actors flat and let the clusters name the children (§15.1 — the graph is the design); or top-down, narrate the purpose and grow children by asking "how do we fulfill this?". The failure mode is deciding *structure before content* — organizing children before the commitments they would own exist. Structure decisions are deliberately cheap (§16 transforms reshape the tree while the graph survives unchanged); missing commitments are the only expensive omission.
 
-**Do not mirror the org chart.** Reporting lines are not commitment ownership. Divisions and departments make wrapper levels that own nothing — the hierarchy belongs in the model as **Personas and `### Authz`** ("Accountant may…", "CFO approves…"), never as namespace segments. Decompose by *capability* (what is promised), not by *hierarchy* (who reports to whom); the resulting trees are wide and shallow (§5.5), which is what human comprehension wants anyway.
+**Do not mirror the org chart.** Reporting lines are not commitment ownership. Divisions and departments make wrapper levels that own nothing — the hierarchy belongs in the model as **Personas and `### Authz`** ("Accountant may…", "CFO approves…"), never as namespace segments. Decompose by *capability* (what is promised), not by *hierarchy* (who reports to whom); capability trees run wider and flatter than the org chart they replace — they still nest as deep as the capabilities themselves demand (§5.5).
 
 **Humans keep the tree; machines keep the graph.** Reviewing an organization model means reading its tree and prose — the front pages, the ladder of why and how. The graph underneath is consumed as answers (§2): what breaks if this parameter changes, which policies nothing enforces, what the whole company owes this month. No one is ever asked to see the organization as a graph — and everyone benefits that the machine does.
