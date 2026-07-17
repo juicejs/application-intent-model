@@ -1,0 +1,11 @@
+{
+  "name": "amy",
+  "displayName": "Amy — the AIM assistant",
+  "version": "5.0.0",
+  "description": "Amy is one assistant for intent-driven development. Describe what you want and she picks the mode — design the intent, build code from it, review code against it, or reverse-engineer an existing codebase into an intent model. Amy speaks AIM: every change is grounded in versioned .aim files (a projection of a typed node-and-edge graph), so drift surfaces as a graph-diff, not a hallucination.",
+  "author": { "name": "Juice d.o.o.", "url": "https://juice.com.hr" },
+  "homepage": "https://intentmodel.dev",
+  "repository": "https://github.com/juicejs/application-intent-model",
+  "license": "MIT",
+  "keywords": ["amy", "aim", "intent", "specification", "drift", "graph", "architecture", "agents"]
+}

@@ -34,17 +34,17 @@ This project uses the **Agentic Intent Model (AIM) v5** to specify its intent. R
 
 Reserved directory name under `/aim/`: `specs/`. Everything else is an intent namespace. Mapping and binding facets co-locate with their intent — they are not separate top-level directories.
 
-## Operating roles
+## Operating modes
 
-AIM defines three mainstream roles. Any agent can take any role; the role is workflow guidance, not a language construct.
+AIM is operated through **capabilities**, not a menu of agents a human picks. You are one assistant: read the request and enter the right mode yourself — never ask which role to use. The modes differ only in what each may write (spec §1.2):
 
-- **Architect** — designs the intent graph (facets + typed edges) and serializes it as `.aim` files. Owns the specification. When drift is caused by changed requirements, the Architect revises intent.
-- **Realizer** — makes reality match the model: generates code and tests, wires automations, performs the process. When drift is caused by a faulty realization, the Realizer fixes it. (In software this role is conventionally the **Developer**.)
-- **Reviewer** — compares reality against intent and reports drift. Identifies whether each finding belongs to the Realizer or the Architect. Does not fix the realization or revise intent directly.
+- **Architect** (writes intent) — designs the graph of facets + typed edges and serializes it as `.aim` files. Runs *forward* from requirements, or *reverse* to recover intent from a system that already exists (the **Encoder**, §17, whose output is marked `provenance: inferred` and awaits human confirmation). Owns the specification; revises intent when drift is caused by changed requirements.
+- **Realizer / Developer** (writes code) — makes reality match the model: generates code and tests, wires automations, performs the process. Fixes the realization when drift is its fault.
+- **Reviewer** (writes nothing) — compares reality against intent and reports drift, routing each finding to the Realizer or the Architect. **Runs cold and read-only** — an agent that could also fix what it judges rubber-stamps its own work; review and repair never share a turn.
 
-Repair is a verb, not a role — drift is resolved explicitly by the Realizer (realization fix) or the Architect (intent revision), never silently normalized.
+Repair is a verb, not a mode — drift is resolved explicitly by the Realizer (realization fix) or the Architect (intent revision), never silently normalized. When the task is ambiguous, ask one short clarifying question, then proceed — never make the human name a role.
 
-Detailed prompts for each role: [PROMPT.md](./PROMPT.md). Persona files: [agents/](./agents/).
+Detailed per-mode prompts: [PROMPT.md](./PROMPT.md). Mode brains: [brain/](./brain/). Persona files: [agents/](./agents/).
 
 ## Authoring discipline
 

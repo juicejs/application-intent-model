@@ -97,7 +97,29 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
 - **[brain/](./brain/)** — the shared and per-role operating-brain instructions.
 - **[examples/](./examples/)** — conformance examples: a single-file intent and the multi-file [helpdesk](./examples/helpdesk/) app.
-- **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension: core mandates and manifest exposing the roles as `@aim-architect` / `@aim-developer` / `@aim-reviewer` / `@aim-encoder`.
+- **[.claude-plugin/](./.claude-plugin/)** + **[skills/amy/](./skills/amy/)** — Claude Code plugin **Amy**: one auto-invoked skill that reads the task and enters the right mode, plus the mode subagents from [agents/](./agents/).
+- **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension **Amy**: one assistant that reads the request and enters the right mode (Architect / Developer / Reviewer / Encoder).
+- **[codex/prompts/amy.md](./codex/prompts/amy.md)** — OpenAI Codex `/amy` prompt; Codex also reads [AGENTS.md](./AGENTS.md) automatically, so an AIM project self-bootstraps with no install.
+
+---
+
+## Meet Amy
+
+**AIM is the language; Amy is the assistant who speaks it.** You don't pick a role from a menu — you talk to Amy and she enters the right mode herself: design the intent, build code from it, review code against it, or reverse-engineer an existing codebase into an intent model.
+
+- **Claude Code** — add this repo as a plugin marketplace, then install Amy:
+  ```
+  /plugin marketplace add juicejs/application-intent-model
+  /plugin install amy@intentmodel
+  ```
+  Amy auto-invokes whenever you work with `.aim` files or ask to model, build, review, or capture a system.
+- **Gemini CLI** — install the extension from this repo:
+  ```
+  gemini extensions install https://github.com/juicejs/application-intent-model
+  ```
+- **OpenAI Codex** — drop [codex/prompts/amy.md](./codex/prompts/amy.md) into `~/.codex/prompts/` for a `/amy` command. In any project with an `AGENTS.md` (AIM ships one), Codex picks up the model automatically even without it.
+
+Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://intentmodel.dev/spec.md>.
 
 ---
 

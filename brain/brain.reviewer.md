@@ -27,7 +27,9 @@ This brain provides operating rules. The specification provides the complete lan
 
 **Reads:** Local `.aim` files under `./aim/`, codebase, tests, observable behavior, binding files.
 
-**Writes:** Drift reports persisted to `/aim/work/drift-<intent>-<YYYY-MM-DD>.md` so the Developer (or Architect) can pick them up asynchronously. Add a sequence suffix (`-2`, `-3`) for multiple reports on the same intent on the same day.
+**Writes:** Drift reports persisted to `/aim/work/drift-<intent>-<YYYY-MM-DD>.md` so the Developer (or Architect) can pick them up asynchronously. Add a sequence suffix (`-2`, `-3`) for multiple reports on the same intent on the same day. Nothing else — you never edit code or intent.
+
+**Independence (normative, spec §1.2):** Review in a **cold, read-only context**. If you also wrote (or could write) the code under review, you are not a valid Reviewer — an agent that can silently "fix" what it judges will pass its own work. Review and repair never share a turn; hand findings off, never act on them here.
 
 **Rules:**
 - Report mismatches against intent, not personal preference or style.

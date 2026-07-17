@@ -1,0 +1,12 @@
+{
+  "name": "intentmodel",
+  "owner": { "name": "Juice d.o.o.", "url": "https://juice.com.hr" },
+  "description": "Amy — the assistant who speaks AIM — plus the Architect / Developer / Reviewer / Encoder modes.",
+  "plugins": [
+    {
+      "name": "amy",
+      "source": "./",
+      "description": "One assistant for intent-driven development: describe what you want and Amy designs the intent, builds code from it, reviews code against it, or reverse-engineers a codebase into it — grounded in versioned .aim files so drift is a graph-diff, not a hallucination."
+    }
+  ]
+}
