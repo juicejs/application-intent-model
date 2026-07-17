@@ -468,7 +468,7 @@ The parent intent's intent file serves two purposes:
 
 Example parent intent:
 
-```markdown
+````markdown
 ---
 aim: juice.tasks
 kind: intent
@@ -511,7 +511,7 @@ status: enum(open, in_progress, completed, archived) required
 createdAt: datetime required
 updatedAt: datetime required
 ```
-```
+````
 
 ### 5.3 Child Discovery
 
@@ -574,7 +574,7 @@ Recommended:
 
 ### 6.2 Extended Intent Example (Child Intent)
 
-```markdown
+````markdown
 ---
 aim: juice.tasks.create_task
 kind: intent
@@ -627,7 +627,7 @@ description: string optional max(2000)
 ### Returns
 
 - The newly created Task record.
-```
+````
 
 Note: `Task` and `User` are not defined in this file — they resolve upward to the parent intent `juice.tasks` (§11.1).
 
@@ -641,7 +641,7 @@ The six behavioral facets are unchanged in meaning from v3.1. What changes is ho
 
 Data at rest, structural types, and constraints.
 
-```markdown
+````markdown
 ## Schema: Task
 
 ### Summary
@@ -665,13 +665,13 @@ status: enum(open, completed, archived) required
 ### Immutable
 
 - `id`, `createdAt`, `ownerId`
-```
+````
 
 ### 7.2 Contract
 
 Externally observable guarantees and obligations.
 
-```markdown
+````markdown
 ## Contract: CreateTask
 
 ### Summary
@@ -701,7 +701,7 @@ description: string optional
 ### Returns
 
 - The newly created Task record.
-```
+````
 
 ### 7.3 Flow
 
@@ -775,7 +775,7 @@ The owner's primary task list view.
 
 Asynchronous payloads, emissions, and routing.
 
-```markdown
+````markdown
 ## Event: TaskCreated
 
 ### Summary
@@ -794,7 +794,7 @@ createdAt: datetime required
 
 - Channel: `tasks.created`
 - Durable: true
-```
+````
 
 The event's emitters (`### Emitted By`) are **not** authored here — they are derived from the `emits` edges declared at the contracts/flows that emit the event (§8.4).
 
@@ -1261,6 +1261,7 @@ Identity and structure: the language was renamed **Agentic Intent Model** (forme
 Additive in the same wave, no migration required: labeled requirement targets (`#Requirements[NET14]`, §8.2); event-anchored and calendar-recurring Trigger schedules with `deadline` kind (§7.7); the open binding locator scheme set (§10.2); realized graphs recovered from configuration and execution logs, not only code (§10.1); `invokes` from a Persona and `satisfies` from a Trigger (§8.2); re-encoding generalized to any existing system, including elicitation with testimony provenance (§17); purpose-rooted organization models (§18); the verb-set extension policy (§8.6); governance frontmatter keys and the open frontmatter set (§3.2); proxy verification (§15.10).
 
 Relabel `AGENTS.md` to `aim_version: 5`, apply the three renames, refresh the local spec cache (§3.4) — nothing else changes on disk.
+
 ---
 
 ## 14. Conformance Examples
