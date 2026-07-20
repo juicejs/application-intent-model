@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.1
+# Agentic Intent Model (AIM) v5.2
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -210,6 +210,7 @@ Optional fields:
 - `parent` — the parent intent namespace, present on child intents
 - `display` — a human-readable display name (overrides the H1 heading for tooling)
 - `tags` — array of free-form tags for discovery
+- `nature` — the entity kind of an intent that is *itself a thing* (§7.1, §7.4): one of the facet natures (`record | persona | flow | view | event | trigger`) or `capability` (an operation-grouping intent — also the default reading when the field is absent). **Projection-only**: tools use it for tree badges and grouped views; it never affects resolution, edge legality, or synthesis. When absent, tools MAY derive it from content — a top-level `## Schema` with no acting edges reads as `record`; intent-level `## Role`/`## Access` or acting edges read as `persona`. A declared nature that contradicts content is an informational diagnostic (§12.2), never an error: content is the authority, the badge is the hint.
 - `provenance` — `inferred` on a file produced by re-encoding existing code and not yet human-accepted (§17). Absent (the default) or `confirmed` means authored/accepted intent. This is the only field that qualifies a file's authority.
 - `owner` — the identity accountable for this file's intent (free-form — a name or an email). Tools use it as the routing target for findings (§12.3). Accountability metadata only; it never affects the file's authority.
 - `status` — the authoring lifecycle of the **specification**: `draft | review | approved | deprecated`. This is the state of the intent, never of the implementation — implementation status remains banned from `.aim` files (§3.8) and lives in the drift report. Absent means unspecified.
@@ -227,7 +228,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5
+aim_version: 5.2
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -291,7 +292,7 @@ Any other directory under `/aim/` that contains a `<name>.aim` file is an intent
 The body of the file is Markdown. Structure is conveyed by heading levels:
 
 - **H1** — the intent's display name (exactly one per file)
-- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Schema`, `## Children`, `## Dependencies`) and facet blocks (`## Contract: CreateTask`, `## Flow: AssignTask`, etc.)
+- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Schema`, `## Role`, `## Access`, `## Children`, `## Dependencies`) and facet blocks (`## Contract: CreateTask`, `## Flow: AssignTask`, etc.)
 - **H3** — facet sub-blocks (`### Schema`, `### Input`, `### Ensures`, `### Steps`, etc.)
 - **Bulleted lists** — for requirements, tests, steps, attributes, and any enumeration
 - **Fenced code blocks** — for attribute definitions, type expressions, and code samples
@@ -349,7 +350,9 @@ createdAt: datetime required
 
 Format per line: `<name>: <type> <modifier>*`
 
-Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`.
+Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`.
+
+`list(<type>)` declares a repeated value: `<type>` is a scalar (`list(string)`) or a Record name — `items: list(ExpenseItem)` for a log that owns its line items as parts. A Record-typed list derives a `refs` edge to that Record (§8.2), exactly as `ref()` does.
 
 `ref(<Type>.<field>)` is a **typed graph edge** (`refs`, §8.2): it links a schema attribute to another schema's attribute and is collected into the graph alongside inline edge tokens.
 
@@ -764,6 +767,42 @@ Actor identity, role semantics, and view access.
 - Create and complete tasks — [invokes](aim:#Contract:CreateTask), [invokes](aim:#Contract:CompleteTask)
 ```
 
+**The promoted form — an entity-intent (5.2).** A Persona with substance of its own — canon attributes, and eventually its own operations — outgrows facet-hood and becomes its **own intent**. The intent *is* the actor; no self-named facet sits inside it. Its acting face moves to **top-level sections**: `## Role` and `## Access` carry exactly what the facet's `### Role`/`### Access` carried, with the actor's edges declared from the intent node itself (`accesses`/`invokes` from an intent, §8.2 — the same intent-level form `subscribes` has always had). Its data is a top-level `## Schema` (§7.1); its operations co-locate as facets under it; `nature: persona` is the badge (§3.2).
+
+````markdown
+---
+aim: app.employee
+kind: intent
+nature: persona
+parent: app
+---
+
+# Employee
+
+## Role
+
+- Submits expense logs; the subject of the monthly reimbursement cycle.
+
+## Access
+
+- [accesses](aim:app.expenses#View:SubmitForm)
+
+## Schema
+
+```schema
+id: string required
+homeAddress: string required
+```
+
+## Contract: UpdateHomeAddress
+
+### Summary
+
+Change the employee's verified home address — [mutates](aim:app.employee).
+````
+
+The cue for the promotion is the moment an entity grows an **operation of its own** (`UpdateHomeAddress`): entity-specific behavior belongs under the entity, not scattered on the parent (§16.5). A Record promotes the same way — top-level `## Schema`, `nature: record` — when its data and lifecycle earn a file of their own.
+
 ### 7.5 View
 
 Shared interface surfaces and user-visible actions.
@@ -894,17 +933,17 @@ There are eleven **declared** verbs and three **derived** inverses. Each declare
 | Verb | from | to | Meaning | Kind |
 |---|---|---|---|---|
 | `exposes` | view | contract | a View action surfaces a Contract to users | declared |
-| `invokes` | flow, view, contract, persona | contract, flow | a call into another behavioral unit — from a Persona: the actor performs the operation directly (§7.4) | declared |
+| `invokes` | flow, view, contract, persona, intent | contract, flow | a call into another behavioral unit — from a Persona (or a persona-natured intent, §7.4): the actor performs the operation directly | declared |
 | `reads` | contract, flow, view | record | reads a persisted Record | declared |
 | `mutates` | contract, flow | record | creates / updates / deletes a Record | declared |
 | `emits` | flow, contract | event | produces an event | declared |
 | `subscribes` | flow, contract, intent | event | consumes an event | declared |
-| `accesses` | persona | view, intent | a persona may reach a view, or a whole screen/route intent | declared |
+| `accesses` | persona, intent | view, intent | a persona — as a facet or a promoted persona-intent (§7.4) — may reach a view, or a whole screen/route intent | declared |
 | `navigates` | view | view | UI navigation between surfaces | declared |
 | `triggers` | trigger | contract, flow | a schedule, webhook, or external origin initiates a behavioral unit | declared |
 | `refs` | record field | record field | data-level foreign reference (the `ref()` modifier) | declared |
 | `satisfies` | contract, flow, view, trigger | requirement item | a behavioral unit (or a deadline Trigger enforcing a time policy) realizes a `## Requirements` item | declared |
-| `triggered-by` | flow, contract | contract / view / trigger / persona | inverse of `invokes`/`exposes`/`triggers` — a persona appears here when it invokes the unit directly (§7.4) | derived |
+| `triggered-by` | flow, contract | contract / view / trigger / persona / intent | inverse of `invokes`/`exposes`/`triggers` — a persona (or promoted persona-intent) appears here when it invokes the unit directly (§7.4) | derived |
 | `emitted-by` | event | flow / contract | inverse of `emits` | derived |
 | `satisfied-by` | requirement item | contract / flow / view / trigger | inverse of `satisfies` | derived |
 
@@ -915,6 +954,8 @@ An `accesses` edge may target a **View** (access to one surface) **or** a **inte
 **`exposes` vs `invokes` from a View.** Both are legal view→contract edges, and the choice carries meaning. Use **`exposes`** when the contract is reached through a *user-initiated action* on the view — a button, a form submit, a gesture. Use **`invokes`** when the view calls the contract *programmatically*, with no user initiation — an on-load data fetch, a poll, a prefetch. Either inbound edge counts as the contract being "reached" for the orphan check (§12.2); the distinction records whether the behavior is user-driven, which matters for reading intent and for realization.
 
 **`subscribes` from a `intent`.** Almost every `subscribes` edge is declared at the consuming Flow or Contract. A `intent`-level `subscribes` is a deliberate early-stage exception: it declares that an intent consumes an event *without yet naming the internal handler* — `[subscribes](aim:#Event:TicketResolved)` written at the intent root. It is valid at Level 1/2; at Level 3 it SHOULD be refined to a flow- or contract-level edge once the handler exists (an informational diagnostic flags an intent-level `subscribes` that survives into a Level-3 intent, §12.2).
+
+**`accesses`/`invokes` from an `intent` are different in kind:** they are not an early-stage placeholder but the **permanent form of a promoted Persona** (§7.4) — the entity-intent acting directly. They are declared in the intent's top-level `## Access` section and never need refinement.
 
 **`satisfies` and its target.** `satisfies` is the one edge that reaches a sub-block target: its `to` is a `## Requirements` list item, not a facet node. It is declared at the acting unit — the Contract, Flow, or View that realizes the requirement, or the deadline Trigger that enforces a time policy (§7.7). The token URI form is `aim:[<intent>]#Requirements[<key>]`: the reserved section address carries **no** `FacetType:` colon, which is exactly what distinguishes it from the facet form `#<FacetType>:<Name>` and keeps it a valid CommonMark link destination (§2.2, §3.6). The `<key>` takes two forms, discriminated by grammar:
 
@@ -1235,6 +1276,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
 - **Probable duplicate entity** — two nodes with the same facet-type and name in intents not linked by an import or reference (e.g. `auth#Record:User` and `billing#Record:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§15.8), or to confirm they are genuinely distinct.
 - **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across intents, instead of extracting them into sibling facet files or a `<app>.core` intent (§15.2, §15.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
+- **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
 - **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Record plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` Record with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Record whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
 
 ### 12.3 Graph-Diff Findings (Reviewer)
@@ -1305,6 +1347,17 @@ v5.1 is an **additive amendment wave** — no migration required; every v5.0 mod
 3. **Per-node provenance promoted** from optional refinement to the norm for inline bindings (§17.2): a `confirmed` node may hold an `inferred` binding.
 
 Relabel `AGENTS.md` to `aim_version: 5.1` when adopting the new forms; nothing on disk is forced.
+
+### 13.5 From v5.1 To v5.2
+
+Additive; no migration. v5.2 completes the entity story — a promoted entity gets its intent-level form:
+
+1. **`nature:`** — optional, projection-only frontmatter badge for an intent that is itself a thing (§3.2). Derivable from content when absent; a mismatch is informational. Never affects resolution or edge legality.
+2. **Intent-level acting sections** — top-level `## Role` / `## Access` (§7.4), with `accesses`/`invokes` declared from an intent node (§8.2): the promoted-Persona mirror of v5.1's intent-level `## Schema`. Unlike intent-level `subscribes`, these are permanent forms, not early-stage placeholders.
+3. **Entity promotion** documented as a transform (§16.5): facet sub-blocks become intent-level sections, addresses re-point from `<parent>#<FacetType>:<Name>` to the new intent node.
+4. **`list(<type>)`** schema modifier (§3.7); a Record-typed list derives a `refs` edge.
+
+Relabel `AGENTS.md` to `aim_version: 5.2` when adopting; nothing on disk is forced.
 
 ---
 
@@ -1568,6 +1621,7 @@ Because the transform knows *exactly* what changed at the intent level, this dif
 ### 16.5 Choosing the Transform (SHOULD)
 
 - **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a child intent rather than piling facets onto the parent (§15.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§12.2).
+- **Entity promotion (5.2).** The same transform applies to an *entity*: when a Persona or Record facet accretes substance **and its own operations** — an entity-specific Contract is the cue — promote it to an **entity-intent** (§7.1, §7.4). The facet's sub-blocks become the intent's top-level form (`### Role`/`### Access` → `## Role`/`## Access`; `### Schema` → `## Schema`), `nature:` records the kind, the entity's operations move under it, and every `<parent>#Persona:X` / `<parent>#Record:X` address re-points to the new intent node. §16.3 invariants apply unchanged; inline `### Bindings` travel with their nodes automatically.
 - **Clusters accrete; promote them whole.** The §4.3 line is usually crossed *gradually*: no single EXTEND introduces "a distinct capability," but change by change one noun accumulates a Record, several Contracts, a View — until a cohesive capability lies flat inside a mixed intent (the noun-cluster smell, §12.2). The next EXTEND that touches the cluster is the moment to **promote** it, and the promotion takes the *existing* facets along with the new ones. Preservation discipline is never a reason to leave a cluster flat: a transform changes addresses, never commitments (§16.3) — moving a node removes nothing.
 - **Re-home when the namespace doesn't fit.** If a node's address namespace does not match where it is used, **move** it to the intent it belongs to rather than referencing it across an unnatural boundary.
 - **Merge duplicates into a canonical home.** When the probable-duplicate diagnostic (§12.2) flags a true duplicate, **merge** to one canonical node (§15.8) — do not let the copies drift.
