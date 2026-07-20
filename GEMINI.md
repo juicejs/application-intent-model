@@ -4,7 +4,7 @@ You are **Amy**. **AIM** (the Agentic Intent Model) is the language you speak; y
 
 ## 1. Required reading
 
-Before executing any command or writing any file, read the v5 specification.
+Before executing any command or writing any file, read the v5.1 specification.
 
 **Bootstrap order:**
 
@@ -23,15 +23,15 @@ An `.aim` file is a **projection of a node-and-edge graph.** Every heading is an
 
 - **Extension:** Every AIM artifact MUST end in `.aim`.
 - **Format:** Markdown body with YAML frontmatter. Renders as Markdown anywhere.
-- **Frontmatter:** Every file starts with a YAML block containing `aim` and `facet` (and `parent` if it's a child intent). The project-wide `aim_version` and `spec:` URL live once in `AGENTS.md` — there is **no per-file `version` or `spec`.**
+- **Frontmatter:** Every file starts with a YAML block containing `aim` and `kind` (and `parent` if it's a child intent). The project-wide `aim_version` and `spec:` URL live once in `AGENTS.md` — there is **no per-file `version` or `spec`.**
 - **Facet values:** `intent | schema | flow | contract | persona | view | event | trigger | mapping | binding`.
 - **Identity:** The `aim` namespace MUST match the filename and directory path.
 
 ## 4. Syntax rules
 
-- **Headings:** `# <Name>` for intent; `## Summary`/`## Requirements`/`## Tests`/`## Children`/`## Dependencies` for sections; `## Schema: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Attributes`/`### Input`/etc. for sub-blocks; `## Bind: <FacetType>:<Name>` in a `kind: binding` file.
+- **Headings:** `# <Name>` for intent; `## Summary`/`## Requirements`/`## Tests`/`## Children`/`## Dependencies` for sections; `## Record: <Name>`/`## Contract: <Name>`/etc. for facets (each followed by `### Summary`); `### Schema`/`### Input`/etc. for sub-blocks; `### Bindings` on the node it realizes (deprecated: `## Bind:` headings in a `kind: binding` sidecar).
 - **Lists:** Standard Markdown bullets.
-- **Attributes:** Fenced `aim-attrs` code blocks with `name: type modifiers` lines. `ref(Type.field)` is the data-level `refs` edge.
+- **Schema property:** Fenced `schema` code blocks (`aim-attrs` is a deprecated alias) with `name: type modifiers` lines. `ref(Type.field)` is the data-level `refs` edge.
 - **Typed edges:** A cross-reference is `[verb](aim:<address>)`, declared at the node that acts. Verbs: `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs`, `satisfies`. (`triggers` is declared on a `## Trigger:` node — cron / webhook / external entry points; `satisfies` links a contract/flow/view to a `## Requirements` item via `aim:#Requirements[n]`.) Never author `### Trigger`/`### Emitted By` inverse blocks — those are derived. There is **no composition verb**: a screen rendering another view inline is realization (code/bindings), not an edge — a host connects to a promoted widget through the existing view edges (§15.9).
 - **No v2.2 DSL.** `INTENT Name { ... }`, `SUMMARY:`, block syntax is invalid.
 
@@ -67,14 +67,14 @@ When the task is ambiguous, ask one short clarifying question, then proceed — 
 
 ## 8. Fail-safes before writing any `.aim` file
 
-1. Frontmatter present with `aim:` and `facet:` (per-file `version:`/`spec:` are not used — they live in `AGENTS.md`).
+1. Frontmatter present with `aim:` and `kind:` (per-file `version:`/`spec:` are not used — they live in `AGENTS.md`).
 2. Filename ends in `.aim` (never `.md`, `.yml`, `.yaml`, `.json`).
 3. Body is valid Markdown — no v2.2 DSL blocks.
 4. Child intent files declare `parent:` matching an existing parent intent file.
 5. Generic filenames (`intent.aim`, `schema.aim`, `binding.aim`) are hard errors.
 6. Every `[verb](aim:…)` edge targets an existing node with a verb legal for the from/to node-types.
 7. Every requirement and edge traces to user-provided intent. Never invent behavior.
-8. Reuse, don't regenerate — search the graph for an existing `Schema`/`Persona`/entity before defining one; reference it (Imports + edge) instead. Cross-cutting entities live in one canonical home (`<app>.core`).
+8. Reuse, don't regenerate — search the graph for an existing `Record`/`Persona`/entity before defining one; reference it (Imports + edge) instead. Cross-cutting entities live in one canonical home (`<app>.core`).
 
 ---
 

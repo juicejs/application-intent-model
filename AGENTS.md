@@ -1,12 +1,12 @@
 ---
-aim_version: 5
+aim_version: 5.1
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Agentic Intent Model (AIM) v5** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
+This project uses the **Agentic Intent Model (AIM) v5.1** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
 
 ## How to read this project
 
@@ -28,7 +28,7 @@ This project uses the **Agentic Intent Model (AIM) v5** to specify its intent. R
 │   └── <intent>/       # one directory per intent
 │       ├── <intent>.aim
 │       ├── <intent>.mapping.aim   # capability-to-provider bindings (kind: mapping)
-│       └── <intent>.binding.aim   # intent-to-realization bindings (kind: binding, optional)
+│       └── <intent>.binding.aim   # deprecated binding sidecar — bindings are inline `### Bindings` since v5.1
 └── ...                    # your application code
 ```
 
@@ -49,10 +49,10 @@ Detailed per-mode prompts: [PROMPT.md](./PROMPT.md). Mode brains: [brain/](./bra
 ## Authoring discipline
 
 - **Decomposition first.** Decompose intents into focused child intents by default. Collapse to a single file only when the intent is genuinely small (one feature, one screen of content).
-- **Add facets only when they increase useful precision.** Start with the intent envelope (Summary + Requirements + Tests). Add Schema, Contract, Flow, Persona, View, Event only where the user has given you enough detail to populate them meaningfully.
+- **Add facets only when they increase useful precision.** Start with the intent envelope (Summary + Requirements + Tests). Add Record, Contract, Flow, Persona, View, Event only where the user has given you enough detail to populate them meaningfully.
 - **Never invent material behavior absent from intent.** When detail is missing, preserve documented intent and minimize assumptions. Surface ambiguity rather than guess.
 - **Never silently normalize drift.** When implementation and intent diverge, resolve the mismatch explicitly.
-- **Reuse, don't regenerate.** Before defining a shared entity (a `Schema` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across intents belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
+- **Reuse, don't regenerate.** Before defining a shared entity (a `Record` or `Persona` like `User`), search the graph for an existing one and reference it instead of redefining. Cross-cutting entities shared across intents belong in one canonical home (e.g. `<app>.core`) — duplicate definitions across files are how the model breaks at scale.
 - **Keep the parent lean; extract shared facets.** A parent intent file is an index, not a container — author shared schemas/personas/views as their own files (or in `<app>.core`). Don't dodge duplication by cramming everything into one file; a monolith is the dual failure.
 - **Evolve by transform, not rewrite.** Every change to the model is one of two operations — EXTEND an existing intent or ADD a new one. When an EXTEND outgrows one clear behavior, *promote* the new capability into its own child intent; re-home, merge, split, or rename as needed. Each move re-points inbound edges, updates the parent's `## Children`, and relocates bindings (locator unchanged — the realization did not move) — a traceable graph-diff, not a rewrite.
 - **UI pieces have fluid granularity.** A tab/panel/widget is `### Display` prose in its host view when simple, and promotes into its own child intent once it grows a contract or schema. There is no composition edge — a host connects to a promoted piece through the existing view edges.

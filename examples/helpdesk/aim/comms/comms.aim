@@ -23,7 +23,7 @@ Send one transactional email.
 
 ### Input
 
-```aim-attrs
+```schema
 to: string required
 subject: string required max(200)
 body: string required

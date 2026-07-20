@@ -1,6 +1,6 @@
 # Example: Helpdesk (multi-file, full v5 showcase)
 
-A small support-ticket app that exercises **every** AIM v5 feature in one connected graph. It is intentionally split across files, because the point of the graph model is that the relation graph *spans files* — and you can still traverse, check, and diff it.
+A small support-ticket app that exercises **every** AIM v5.1 feature in one connected graph. It is intentionally split across files, because the point of the graph model is that the relation graph *spans files* — and you can still traverse, check, and diff it.
 
 > The single-file [`nemicko.demo.todo.aim`](../nemicko.demo.todo.aim) shows the basics in one file. This example shows the graph at scale.
 
@@ -12,11 +12,11 @@ Requesters open support tickets from a form and track them. Agents work a shared
 
 | Feature | Where |
 |---|---|
-| All seven facets | `Schema` ×2, `Contract` ×3, `Flow` ×4, `Persona` ×2, `View` ×3, `Event` ×2, `Trigger` ×1 |
+| All seven facets | `Record` ×2, `Contract` ×3, `Flow` ×4, `Persona` ×2, `View` ×3, `Event` ×2, `Trigger` ×1 |
 | Child intents + parent-as-index | `submit/` and `resolve/` under `helpdesk.tickets`; parent holds shared schema, personas, views |
 | All ten typed edges | `exposes`, `invokes`, `reads`, `mutates`, `emits`, `subscribes`, `accesses`, `navigates`, `triggers`, `refs` |
 | Non-actor entry point | `Trigger: StaleSweep` (cron) `triggers` `Flow: EscalateStale` — a scheduled sweep with no Persona or View |
-| Upward resolution | child intents write `[mutates](aim:#Schema:Ticket)` — `Ticket` resolves up to the parent |
+| Upward resolution | child intents write `[mutates](aim:#Record:Ticket)` — `Ticket` resolves up to the parent |
 | Cross-component edges | parent → child (`...resolve#Contract:ResolveTicket`) and → external (`comms#Contract:SendEmail`) |
 | Dependencies + mapping | `Imports`/`Requires` in the parent; `helpdesk.tickets.mapping.aim` binds the `Users` capability |
 | Intent↔code bindings | `helpdesk.tickets.binding.aim` maps nodes to `file#symbol`, `route:`, `table:`, `topic:` |
@@ -61,8 +61,8 @@ graph LR
   F_Sub["Flow: ExecuteSubmit"]:::flow
   F_Res["Flow: ExecuteResolve"]:::flow
   F_Notify["Flow: NotifyRequester"]:::flow
-  S_Ticket["Schema: Ticket"]:::schema
-  S_User["Schema: User"]:::schema
+  S_Ticket["Record: Ticket"]:::schema
+  S_User["Record: User"]:::schema
   E_Sub["Event: TicketSubmitted"]:::event
   E_Res["Event: TicketResolved"]:::event
   F_Esc["Flow: EscalateStale"]:::flow
@@ -103,5 +103,5 @@ A standalone vector version of the same graph (facet columns, left-to-right) liv
 - **Submit path:** `Requester` *accesses* `SubmitForm`, which *exposes* `SubmitTicket`; the contract *invokes* `ExecuteSubmit`, which *mutates* `Ticket` and *emits* `TicketSubmitted`.
 - **Resolve + notify (the async hop):** `Agent` opens `TicketDetail`, which *exposes* `ResolveTicket` → *invokes* `ExecuteResolve` → *mutates* `Ticket` + *emits* `TicketResolved`. Separately, `NotifyRequester` *subscribes* to `TicketResolved`, *reads* the `Ticket`, and *invokes* the external `comms.SendEmail`. Nothing *invokes* `NotifyRequester` — it is entered by the event, which is exactly why event-driven flows are not orphans.
 - **Scheduled, non-actor path:** `StaleSweep` (a cron `Trigger`) *triggers* `EscalateStale`, which *reads* and *mutates* `Ticket`. No Persona or View is involved — the Trigger is the entry point, so the flow has a real inbound edge instead of looking orphaned. (External webhooks model the same way.)
-- **Impact analysis for free:** changing `Schema: Ticket` reaches **12** nodes along inbound edges — both contracts, all four flows (incl. the notify and escalate flows), all three views, both personas, and the `StaleSweep` trigger (transitively). That set is *computed* from the graph, not guessed.
+- **Impact analysis for free:** changing `Record: Ticket` reaches **12** nodes along inbound edges — both contracts, all four flows (incl. the notify and escalate flows), all three views, both personas, and the `StaleSweep` trigger (transitively). That set is *computed* from the graph, not guessed.
 - **Drift as graph-diff:** because `helpdesk.tickets.binding.aim` maps nodes to code (`SubmitTicket → src/tickets/submit.ts#submitTicket`, `Ticket → table:tickets`, `TicketResolved → topic:…`), a Reviewer can diff this declared graph against the realized code graph and report precise, owner-routed findings.

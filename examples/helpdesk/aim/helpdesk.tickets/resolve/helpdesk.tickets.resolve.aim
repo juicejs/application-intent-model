@@ -30,7 +30,7 @@ Mark a ticket resolved on behalf of the acting agent.
 
 ### Input
 
-```aim-attrs
+```schema
 ticketId: string required
 ```
 
@@ -45,12 +45,17 @@ ticketId: string required
 ### Ensures
 
 - Orchestration is delegated to the resolve flow — [invokes](aim:#Flow:ExecuteResolve).
-- The ticket status becomes `resolved` and `resolvedAt` is set — [mutates](aim:#Schema:Ticket).
+- The ticket status becomes `resolved` and `resolvedAt` is set — [mutates](aim:#Record:Ticket).
 - A resolution event is emitted — [emits](aim:#Event:TicketResolved).
 
 ### Returns
 
 - The updated Ticket.
+
+### Bindings
+
+- binds: `src/tickets/resolve.ts#resolveTicket` — as: handler
+- binds: `route:POST /api/tickets/:id/resolve` — as: route
 
 ## Flow: ExecuteResolve
 
@@ -61,7 +66,7 @@ Transition the ticket to resolved and emit the event.
 ### Steps
 
 1. Verify the acting agent and the current status.
-2. Set `status="resolved"` and stamp `resolvedAt` — [mutates](aim:#Schema:Ticket).
+2. Set `status="resolved"` and stamp `resolvedAt` — [mutates](aim:#Record:Ticket).
 3. Emit the event — [emits](aim:#Event:TicketResolved).
 
 ## Event: TicketResolved
@@ -72,7 +77,7 @@ Emitted when an agent resolves a ticket. Consumed by the parent's `NotifyRequest
 
 ### Payload
 
-```aim-attrs
+```schema
 ticketId: string required
 resolvedBy: string required
 resolvedAt: datetime required
@@ -82,3 +87,7 @@ resolvedAt: datetime required
 
 - Channel: `helpdesk.tickets.resolved`
 - Durable: true
+
+### Bindings
+
+- binds: `topic:helpdesk.tickets.resolved` — as: topic

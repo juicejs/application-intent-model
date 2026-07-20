@@ -33,30 +33,30 @@ Requesters submit support tickets and track their status. Agents see the whole q
 
 - Directory as Users
 
-## Schema: User
+## Record: User
 
 ### Summary
 
 A person who can use the helpdesk, in either role.
 
-### Attributes
+### Schema
 
-```aim-attrs
+```schema
 id: string required
 name: string required max(120)
 email: string required
 role: enum(requester, agent) required
 ```
 
-## Schema: Ticket
+## Record: Ticket
 
 ### Summary
 
 A single support request and its lifecycle state.
 
-### Attributes
+### Schema
 
-```aim-attrs
+```schema
 id: string required
 subject: string required min(1) max(160)
 body: string required max(4000)
@@ -70,6 +70,11 @@ resolvedAt: datetime optional
 ### Constraints
 
 - `status` transitions follow: `open` → `in_progress` → `resolved`.
+
+### Bindings
+
+- binds: `src/models/ticket.ts#Ticket` — as: model
+- binds: `table:tickets` — as: table
 
 ## Persona: Requester
 
@@ -97,12 +102,16 @@ The agent's worklist — every ticket as a table, newest first.
 
 ### Display
 
-- A table of [reads](aim:#Schema:Ticket) rows: subject, requester, status, createdAt.
+- A table of [reads](aim:#Record:Ticket) rows: subject, requester, status, createdAt.
 - Status shown as a colored badge; resolved tickets dimmed.
 
 ### Actions
 
 - Clicking a row — [navigates](aim:#View:TicketDetail).
+
+### Bindings
+
+- binds: `src/views/TicketQueue.tsx#TicketQueue` — as: component
 
 ## View: TicketDetail
 
@@ -112,7 +121,7 @@ A single ticket in full, with the actions available for the viewer's role.
 
 ### Display
 
-- The [reads](aim:#Schema:Ticket) record: subject, body, requester, assignee, status, timestamps.
+- The [reads](aim:#Record:Ticket) record: subject, body, requester, assignee, status, timestamps.
 
 ### Actions
 
@@ -127,7 +136,7 @@ When a ticket is resolved, email its requester. Event-driven and asynchronous �
 ### Steps
 
 1. React to a resolved ticket — [subscribes](aim:helpdesk.tickets.resolve#Event:TicketResolved).
-2. Load the ticket to find its requester — [reads](aim:#Schema:Ticket).
+2. Load the ticket to find its requester — [reads](aim:#Record:Ticket).
 3. Resolve the requester's email address via the `Users` directory.
 4. Send the notification — [invokes](aim:comms#Contract:SendEmail).
 
@@ -139,8 +148,8 @@ Find tickets still `open` past the SLA window and escalate them (bump priority, 
 
 ### Steps
 
-1. Find open tickets older than the SLA window — [reads](aim:#Schema:Ticket).
-2. Re-stamp the stale tickets for escalation — [mutates](aim:#Schema:Ticket).
+1. Find open tickets older than the SLA window — [reads](aim:#Record:Ticket).
+2. Re-stamp the stale tickets for escalation — [mutates](aim:#Record:Ticket).
 
 ## Trigger: StaleSweep
 

@@ -44,7 +44,7 @@ Create a new ticket on behalf of the current requester.
 
 ### Input
 
-```aim-attrs
+```schema
 subject: string required min(1) max(160)
 body: string required max(4000)
 ```
@@ -56,12 +56,17 @@ body: string required max(4000)
 ### Ensures
 
 - Orchestration is delegated to the submit flow — [invokes](aim:#Flow:ExecuteSubmit).
-- A new Ticket is persisted with status="open" — [mutates](aim:#Schema:Ticket), [satisfies](aim:#Requirements[2]).
+- A new Ticket is persisted with status="open" — [mutates](aim:#Record:Ticket), [satisfies](aim:#Requirements[2]).
 - A submission event is emitted — [emits](aim:#Event:TicketSubmitted), [satisfies](aim:#Requirements[3]).
 
 ### Returns
 
 - The created Ticket.
+
+### Bindings
+
+- binds: `src/tickets/submit.ts#submitTicket` — as: handler
+- binds: `route:POST /api/tickets` — as: route
 
 ## Flow: ExecuteSubmit
 
@@ -72,7 +77,7 @@ Persist the ticket and emit the submission event.
 ### Steps
 
 1. Set `requesterId` to the current user and `status` to `open`.
-2. Persist the ticket — [mutates](aim:#Schema:Ticket).
+2. Persist the ticket — [mutates](aim:#Record:Ticket).
 3. Emit the event — [emits](aim:#Event:TicketSubmitted).
 
 ## Event: TicketSubmitted
@@ -83,7 +88,7 @@ Emitted when a requester opens a new ticket.
 
 ### Payload
 
-```aim-attrs
+```schema
 ticketId: string required
 requesterId: string required
 createdAt: datetime required

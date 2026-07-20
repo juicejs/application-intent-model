@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5
+# Agentic Intent Model (AIM) v5.1
 
 *Formerly "Application Intent Model" — renamed when the language generalized beyond software.*
 
@@ -12,7 +12,7 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 
 - **Ground agents in explicit, versioned intent** instead of loose chat context that evaporates between sessions.
 - **A reviewable contract between intent and reality.** `.aim` files are normally agent-authored from a human's narration, but a small model is something a human can read, correct, and diff — and a Reviewer can check reality against (code, configurations, execution logs) — far more cheaply than inspecting the realization itself.
-- **A relation graph, not just a tree.** AIM treats every `.aim` file as a projection of a node-and-edge graph: a View *exposes* a Contract, a Flow *mutates* a Schema and *emits* an Event. That graph is derived, traversable, and checkable.
+- **A relation graph, not just a tree.** AIM treats every `.aim` file as a projection of a node-and-edge graph: a View *exposes* a Contract, a Flow *mutates* a Record and *emits* an Event. That graph is derived, traversable, and checkable.
 - **Drift as graph-diff.** With optional intent↔realization bindings, review becomes a diff between the declared graph and the realized graph — recovered from code for software, from logs and configurations for processes.
 
 AIM pays off when reading the model is meaningfully easier than inspecting the realization. For trivially small or throwaway work, acting directly is the right call.
@@ -25,7 +25,7 @@ v4 was the breaking change from v3.1 that founded the language on a graph; v5 ge
 
 1. **Graph-founded model.** The `.aim` Markdown file is a *projection* of an underlying node-and-edge graph. Every heading is an addressable node.
 2. **Typed edge taxonomy.** One CommonMark-native token — `[verb](aim:<address>)` — replaces v3.1's inconsistent prose cross-references. Dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
-3. **Intent↔realization binding layer.** Optional `kind: binding` files map intent nodes to their realization sites — in code, in systems, in automations — turning drift detection into a graph-diff.
+3. **Intent↔realization binding layer.** An inline `### Bindings` property on each node (with its own `provenance`; deprecated `kind: binding` sidecars still accepted) maps intent nodes to their realization sites — in code, in systems, in automations — turning drift detection into a graph-diff.
 
 Migrating from v3.1: see Section 13 of [specification.md](./specification.md).
 
@@ -91,7 +91,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v5 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v5.1 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -123,5 +123,5 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v5**  
+Current spec: **AIM v5.1**  
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License
