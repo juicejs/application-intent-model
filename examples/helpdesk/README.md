@@ -1,6 +1,6 @@
 # Example: Helpdesk (multi-file, full v5 showcase)
 
-A small support-ticket app that exercises **every** AIM v5.1 feature in one connected graph. It is intentionally split across files, because the point of the graph model is that the relation graph *spans files* — and you can still traverse, check, and diff it.
+A small support-ticket app that exercises **every** AIM v5.2 feature in one connected graph. It is intentionally split across files, because the point of the graph model is that the relation graph *spans files* — and you can still traverse, check, and diff it.
 
 > The single-file [`nemicko.demo.todo.aim`](../nemicko.demo.todo.aim) shows the basics in one file. This example shows the graph at scale.
 

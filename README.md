@@ -91,7 +91,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v5.1 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v5.2 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -123,5 +123,5 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v5.1**  
+Current spec: **AIM v5.2**  
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License

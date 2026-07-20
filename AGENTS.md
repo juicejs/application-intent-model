@@ -1,5 +1,5 @@
 ---
-aim_version: 5.1
+aim_version: 5.2
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
