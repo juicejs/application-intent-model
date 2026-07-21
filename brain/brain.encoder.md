@@ -64,6 +64,7 @@ Humans think in trees, not graphs (§2): the tree is the model's entire human in
 
 - **Table-of-contents test:** each intent's children must read as a short table of contents for the level below ("My Library has Playlists"). 3–9 children per level; depth is uncapped but every level must re-earn this test (§5.5).
 - **Noun-cluster rule (§12.2):** a Record plus several like-named Contracts (often a View too) is a child intent — never leave the cluster lying flat inside a mixed intent.
+- **Wrapper rule (§15.2):** the inverse — a sub-intent holding ONE facet, with no requirements of its own and no children, is a wrapper level; make that operation a facet of its parent or entity-intent instead. A sub-intent must earn its level: several facets, its own entry points, or its own requirements.
 - **No single-child parents; parents stay lean indexes** (§15.2). Shared facets live in their own files; entities shared across domains live once — in `<app>.core` — and are referenced (§15.8), never re-minted under a synonym.
 - **Actors and entry points are first-class:** every human role is a `## Persona:`; every schedule, webhook, queue consumer, or external caller is a `## Trigger:`. A model with no Personas is a wrongly encoded model.
 

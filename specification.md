@@ -407,7 +407,7 @@ The namespace hierarchy is the `extends` edge of the graph (parent ← child); i
 /aim/
   juice.tasks/
     juice.tasks.aim                  # parent: index + shared
-    juice.tasks.schema.aim           # shared schemas (Task, User refs)
+    juice.tasks.record.aim           # shared Records (Task, User refs; `kind: record` — `kind: schema` is the deprecated spelling)
     juice.tasks.mapping.aim          # capability mappings (kind: mapping)
     juice.tasks.binding.aim          # code bindings (kind: binding)
     create_task/
@@ -1276,6 +1276,8 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
 - **Probable duplicate entity** — two nodes with the same facet-type and name in intents not linked by an import or reference (e.g. `auth#Record:User` and `billing#Record:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§15.8), or to confirm they are genuinely distinct.
 - **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across intents, instead of extracting them into sibling facet files or a `<app>.core` intent (§15.2, §15.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
+- **Unanchored deadline** — an event-anchored Trigger schedule whose anchor Event (`after [Event:X]`) or disarming Event (`unless [Event:Y]`) does not resolve to an existing Event node (§7.7): the timer has nothing checkable to arm or disarm on. Remediation: create the Event and `emits` it from the operation that starts / fulfills the countdown.
+- **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
 - **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
 - **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Record plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` Record with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Record whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
 
@@ -1356,6 +1358,7 @@ Additive; no migration. v5.2 completes the entity story — a promoted entity ge
 2. **Intent-level acting sections** — top-level `## Role` / `## Access` (§7.4), with `accesses`/`invokes` declared from an intent node (§8.2): the promoted-Persona mirror of v5.1's intent-level `## Schema`. Unlike intent-level `subscribes`, these are permanent forms, not early-stage placeholders.
 3. **Entity promotion** documented as a transform (§16.5): facet sub-blocks become intent-level sections, addresses re-point from `<parent>#<FacetType>:<Name>` to the new intent node.
 4. **`list(<type>)`** schema modifier (§3.7); a Record-typed list derives a `refs` edge.
+5. **Wrapper-intent guidance and diagnostic** — a sub-intent must earn its level (§15.2); a child holding one facet with no requirements and no children is flagged informationally (§12.2).
 
 Relabel `AGENTS.md` to `aim_version: 5.2` when adopting; nothing on disk is forced.
 
@@ -1388,7 +1391,7 @@ A single-player snake game.
 ```
 /aim/game.snake/
   game.snake.aim              # parent: shared schemas, index
-  game.snake.schema.aim       # shared SnakeState, FoodPellet
+  game.snake.record.aim       # shared SnakeState, FoodPellet
   tick/
     game.snake.tick.aim
   collision/
@@ -1430,7 +1433,9 @@ The parent intent file is a **lean index**, not a container:
 - The `## Children` index.
 - Dependencies.
 
-Shared **facets** — schemas, personas, views referenced by multiple intents — are authored as their **own files**, never embedded en masse in the parent: a sibling facet file (`<intent>.schema.aim`, `<intent>.persona.aim`, `<intent>.view.aim`) for what's shared within a subtree, or a `<app>.core` intent (§15.8) for entities shared *across* top-level intents. Embedding many facets into one intent file produces a **monolith** (§12.2) — the dual of the duplication problem, and just as damaging at scale.
+Shared **facets** — Records, personas, views referenced by multiple intents — live at the parent so children resolve them upward (§11.1). **A handful live directly in the parent intent file**; a sibling facet file (`<intent>.record.aim`, `<intent>.persona.aim`, `<intent>.view.aim`) earns itself only **at scale**, when the shared set has grown enough to crowd the parent — the same earn-your-level judgment as sub-intents. Do not mint a "Shared Xs" sidecar for two personas: sharing is about *ownership and resolution* (parent-level), not about a separate file. For entities shared *across* top-level intents, use a `<app>.core` intent (§15.8). Embedding **many** facets into one intent file produces a **monolith** (§12.2) — the dual of the duplication problem; the failure is the extreme at either end, not co-location itself.
+
+**A sub-intent must earn its level (5.2).** The inverse failure of the monolith is the **wrapper**: a child intent holding a single facet and nothing else — no requirements of its own, no children — adds a level of navigation without adding a level of meaning ("Wallet Balances" containing only `ManageBalances`). A lone operation is a **facet on its parent** (or on its entity-intent, §7.4/§16.5); it becomes a child intent when it *grows* — several facets, its own entry points, its own requirements ("Wallet Funding" holding two payment webhooks plus two contracts has earned the level). Tools flag surviving wrappers informationally (§12.2). The tellability test decides the edge cases: a level the reader must click through without learning anything is a level too many.
 
 ### 15.3 What Goes In A Child Intent
 
@@ -1621,7 +1626,7 @@ Because the transform knows *exactly* what changed at the intent level, this dif
 ### 16.5 Choosing the Transform (SHOULD)
 
 - **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a child intent rather than piling facets onto the parent (§15.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§12.2).
-- **Entity promotion (5.2).** The same transform applies to an *entity*: when a Persona or Record facet accretes substance **and its own operations** — an entity-specific Contract is the cue — promote it to an **entity-intent** (§7.1, §7.4). The facet's sub-blocks become the intent's top-level form (`### Role`/`### Access` → `## Role`/`## Access`; `### Schema` → `## Schema`), `nature:` records the kind, the entity's operations move under it, and every `<parent>#Persona:X` / `<parent>#Record:X` address re-points to the new intent node. §16.3 invariants apply unchanged; inline `### Bindings` travel with their nodes automatically.
+- **Entity promotion (5.2).** The same transform applies to an *entity*: when a Persona or Record facet accretes substance **and its own operations** — an entity-specific Contract is the cue — promote it to an **entity-intent** (§7.1, §7.4). The facet's sub-blocks become the intent's top-level form (`### Role`/`### Access` → `## Role`/`## Access`; `### Schema` → `## Schema`), `nature:` records the kind, the entity's operations move under it, and every `<parent>#Persona:X` / `<parent>#Record:X` address re-points to the new intent node. §16.3 invariants apply unchanged; inline `### Bindings` travel with their nodes automatically. The moved operations arrive as **facets of the entity-intent**, not as one-facet child intents each — a sub-intent must earn its level (§15.2); wrap an operation only once it has grown its own facets, entry points, or requirements.
 - **Clusters accrete; promote them whole.** The §4.3 line is usually crossed *gradually*: no single EXTEND introduces "a distinct capability," but change by change one noun accumulates a Record, several Contracts, a View — until a cohesive capability lies flat inside a mixed intent (the noun-cluster smell, §12.2). The next EXTEND that touches the cluster is the moment to **promote** it, and the promotion takes the *existing* facets along with the new ones. Preservation discipline is never a reason to leave a cluster flat: a transform changes addresses, never commitments (§16.3) — moving a node removes nothing.
 - **Re-home when the namespace doesn't fit.** If a node's address namespace does not match where it is used, **move** it to the intent it belongs to rather than referencing it across an unnatural boundary.
 - **Merge duplicates into a canonical home.** When the probable-duplicate diagnostic (§12.2) flags a true duplicate, **merge** to one canonical node (§15.8) — do not let the copies drift.
