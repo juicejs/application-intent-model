@@ -722,6 +722,40 @@ description: string optional
 - The newly created Task record.
 ````
 
+**Decisions (5.4).** A decision is the basis of most processes — "are the statements accurate?", "approve or return?" — and it is a **judgment somebody reaches against criteria**, with an owner and an audit trail. It is therefore a commitment, not control flow, and it belongs in the model.
+
+A decision is **not its own node**: the operation that reaches it *is* the decision. Reviewing *is* deciding; a Contract whose `### Authz` says who may review is already the place accountability lives, and a separate gateway node would split one act in two — divorcing the judgment from the authority over it, and minting a node with no commitment of its own. Instead the deciding Contract (or Flow) declares its outcomes in a `### Decides` block:
+
+````markdown
+## Contract: ReviewFinancialStatements
+
+### Summary
+
+The reviewer checks the draft statements against the reconciliations.
+
+### Authz
+
+- InternalReviewer only.
+
+### Decides
+
+- **Accurate** — every balance ties to a reconciliation and each adjustment is supported
+  — [emits](aim:#Event:FinancialStatementsConfirmed)
+- **Inaccurate** — any balance is unexplained, or an adjustment lacks support
+  — [emits](aim:#Event:DiscrepanciesFound)
+````
+
+The grammar mirrors a Flow's `### Steps` (§7.3), so there is one form to learn:
+
+- **One bullet is one outcome.** The bolded name is the outcome's label and follows the §3.6 name grammar, which makes it addressable as `#Contract:<Name> → Decides[<Label>]` (§2.2).
+- **The prose after the dash is the criteria** — what the judgment turns on. It is normative: realization must decide on this basis, and the Reviewer checks that it does (§15.10 — for a judgment no output can verify, the criteria are the proxy).
+- **The outcome's edge tokens ride inside its bullet**, exactly as a step's do. Usually one `emits`; `invokes`/`mutates` are legal where an outcome acts directly.
+- **The block asserts that its outcomes are mutually exclusive and exhaustive** — that is what `### Decides` *means*, so no further marker is needed. Two or more bullets are required; a single-outcome block is not a decision.
+
+Exclusivity is the fact the graph cannot otherwise derive: without it, "either A or B" and "both A and B" produce identical edges, and any projection that draws a branch must guess. The block adds no new verb and no new node type — every outcome's edge derives exactly as before (§8.1) — so the addition is additive and needs no migration. What it adds to the derived graph is one **exclusivity group** per deciding node: the ordered outcome labels, each with its events and its criteria.
+
+Two consequences elsewhere. A `### Steps` item whose operations are the outcomes of a deciding Contract is **exclusive**; anything else in one item is joint work — which settles the ambiguity §7.3's step grammar otherwise leaves open. And a Flow's `### Steps` stay the procedure: where the path forks, the fork belongs to the deciding Contract the step invokes, keeping sequencing and judgment separate.
+
 ### 7.3 Flow
 
 Operational sequencing, branching, retries, and error handling.
@@ -754,7 +788,7 @@ When a guarantee cannot be cheaply and completely verified from its outcome, a F
 
 - **One numbered item = one step.** Sequencing is *between* steps, never within one. The authored numbers are display; position is authority.
 - **Inline edge tokens are the step's operations.** An `[invokes](aim:#Contract:X)` inside item 4 belongs to step 4; the edge carries its step index into the graph.
-- **Two or more `invokes` in one item are alternatives or joint work — not a sequence.** "Wash — `[invokes](aim:#Contract:Wash)` — or shower — `[invokes](aim:#Contract:Shower)`" is one step with two ways through it. A projection renders them side by side, never chained.
+- **Two or more `invokes` in one item are not a sequence** — they are one step with several ways through it: "Wash — `[invokes](aim:#Contract:Wash)` — or shower — `[invokes](aim:#Contract:Shower)`". A projection renders them side by side, never chained. Whether they are *exclusive* is decided by the model, not guessed by the reader: they are alternatives when they are the outcomes of a deciding Contract (`### Decides`, §7.2), and joint work otherwise.
 - **A step with no edges is a human step.** "Get undressed." is first-class: it appears in every process projection (§17 — a manual step remains a Flow step). A step whose only edges are `mutates`/`emits`/`reads` is work the flow performs itself.
 - Indented continuation lines belong to the step above them.
 
@@ -1319,6 +1353,10 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Over-embedded intent file (monolith)** — an intent file that embeds many facets, especially shared ones used across intents, instead of extracting them into sibling facet files or a `<app>.core` intent (§15.2, §15.8). The dual of duplication: both fragment maintainability at scale. A smell, not a hard error.
 - **Over-hoisted facet** — a facet defined at an ancestor intent whose consumers all lie inside a single descendant subtree (§15.2): it was lifted for a sharing that never materialized, or it is a **role** that should have stayed with the intent reading it (§7.4). Remediation: move it down to its actual consumer — or, when it is a canonical entity whose second consumer has not arrived yet (§18: structure decisions are cheap, missing commitments are not), leave it and expect the note to stand. Detection counts the distinct subtrees that reference the node, so it is exact wherever edges are declared and silent where they are not; informational, and expected while a shared set is still forming. The inverse of the monolith smell: one lifts too little, this lifts too early.
 - **Unanchored deadline** — an event-anchored Trigger schedule whose anchor Event (`after [Event:X]`) or disarming Event (`unless [Event:Y]`) does not resolve to an existing Event node (§7.7): the timer has nothing checkable to arm or disarm on. Remediation: create the Event and `emits` it from the operation that starts / fulfills the countdown.
+- **Unhandled outcome (5.4)** — a `### Decides` outcome whose Event nothing consumes: no operation `subscribes` to it, and no Trigger anchors on or is disarmed by it (§7.2). This is the half-modelled decision a flowchart author writes when the losing branch trails off the page — the model claims a judgment with a path that goes nowhere. Distinct from an ordinary dead-end Event because the decision states that this outcome *will* occur. Remediation: wire the consumer, or ask the owner what actually happens on that branch — never quietly drop it.
+- **Single-outcome decision (5.4)** — a `### Decides` block with fewer than two outcomes (§7.2): either it is not a decision and its content belongs in `### Ensures`, or an outcome is missing. Remediation: name the other outcome, or remove the block.
+- **Criteria-free outcome (5.4)** — a `### Decides` outcome with a label and edges but no criteria prose (§7.2): the judgment is unauditable, and §15.10's proxy verification has nothing to check. Remediation: state what the outcome turns on.
+- **Undeclared branch (5.4)** — an operation emitting two or more Events whose consumers diverge, with no `### Decides` block (§7.2): probably a decision left implicit, since the graph alone cannot tell an either/or from concurrent announcements. Remediation: declare the outcomes if it is a decision — and if it is not, no change is needed. Informational by design: this is the question a tool should raise rather than the guess it should make.
 - **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
 - **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
 - **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Record plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` Record with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Record whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
