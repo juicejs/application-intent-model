@@ -292,7 +292,7 @@ Any other directory under `/aim/` that contains a `<name>.aim` file is an intent
 The body of the file is Markdown. Structure is conveyed by heading levels:
 
 - **H1** — the intent's display name (exactly one per file)
-- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Schema`, `## Role`, `## Access`, `## Children`, `## Dependencies`) and facet blocks (`## Contract: CreateTask`, `## Flow: AssignTask`, etc.)
+- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Schema`, `## Role`, `## Access`, `## Steps`, `## Children`, `## Dependencies`) and facet blocks (`## Contract: CreateTask`, `## Flow: AssignTask`, etc.)
 - **H3** — facet sub-blocks (`### Schema`, `### Input`, `### Ensures`, `### Steps`, etc.)
 - **Bulleted lists** — for requirements, tests, steps, attributes, and any enumeration
 - **Fenced code blocks** — for attribute definitions, type expressions, and code samples
@@ -749,6 +749,43 @@ Persists a new task and emits the creation event.
 The flow's trigger (which contract invokes it) is **not** authored here — it is derived from the `invokes` edge declared at the contract or view that calls the flow (§8.4).
 
 When a guarantee cannot be cheaply and completely verified from its outcome, a Flow's `### Steps` take on a second job: they are the normative **proxy verifier** for that guarantee (§15.10).
+
+**Step grammar (5.3).** `### Steps` is a structured ordered list, and tools parse it — projections (the process chart, the sidebar, verifiers) read the steps directly rather than re-deriving them from prose:
+
+- **One numbered item = one step.** Sequencing is *between* steps, never within one. The authored numbers are display; position is authority.
+- **Inline edge tokens are the step's operations.** An `[invokes](aim:#Contract:X)` inside item 4 belongs to step 4; the edge carries its step index into the graph.
+- **Two or more `invokes` in one item are alternatives or joint work — not a sequence.** "Wash — `[invokes](aim:#Contract:Wash)` — or shower — `[invokes](aim:#Contract:Shower)`" is one step with two ways through it. A projection renders them side by side, never chained.
+- **A step with no edges is a human step.** "Get undressed." is first-class: it appears in every process projection (§17 — a manual step remains a Flow step). A step whose only edges are `mutates`/`emits`/`reads` is work the flow performs itself.
+- Indented continuation lines belong to the step above them.
+
+**The promoted form — a process-intent (5.3).** A Flow with substance of its own — several steps, its own contracts and records, its own requirements — outgrows facet-hood the same way a Persona or Record does (§16.5): it becomes its **own intent**. The intent *is* the process; no self-named `## Flow:` facet sits inside it. Its sequence moves to a **top-level `## Steps`** section (same grammar as above, edges declared from the intent node — the intent-level `invokes` §8.2 already permits); its operations and records co-locate as facets under it; `nature: flow` is the badge (§3.2).
+
+````markdown
+---
+aim: org.reimbursement
+kind: intent
+nature: flow
+parent: org
+---
+
+# Monthly Reimbursement
+
+## Requirements
+
+- **R1** — Every approved expense is paid in the month it was approved.
+
+## Steps
+
+1. Collect expense logs — [invokes](aim:#Contract:CollectLogs).
+2. Manager reviews and approves the batch.
+3. Issue payments — [invokes](aim:#Contract:IssuePayments).
+
+## Contract: CollectLogs
+
+…
+````
+
+The promotion cue mirrors entity promotion (§16.5): promote a process when it has grown its own operations, data, and requirements **and** it is not alone — an organization with several processes gives each one a flow-natured sub-intent. A project that *is* one process does **not** wrap itself: the root intent already is the process (§15.2 — never mint a single-child parent).
 
 ### 7.4 Persona
 
