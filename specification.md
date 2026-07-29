@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.2
+# Agentic Intent Model (AIM) v5.5
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -240,7 +240,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5.2
+aim_version: 5.5
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -1478,6 +1478,16 @@ Additive; no migration. v5.2 completes the entity story — a promoted entity ge
 5. **Wrapper-intent guidance and diagnostic** — a sub-intent must earn its level (§15.2); a child holding one facet with no requirements and no children is flagged informationally (§12.2).
 
 Relabel `AGENTS.md` to `aim_version: 5.2` when adopting; nothing on disk is forced.
+
+### 13.6 From v5.2 To v5.5
+
+Additive; no migration. Three waves make steps and decisions first-class — each construct carries its wave marker inline:
+
+1. **Step grammar (5.3)** — a Flow's `### Steps` is structured and parsed (§7.3): one numbered item is one step, inline edge tokens are the step's operations (each edge carries its step index into the graph), a prose-only item is a first-class human step. A process with substance promotes to a flow-natured intent carrying a top-level `## Steps` (§7.3).
+2. **Decisions (5.4)** — a deciding Contract or Flow declares `### Decides` (§7.2): one bullet per outcome — bolded label, normative criteria after the dash, the outcome's edge tokens inline. The block asserts its outcomes mutually exclusive and exhaustive, deriving one exclusivity group per deciding node. `invokes`/`triggers` accept an intent target so a promoted process stays callable (§8.2), and **phases** name the decomposition of a grown process (§7.3). New informational diagnostics: unhandled outcome, single-outcome decision, criteria-free outcome, undeclared branch (§12.2).
+3. **Step semantics (5.5)** — operations sharing one step are joint and unordered; the following step is the join (§7.3). Co-stepped operations are exclusive only when they are a deciding Contract's outcomes (§7.2). The **continuation convention**: the outcome the procedure proceeds on continues as the next step and declares no continuation of its own; every other outcome's consequence rides its bullet — a correction loop is a legal `invokes` cycle among contracts, bounded by a deadline Trigger, never a count (§15.7). The scope principle is named (§1.4): AIM models commitments, never the mechanics of meeting them. New informational diagnostics: redundant continuation, ambiguous continuation (§12.2).
+
+Relabel `AGENTS.md` to `aim_version: 5.5` when adopting; nothing on disk is forced.
 
 ---
 
