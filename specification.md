@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.5
+# Agentic Intent Model (AIM) v5.6
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -240,7 +240,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5.5
+aim_version: 5.6
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -1033,7 +1033,7 @@ There are eleven **declared** verbs and three **derived** inverses. Each declare
 | Verb | from | to | Meaning | Kind |
 |---|---|---|---|---|
 | `exposes` | view | contract | a View action surfaces a Contract to users | declared |
-| `invokes` | flow, view, contract, persona, intent | contract, flow, intent | a call into another behavioral unit — from a Persona (or a persona-natured intent, §7.4): the actor performs the operation directly; **to** an intent when the callee is a promoted process (§7.3), whose sequence is its own `## Steps` and which therefore has no facet node to name | declared |
+| `invokes` | flow, view, contract, persona, intent | contract, flow, intent, capability | a call into another behavioral unit — from a Persona (or a persona-natured intent, §7.4): the actor performs the operation directly; **to** an intent when the callee is a promoted process (§7.3), whose sequence is its own `## Steps` and which therefore has no facet node to name; **to** a Capability (§9.2): the unit consults that source-kind (5.6) | declared |
 | `reads` | contract, flow, view | record | reads a persisted Record | declared |
 | `mutates` | contract, flow | record | creates / updates / deletes a Record | declared |
 | `emits` | flow, contract | event | produces an event | declared |
@@ -1052,6 +1052,8 @@ There are eleven **declared** verbs and three **derived** inverses. Each declare
 An `accesses` edge may target a **View** (access to one surface) **or** a **intent** (route/screen-level access — the persona may reach that whole feature). Use the intent form for role-gated screens that aggregate several views; `[accesses](aim:app.profile)` is valid and means "this persona may reach the profile screen."
 
 **`invokes` and `triggers` to an intent (5.4).** A promoted process (§7.3) keeps its sequence in a top-level `## Steps` and therefore holds **no facet node to name** — so without an intent target it could not be called at all, only entered by invoking its inner Contracts one at a time, which defeats the promotion. Both verbs therefore accept an intent whose content is a process: `[invokes](aim:org.reimbursement)` from an orchestrating Flow's step, `[triggers](aim:org.reimbursement)` from a schedule. This is the symmetric completion of `invokes` **from** an intent (a promoted Persona acting, §7.4): promotion must not cost a node its reachability. Use the facet form (`#Flow:X`) whenever the callee *is* a facet; the intent form is for the promoted case only, and a `triggers`/`invokes` edge into an intent that holds no `## Steps` is a modeling smell rather than a legal shortcut for "somewhere in there".
+
+**`invokes` to a Capability (5.6).** An operation that acquires information or service from **outside the system** declares the Capability surface it consults: `[invokes](aim:#Capability:WeatherSource)`. The edge means *consults this source-kind* — the declared basis of the acting unit — and inside a `### Steps` item the token is the step's operation exactly as any `invokes` (§7.3). **No inverse derives** from a capability-targeted `invokes`: a capability is a surface being consulted, not a behavioral unit being entered, so `triggered-by` derives only for contract/flow/intent targets (§8.4). The target must be a required capability of the resolving scope (`## Dependencies → Requires`, §9.1); how the alias resolves — mapping or binding — is §9.3's concern, not the edge's. A Capability with no inbound `invokes` and no `Requires` alias is declared-but-unused (informational, §12.2).
 
 **`exposes` vs `invokes` from a View.** Both are legal view→contract edges, and the choice carries meaning. Use **`exposes`** when the contract is reached through a *user-initiated action* on the view — a button, a form submit, a gesture. Use **`invokes`** when the view calls the contract *programmatically*, with no user initiation — an on-load data fetch, a poll, a prefetch. Either inbound edge counts as the contract being "reached" for the orphan check (§12.2); the distinction records whether the behavior is user-driven, which matters for reading intent and for realization.
 
@@ -1087,7 +1089,7 @@ This is the structural fix for v3.1's "three inconsistent expressions" problem: 
 
 ### 8.4 Inverse Derivation
 
-For every declared `invokes`/`exposes` edge `A → B`, the graph contains a derived `triggered-by` edge `B → A`. For every declared `emits` edge `A → E`, the graph contains a derived `emitted-by` edge `E → A`. For every declared `satisfies` edge `A → R` (R a `## Requirements` item), the graph contains a derived `satisfied-by` edge `R → A`. Derived edges are computed during graph derivation (§2.4 step 4) and are available to tooling and reviewers exactly like declared edges, but they never appear in source.
+For every declared `invokes`/`exposes` edge `A → B` whose target is a Contract, Flow, or intent — a capability-targeted `invokes` derives no inverse (§8.2, 5.6) — the graph contains a derived `triggered-by` edge `B → A`. For every declared `emits` edge `A → E`, the graph contains a derived `emitted-by` edge `E → A`. For every declared `satisfies` edge `A → R` (R a `## Requirements` item), the graph contains a derived `satisfied-by` edge `R → A`. Derived edges are computed during graph derivation (§2.4 step 4) and are available to tooling and reviewers exactly like declared edges, but they never appear in source.
 
 If an author writes a `### Trigger` or `### Emitted By` block anyway (e.g. migrated content not yet cleaned up), tools reconcile it against the derived set and emit an informational "redundant inverse, possibly stale" diagnostic on mismatch.
 
@@ -1175,6 +1177,8 @@ Capability required to resolve user identities.
 - `ResolveUser(id) -> UserRecord`
 ```
 
+**A Capability is any required external surface — a service *or an information source* (5.6).** "Official company registry lookups", "daily FX rates", "an official weather source: current conditions and active warnings, per city" are capabilities exactly as an identity resolver is: the surface's Summary and Operations state the **kind**, and the kind is the commitment — the provider and its transport are not (§1.4). The consuming operation declares what it consults with a capability-targeted `invokes` (§8.2). For document-shaped information the doctrine is **acquisition-as-step**: a collect Contract consults the capability and `mutates` a Record; downstream operations `read` the Record — the informational basis of every judgment stays a graph derivation end to end. This is also what makes a performed intent's required inputs derivable (§1.2 performance): unresolved capabilities, Records read but never mutated in-model, and schedules to arm are exactly the graph's statement of "what must be provided for this to run."
+
 ### 9.3 Mapping Files
 
 Mappings bind required aliases to concrete providers. A mapping is a `kind: mapping` file that co-locates with its intent, exactly like any other facet (§4.2).
@@ -1198,9 +1202,9 @@ kind: mapping
 - `AssigneeUsers.ResolveUser` → `company.identity.ResolveUser`
 ```
 
-Unresolved `Requires` aliases are hard errors at validation time.
+A `Requires` alias resolves through **either of two forms (5.6)**: a **mapping** (above), when the provider is a modeled intent — or a **`### Bindings` property declared on the `## Capability:` surface itself** (§10.2 — a `system:`, `agent:`, or other locator), when the provider is an **external system** that has no intent model and should not be forced to masquerade as one. In the bound form the *kind* stays intent-side on the surface while the *where* is realization — provenance-stamped like every binding, so it can go stale without the commitment being wrong (§1.3). An external capability MAY bind **per operation**: the binding's `— as:` names the operation the site realizes — `` - binds: `table:erp.customers#credit_limit` — as: CreditLimit `` — the external analogue of the Operation Map below, with the same division of labor: the operation is the commitment, the site is realization, and query mechanics and credentials are the realization's own concern, never modeled (5.6). Unresolved by either form remains a hard error at validation time.
 
-**Mappings vs bindings.** A mapping is an **intent→intent** capability binding: it resolves a required-capability alias to a concrete provider *intent*. A binding (§10) is an **intent→realization** binding: it links a node to the code/system that implements it. They are distinct — a mapping is a `kind: mapping` facet; a binding is an inline `### Bindings` property (§10.2) — and must not be confused with each other.
+**Mappings vs bindings.** A mapping is an **intent→intent** capability binding: it resolves a required-capability alias to a concrete provider *intent*. A binding (§10) is an **intent→realization** binding: it links a node to the code/system that implements it. They are distinct — a mapping is a `kind: mapping` facet; a binding is an inline `### Bindings` property (§10.2) — and must not be confused with each other. (A capability resolved by a binding, above, does not blur the line: the binding still records realization — the external system — while the surface remains the intent-side declaration of kind.)
 
 ---
 
@@ -1361,7 +1365,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - Facet name violating the `[A-Za-z][A-Za-z0-9_]*` grammar (e.g. `## Record: Todo Item`) (§3.6).
 - Duplicate facet definitions with the same name within the effective source.
 - Ambiguous child-intent authority (auto-discovered child not in explicit `## Children` list).
-- Unresolved `Requires` aliases with no matching mapping.
+- Unresolved `Requires` aliases — no matching mapping and no `### Bindings` on the Capability surface (§9.3, 5.6).
 - Child-intent facet name collision with a parent facet name (when the parent definition is authoritative).
 - Generic filenames (`intent.aim`, `schema.aim`, `mapping.aim`, `binding.aim`).
 - **Dangling reference** — an edge token's `to` address resolves to Absent (§11.1). Same class as an unresolved `ref()` (`<Type>` resolves to no Record).
@@ -1394,6 +1398,8 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Undeclared branch (5.4)** — an operation emitting two or more Events whose consumers diverge, with no `### Decides` block (§7.2): probably a decision left implicit, since the graph alone cannot tell an either/or from concurrent announcements. Remediation: declare the outcomes if it is a decision — and if it is not, no change is needed. Informational by design: this is the question a tool should raise rather than the guess it should make.
 - **Redundant continuation (5.5)** — the proceeding outcome of a deciding step also declares the continuation the next step already carries (§7.3): the same operation reached twice — duplicate, possibly stale; the `### Decides` analogue of the stale-inverse rule (§8.4). Remediation: drop the edge from the outcome; the next step is the continuation's one home.
 - **Ambiguous continuation (5.5)** — a deciding step is followed by a further step, but zero or several outcomes read as proceeding (none, or more than one, lacks a continuation of its own, §7.3): the model has not said which leg is the procedure. Remediation: give every non-proceeding outcome its continuation, or end the sequence at the decision and let each outcome carry its own path.
+- **Ungrounded decision (5.6)** — a `### Decides` block on a unit that declares no informational inputs: no `reads`, no capability-targeted `invokes` (§8.2), no `### Input`. A judgment with no stated basis — nothing in the model says what it is decided *from*. Remediation: declare the basis (a Record read, a Capability consulted), or accept the criteria as self-contained; the note merely surfaces the question.
+- **Unused capability (5.6)** — a `## Capability:` surface with no inbound capability-targeted `invokes` and no `Requires` alias naming it (§8.2, §9.1): declared but consulted by nothing. Remediation: wire the consuming operation, or remove the surface.
 - **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
 - **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
 - **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Record plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` Record with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Record whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
@@ -1488,6 +1494,17 @@ Additive; no migration. Three waves make steps and decisions first-class — eac
 3. **Step semantics (5.5)** — operations sharing one step are joint and unordered; the following step is the join (§7.3). Co-stepped operations are exclusive only when they are a deciding Contract's outcomes (§7.2). The **continuation convention**: the outcome the procedure proceeds on continues as the next step and declares no continuation of its own; every other outcome's consequence rides its bullet — a correction loop is a legal `invokes` cycle among contracts, bounded by a deadline Trigger, never a count (§15.7). The scope principle is named (§1.4): AIM models commitments, never the mechanics of meeting them. New informational diagnostics: redundant continuation, ambiguous continuation (§12.2).
 
 Relabel `AGENTS.md` to `aim_version: 5.5` when adopting; nothing on disk is forced.
+
+### 13.7 From v5.5 To v5.6
+
+Additive; no migration. One wave makes **external information** a commitment — the source-kind an operation consults, never the vendor or the mechanics:
+
+1. **Capability is the information-source surface (§9.2)** — a `## Capability:` declares any required external surface: an invocable service *or* an information source ("an official weather source: conditions and warnings, per city"). The kind is the commitment; provider and transport are not (§1.4).
+2. **`invokes` accepts a Capability target (§8.2)** — `[invokes](aim:#Capability:X)` is the declared basis: the acting unit consults that source-kind. No inverse derives (§8.4); document-shaped information is acquired as a step (collect Contract → Record → downstream `reads`, §15.7).
+3. **Either-form resolution (§9.3)** — a `Requires` alias resolves by a mapping (the provider is a modeled intent) *or* by a `### Bindings` on the Capability surface itself (an external system; per-operation form `` - binds: `table:erp.customers#credit_limit` — as: CreditLimit ``). Unresolved by either stays a hard error; a previously-invalid external-source model becomes valid, so the change only admits.
+4. **New informational diagnostics (§12.2):** ungrounded decision (a `### Decides` with no declared informational inputs), unused capability.
+
+Relabel `AGENTS.md` to `aim_version: 5.6` when adopting; nothing on disk is forced.
 
 ---
 
@@ -1596,6 +1613,7 @@ The intent is the contract. Code follows intent. When they diverge, one of them 
 - **External events** need no new machinery: model the origin as a Trigger that `triggers` an ingest Flow, and let that Flow `emits` the internal Event. The event then has a real emitter and subscribers attach as usual.
 - **Sagas and long-running orchestration** are expressible with existing verbs: the orchestrator Flow `invokes` each step, `mutates` a saga-state Record to track progress, and `emits`/`subscribes` compensation Events. AIM captures the *intent* of the orchestration, not the durable-timer/signal semantics of a workflow engine — those remain an implementation detail bound to code.
 - **Correction loops and their bounds (5.5)** — a losing `### Decides` outcome that (directly or through corrective work) re-invokes its deciding Contract is a legal cycle among contracts, while `### Steps` stay the linear procedure (§7.2, §7.3). The commitment-shaped bound on such a loop is a **deadline Trigger** (§7.7) anchored on the phase's start and disarmed by the confirming Event — `5 business-days after [Event:StatementsDrafted] — unless [Event:FinancialStatementsConfirmed]`, firing an escalation. A *count* bound ("at most two failed reviews") is not expressible and stays recorded pressure (§8.6): a count is usually a proxy for a time budget, and the time form is the stronger commitment — it also bounds a single pass that drags.
+- **External information (5.6)** — an operation that acquires information from outside the system declares the **Capability** it consults — `[invokes](aim:#Capability:WeatherSource)` — never an implicit source in a fetch-contract's prose. The surface carries the kind (§9.2); its mapping or binding carries the provider (§9.3). Document-shaped information is acquired as a step: a collect Contract consults the capability and `mutates` a Record, downstream operations `read` it, and every judgment's basis stays a graph derivation. A model whose fetch operation names no source leaves the performer to invent one — the exact divergence §7.3's step semantics exist to prevent.
 
 ### 15.8 Shared Entities And Canonicalization
 
