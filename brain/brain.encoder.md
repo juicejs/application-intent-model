@@ -72,7 +72,32 @@ Humans think in trees, not graphs (§2): the tree is the model's entire human in
 - **Step semantics (§7.3, 5.5):** within one item there is no order — joint operations in a single step are unordered, a performer may run them concurrently, and the next step is the join. Encode what you observe accordingly: work performed in parallel goes in ONE item; work that waits goes in the next; a multi-step parallel branch becomes its own flow-natured child invoked jointly from one spine step. After a deciding operation, the outcome the process proceeds on is simply the next step — every other outcome carries its consequence on its own `### Decides` bullet, so a correction loop you observe ("rejected → rework → resubmit") is the losing outcome invoking the fix and the fix re-invoking the decider, never a goto in the numbering. An observed escalation window is a deadline Trigger anchored on the phase's start and disarmed by the confirming Event (§15.7); never invent a count-based retry construct (§8.6).
 - **External information (§9, 5.6):** when the realization reaches out — an HTTP client, an SDK call, a feed poll — encode the *kind* as a `## Capability:` surface (`## Dependencies → Requires` plus `[invokes](aim:#Capability:X)` from the consuming operation), and put the concrete system in the surface's `### Bindings` (`system:` locator): you know the site you read, so the external resolution comes free (§17.5). Never encode the vendor as the capability — the kind is the commitment ("an official weather source"), the vendor is its realization.
 - **No single-child parents; parents stay lean indexes** (§15.2). Shared facets live in their own files; entities shared across domains live once — in `<app>.core` — and are referenced (§15.8), never re-minted under a synonym.
-- **Actors and entry points are first-class:** every human role is a `## Persona:`; every schedule, webhook, queue consumer, or external caller is a `## Trigger:`. A model with no Personas is a wrongly encoded model.
+- **Actors and entry points are first-class:** every human role is a `## Persona:`; every schedule, webhook, queue consumer, or external caller is a `## Trigger:`. A role assumed by state is still a Persona — whoever opened today's round is its *Runner*, even though any member can become one; fold it into Member and the model loses the actor half the guards are about. A model with no Personas is a wrongly encoded model.
+
+**Edge grammar — the reverse pass's #1 mechanical failure.** Every typed edge is authored at the ACTING node and points at what it acts on (§8.2, §8.3). The closed direction set:
+
+| acting node | verb | target |
+|---|---|---|
+| Persona | `accesses` | View / intent |
+| View | `exposes` / `navigates` | Contract / View |
+| Trigger | `triggers` | Contract / Flow / intent |
+| Contract / Flow / View | `reads` | Record |
+| Contract / Flow | `mutates` | Record |
+| Contract / Flow | `emits` | Event |
+| Contract / Flow (the consumer) | `subscribes` | Event |
+| Contract / Flow / View / Trigger | `satisfies` | Requirement |
+| Record | `refs` | Record |
+| Flow / View / Contract / Persona | `invokes` | Contract / Flow / Capability / intent |
+
+**Heading grammar — one level, exactly.** A facet is declared at H2 — `## Contract: AddItem`, `## Persona: Runner` — with its subsections at H3 (`### Summary`, `### Ensures`, `### Authz`, `### Bindings`, `### Steps`, `### Decides`). NEVER group facets under umbrella headings (`## Personas`, `## Contracts`) with the declarations pushed to H3: a facet a parser cannot see at H2 **does not exist in the graph** — its edges silently re-attach to the intent and every reference to it dangles. The facet heading itself is the grouping.
+
+Consequences you must apply while encoding — each row below is a real error class observed in reverse passes:
+
+- **A contract never points at its caller.** "Only members may call this" is `### Authz` prose backed by a Requirement and a `satisfies` edge — NEVER `[invokes](aim:#Persona:…)` authored on the contract. A Persona's only outbound verbs are `accesses` and `invokes`; nothing points *at* a Persona.
+- **Events are inert facts.** An Event has NO outbound edges and no `### Ensures` of its own. The work you observe in a listener (`bus.on(…)`, a queue consumer, a subscriber) is a **Flow** that `subscribes` to the Event and itself carries the reads/mutates/invokes. A complete chain reads: emitter —`emits`→ Event ←`subscribes`— consuming Flow.
+- **Triggers only fire.** A Trigger's single outbound behavioral verb is `triggers`, aimed at the Contract or Flow that does the work. The cron or webhook handler body you read IS that Contract/Flow — encode it as one; its reads and invokes belong there, never on the Trigger.
+- **Requirements are wired, not just written.** Every requirement must receive at least one `satisfies` edge from the behavior realizing it — a Requirements list with no inbound `satisfies` is an unfinished encoding, and the validator flags every bullet. Label form: `- **PAY-01** — prose` (letters, digits, underscore, hyphen).
+- **A lifecycle is a process — recover the spine, not just the transitions.** A status enum plus guarded transition handlers (`open → closed → ordered → delivered`) is a state machine the code never writes down in one place; four transition Contracts alone leave it invisible. Encode the spine as a **Flow** whose `### Steps` name each stage in order, each step carrying its transition operation inline (`[invokes](aim:#Contract:CloseRound)`); a stage where the actor chooses between transitions (close vs. cancel) is a `### Decides` on the deciding operation, not two loose contracts. Without a Steps-bearing Flow, the process projection has nothing to draw — a model whose lifecycle doesn't appear in the process chart is an incomplete encoding.
 
 ---
 
@@ -90,14 +115,14 @@ Humans think in trees, not graphs (§2): the tree is the model's entire human in
 4. Inline `### Bindings` (with `provenance: inferred`) for everything you placed (§10.2).
 5. Frontmatter: `kind:` and `provenance: inferred`; a `needs-human-check` note wherever you exercised judgment.
 
-**Phase D — VALIDATE AND REPAIR before presenting (§1.2).** Derive the full graph; drive hard errors (§12.1) to zero and resolve or explain every informational diagnostic (§12.2). Reverse-pass blind spots to check deliberately:
+**Phase D — VALIDATE AND REPAIR before presenting (§1.2).** Derive the full graph; drive hard errors (§12.1) to zero and resolve or explain every informational diagnostic (§12.2). You usually have no validator tool in this environment: your check is a deliberate re-read — walk every `[verb](aim:…)` token you wrote against the §2 edge-grammar table, confirm every Event has an emitter and a subscribing consumer, every Trigger `triggers` something, every Requirement has an inbound `satisfies`. Report only checks you actually performed — a claimed validation that never ran is worse than none. Reverse-pass blind spots to check deliberately:
 
 - **Guessed homes:** an early intent referenced a shared schema at an address that later turned out to belong to a sibling — re-point under §16.3.
 - **Cross-intent invocations:** an orphan Contract is often invoked from a View encoded in a *different* intent's scope (the logout button living in another domain's toolbar) — look across the whole graph before declaring anything dead.
 - **Unowned entry points:** app shells, boot code, static pages that fell between intent scopes — attach them; don't drop them.
 - **Duplicates:** merge two nodes only when their bindings hit the *same realization site* (§12.3 `AMBIGUOUS_BINDING`); same name alone is a report flag, not a merge (§16.3 — merge is author-confirmed).
 
-**Phase E — REPORT.** Write `/aim/work/encoding-<app>-<YYYY-MM-DD>.md`: method and scope; a per-intent confidence table; repairs performed in Phase D; open findings **ranked and typed** — product questions (possible bugs, authz inconsistencies the encoding exposed) separated from modeling questions (judgments awaiting confirmation). Every `needs-human-check` appears here. The owner confirms per intent; a finding reported honestly is worth more than a gap smoothed over.
+**Phase E — REPORT.** Write `/aim/work/encoding-<app>-<YYYY-MM-DD-HHMM>.md` (minute precision — same-day re-encodings must not overwrite an earlier report): method and scope; a per-intent confidence table; repairs performed in Phase D; open findings **ranked and typed** — product questions (possible bugs, authz inconsistencies the encoding exposed) separated from modeling questions (judgments awaiting confirmation). Every `needs-human-check` appears here. The owner confirms per intent; a finding reported honestly is worth more than a gap smoothed over.
 
 ---
 

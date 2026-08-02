@@ -1064,7 +1064,7 @@ An `accesses` edge may target a **View** (access to one surface) **or** a **inte
 **`satisfies` and its target.** `satisfies` is the one edge that reaches a sub-block target: its `to` is a `## Requirements` list item, not a facet node. It is declared at the acting unit — the Contract, Flow, or View that realizes the requirement, or the deadline Trigger that enforces a time policy (§7.7). The token URI form is `aim:[<intent>]#Requirements[<key>]`: the reserved section address carries **no** `FacetType:` colon, which is exactly what distinguishes it from the facet form `#<FacetType>:<Name>` and keeps it a valid CommonMark link destination (§2.2, §3.6). The `<key>` takes two forms, discriminated by grammar:
 
 - **Positional** — a 1-based integer: `[satisfies](aim:#Requirements[2])`. Valid everywhere, but fragile: reordering bullets re-points it (§2.2, §16.3 invariant 1). The casual form for small models.
-- **Labeled** — a name matching the facet-name grammar (§3.6): `[satisfies](aim:#Requirements[NET14])`. A requirement declares its label by opening the bullet with a bolded name and an em-dash:
+- **Labeled** — a name matching `[A-Za-z][A-Za-z0-9_-]*` — the facet-name grammar (§3.6) widened by the hyphen, so ticket-style labels (`PAY-REQ-01`) are valid: `[satisfies](aim:#Requirements[NET14])`. A requirement declares its label by opening the bullet with a bolded name and an em-dash:
 
   ```markdown
   ## Requirements
