@@ -1,4 +1,6 @@
-# Agentic Intent Model (AIM) v5.6
+# Agentic Intent Model (AIM) v5.8
+
+This revision adds document `file` values, optional and recovered supplied material, and visual identity guidance. See [the 5.8 migration notes](./specification.md#139-from-v57-to-v58) and [document-import example](./examples/documents/README.md).
 
 *Formerly "Application Intent Model" — renamed when the language generalized beyond software.*
 
@@ -91,7 +93,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v5.6 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v5.8 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -123,5 +125,6 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v5.6**  
+Current spec: **AIM v5.8**
+
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License

@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.6
+# Agentic Intent Model (AIM) v5.8
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -240,7 +240,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5.6
+aim_version: 5.8
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -362,7 +362,11 @@ createdAt: datetime required
 
 Format per line: `<name>: <type> <modifier>*`
 
-Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`.
+Scalar types: `string`, `number`, `boolean`, `date`, `datetime`; `enum(...)` and `list(...)` may stand in the type position. `file` is a scalar too (5.8): a document a person hands to an operation, or that a row keeps. It names the kind of value and nothing about its storage or its reading — how a document is held, and how its contents are parsed, are the Realizer's (§1.2). An operation that `invokes` a document-reading Capability to read a caller-supplied document declares that document as a `file` Input; that line is what lets a realization offer the upload, while the Capability parses the document and the Contract owns what becomes of the rows.
+
+Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`, `owner`.
+
+`owner` marks a reference to the person a row is private to: `ownerId: string required ref(Member.id) owner` says a Task belongs to the Member it names — only they see it, only they change it, and a new one is theirs. It is a statement about the row, never an inference from a reference: a Round's `runnerId` names who runs it and every member still sees the round. Declare `owner` where the intent says "their own" and nobody else's; leave a reference plain where a person merely plays a role on the row.
 
 `list(<type>)` declares a repeated value: `<type>` is a scalar (`list(string)`) or a Record name — `items: list(ExpenseItem)` for a log that owns its line items as parts. A Record-typed list derives a `refs` edge to that Record (§8.2), exactly as `ref()` does.
 
@@ -926,6 +930,8 @@ The owner's primary task list view.
 - Archive task — [exposes](aim:#Contract:ArchiveTask).
 ```
 
+`### Display` states **what the surface shows and which Records it reads**, never the words it says. A bullet like "an empty state message when there are no tasks" commits that the message exists; the message itself is **supplied material (§9.4)** — realization the owner provides beside the model. An `### Actions` label is the exception that stays in intent: it names a commitment (5.7).
+
 ### 7.6 Event
 
 Asynchronous payloads, emissions, and routing.
@@ -1206,6 +1212,25 @@ A `Requires` alias resolves through **either of two forms (5.6)**: a **mapping**
 
 **Mappings vs bindings.** A mapping is an **intent→intent** capability binding: it resolves a required-capability alias to a concrete provider *intent*. A binding (§10) is an **intent→realization** binding: it links a node to the code/system that implements it. They are distinct — a mapping is a `kind: mapping` facet; a binding is an inline `### Bindings` property (§10.2) — and must not be confused with each other. (A capability resolved by a binding, above, does not blur the line: the binding still records realization — the external system — while the surface remains the intent-side declaration of kind.)
 
+### 9.4 Supplied Material (5.7)
+
+**Supplied material** is the concrete displayable content a realization needs and the model deliberately does not state: the copy on a screen, the starting entries of a Record nothing in the model writes, the images. It completes the same three-layer split as external information (§9.2) — *the obligation is intent, the concrete thing is supplied, the mechanics are realization* — and it admits **no new syntax**: no facet, no verb, no authored block. Material is never written into `.aim`.
+
+**That material is owed is derived, not authored.** A View that `reads` a Record commits to displaying that data, so it owes the reader something when there is none — `### Display`'s *"empty state message if no tasks exist"* (§7.5) commits that the message exists and stops exactly where its words begin. A Record read but never mutated in-model commits to having contents that originate outside the model — the category §9.2 already names as part of "what must be provided for this to run". Both facts are graph derivations, so nothing new is declared to obtain them.
+
+**Supply may widen beyond what is owed; the owed derivation never does (5.8).** A realization may ship starting entries for a Record the model itself mutates — the catalog a product is born with. Those entries are supplied material like any other (they ride the same channels, marked as not owed), but they create no obligation: widening the owed derivation to mutable Records would turn every CRUD application's readiness statement into false debt. And when an existing system is re-encoded (§17), its supplied material — the words and starting data the artifact already ships — is recovered *beside* the intent with the same provenance discipline as the intent itself: extracted values arrive as drafts for the owner to confirm, never as the owner's signature.
+
+**Visual identity (5.8).** A model with at least one View also owes a **visual identity**: a small curated token summary — palette, typeface, spacing grain, shape, brand mark, and the identity's own words — riding the handoff beside the model (conventionally `content/style/`). It obeys the same three-layer split: that an identity is owed is derived from the graph, the values are the owner's supplied realization, and everything below the tokens' grain — layout, component styling, the stylesheets themselves — remains the Realizer's freedom (§1.4, §15.9). Token values may be plain words ("a clear, strong azure"): the owner states the identity; the realization elaborates it in the idiom of its stack and its time. One deliberate asymmetry against copy: supplied tokens are used verbatim, but an *absent* identity licenses a clean neutral choice, recorded — invented copy asserts facts, invented dress is reversible. Owed-but-empty identity is informational (§12.2), never an error.
+
+**The material itself is realization.** A headline is not a commitment about behavior; it is one way of meeting the commitment that a screen says what it is for. Put it under intent authority and every rewrite becomes a model change, a diff and a re-review — review cost with no review value, and exactly the degree of freedom §1.4 reserves for the Realizer. What *is* authored, and stays authored, is an `### Actions` label: it names a commitment, so it belongs in intent, and material must never duplicate it.
+
+**Conventional channel.** A handoff carries material beside the model, not inside it: seed entries for an input Record under `records/<Name>/` (the same place §9.2's manifest and a performed intent's own state already use), and screen copy and media under `content/`. On-disk shapes are a tooling concern this spec does not define (as with the realized-graph manifest, §10.1). Two rules are normative for anyone consuming a handoff:
+
+1. **Use supplied material verbatim, and never write it back into the model.** Writing it into `.aim` converts realization into intent and is drift by definition (§1.3).
+2. **Absent material is a question, never a licence.** A missing value is the owner's to give; inventing it is the content form of inventing behavior (§1.2), and shipping a placeholder that reads like a placeholder is worse than stopping.
+
+Material is a **handoff-readiness** fact, not a model property: an unsupplied screen or an unseeded input Record is informational (§12.2), never a validation error, and never affects specification level (§11.2) — a Level 3 intent with no copy is still Level 3, and still unbuildable, which is why the readiness statement is derived separately. Presentation stays out: **which** slots a screen owes is an ecosystem concern, and where any of it sits on screen remains realization (§15.9).
+
 ---
 
 ## 10. Binding Layer
@@ -1400,6 +1425,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Ambiguous continuation (5.5)** — a deciding step is followed by a further step, but zero or several outcomes read as proceeding (none, or more than one, lacks a continuation of its own, §7.3): the model has not said which leg is the procedure. Remediation: give every non-proceeding outcome its continuation, or end the sequence at the decision and let each outcome carry its own path.
 - **Ungrounded decision (5.6)** — a `### Decides` block on a unit that declares no informational inputs: no `reads`, no capability-targeted `invokes` (§8.2), no `### Input`. A judgment with no stated basis — nothing in the model says what it is decided *from*. Remediation: declare the basis (a Record read, a Capability consulted), or accept the criteria as self-contained; the note merely surfaces the question.
 - **Unused capability (5.6)** — a `## Capability:` surface with no inbound capability-targeted `invokes` and no `Requires` alias naming it (§8.2, §9.1): declared but consulted by nothing. Remediation: wire the consuming operation, or remove the surface.
+- **Unsupplied material (5.7)** — a View with no supplied copy, or a Record read but never mutated in-model with no supplied entries (§9.4): the model says what the surface does and nothing says what it displays, so the realization has nothing to render and a conforming Realizer must stop and ask (§1.2). Reported against the *handoff*, not the model: it is not a defect, it does not affect specification level (§11.2), and it never becomes a hard error — a model is legitimately complete long before its words exist. Remediation: supply the material beside the model, never inside it. The note exists because a Level-3 graph with no material reads *finished* while being unbuildable — §15.10's false assurance at the handoff layer.
 - **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
 - **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
 - **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Record plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` Record with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Record whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
@@ -1506,6 +1532,27 @@ Additive; no migration. One wave makes **external information** a commitment —
 
 Relabel `AGENTS.md` to `aim_version: 5.6` when adopting; nothing on disk is forced.
 
+### 13.8 From v5.6 To v5.7
+
+Additive; **no migration, and no new syntax at all** — the smallest wave in the language. Two ideas: the concrete content a realization displays is **supplied material**, owed by the graph and never authored into it; and grain follows purpose — the promote boundary gains the §1.4 test.
+
+1. **Supplied material is named (§9.4)** — screen copy, seed entries for Records read but never mutated in-model, and media are realization the owner supplies beside the model. Two normative rules for a handoff's consumer: use the material verbatim and never write it back into `.aim`; treat an absent value as a question for the owner, never a licence to invent one.
+2. **`### Display` says what a surface shows, not what it says (§7.5)** — clarifying, not restricting: a Display bullet already committed that (say) an empty state exists, and the words were always outside. `### Actions` labels stay in intent, because a label names a commitment.
+3. **New informational diagnostic (§12.2):** unsupplied material — reported against the handoff, never affecting validity or specification level.
+4. **The promote boundary gains the purpose test (§15.9, §15.2)** — a piece whose purpose is an outcome of its own that someone could be held accountable to (§1.4) is a child intent from the moment that purpose is understood, before it owns data or operations, and the sections that page is composed of become its `## View:` facets — never one page-View restating the intent, which is a wrapper (§12.2). `### Display` keeps its job one level down: what a section shows, and what a display-only widget inside a screen is. The seeded `## Requirements` is the proof of work, and what keeps the wrapper smell sharp. Clarifying where grain comes from, not moving what exists: §4.3's behavior test still promotes, and nothing already written becomes invalid.
+
+Nothing already written becomes invalid, and no file changes. Relabel `AGENTS.md` to `aim_version: 5.7` when adopting.
+
+### 13.9 From v5.7 To v5.8
+
+This amendment names document values and extends supplied-material guidance. It introduces no new headings, edges, or schema-line grammar.
+
+1. **Document values use `file` (§3.7).** A caller-supplied document is a `file` Input on the consuming operation; a retained document may be a `file` field on a Record. The Capability reads the document, while the business Contract owns validation and domain outcomes. Storage and parsing mechanics remain realization. A remote document acquired by a service does not require a caller upload merely because its contents are document-shaped.
+2. **Optional starting data and recovered material (§9.4).** Mutable Records may receive supplied starting entries without creating an owed-data obligation. Re-encoding recovers existing material beside intent as extracted drafts for owner confirmation.
+3. **Visual identity (§9.4).** A model with a View owes a coarse identity token summary. Supplied tokens are used verbatim; missing identity permits a recorded neutral choice. Layout and stylesheets remain realization, and missing identity is informational.
+
+When adopting, relabel `AGENTS.md` to `aim_version: 5.8` and refresh the specification cache. Review document-import operations: if the caller supplies a document, declare it as `file` rather than plain text. Text that is already parsed, remote-source addresses, and operations with no caller-supplied document need no conversion. No general tree or edge migration is required.
+
 ---
 
 ## 14. Conformance Examples
@@ -1579,7 +1626,7 @@ The parent intent file is a **lean index**, not a container:
 
 Shared **facets** — Records, personas, views referenced by multiple intents — live at the **lowest common ancestor** of the intents that use them, so those intents resolve them upward (§11.1). Not higher: an ancestor holding what only one subtree consumes has taken on a facet that is not its own, and has started down the road to the monolith this section warns about below. And what moves upward is the **entity**, never the role that reads it (§7.4) — sharing `Employee` is canonicalization; sharing `Traveler` is erasure. **A handful live directly in the parent intent file**; a sibling facet file (`<intent>.record.aim`, `<intent>.persona.aim`, `<intent>.view.aim`) earns itself only **at scale**, when the shared set has grown enough to crowd the parent — the same earn-your-level judgment as sub-intents. Do not mint a "Shared Xs" sidecar for two personas: sharing is about *ownership and resolution* (which ancestor owns the node), not about a separate file. For entities shared *across* top-level intents, use a `<app>.core` intent (§15.8). Embedding **many** facets into one intent file produces a **monolith** (§12.2) — the dual of the duplication problem; the failure is the extreme at either end, not co-location itself.
 
-**A sub-intent must earn its level (5.2).** The inverse failure of the monolith is the **wrapper**: a child intent holding a single facet and nothing else — no requirements of its own, no children — adds a level of navigation without adding a level of meaning ("Wallet Balances" containing only `ManageBalances`). A lone operation is a **facet on its parent** (or on its entity-intent, §7.4/§16.5); it becomes a child intent when it *grows* — several facets, its own entry points, its own requirements ("Wallet Funding" holding two payment webhooks plus two contracts has earned the level). Tools flag surviving wrappers informationally (§12.2). The tellability test decides the edge cases: a level the reader must click through without learning anything is a level too many.
+**A sub-intent must earn its level (5.2).** The inverse failure of the monolith is the **wrapper**: a child intent holding a single facet and nothing else — no requirements of its own, no children — adds a level of navigation without adding a level of meaning ("Wallet Balances" containing only `ManageBalances`). A lone operation is a **facet on its parent** (or on its entity-intent, §7.4/§16.5); it becomes a child intent when it *grows* — several facets, its own entry points, its own requirements ("Wallet Funding" holding two payment webhooks plus two contracts has earned the level). Growth is not the only way to earn it (5.7): a piece whose purpose is an outcome of its own — one someone could be held accountable to (§1.4): a landing page, a checkout — has earned its level before its first facet arrives, because the purpose becomes its `## Summary` and seeds its `## Requirements`, which is exactly what a wrapper lacks (§15.9). Tools flag surviving wrappers informationally (§12.2). The tellability test decides the edge cases: a level the reader must click through without learning anything is a level too many.
 
 ### 15.3 What Goes In A Child Intent
 
@@ -1628,9 +1675,10 @@ Beware the **opposite trap**: do not dodge duplication by embedding every entity
 
 ### 15.9 UI Composition And Fluid Granularity
 
-A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly like any other capability. It is not a fixed kind of node in the model; what it *is* depends on how much behavior it carries, and it moves between forms by the **promote** transform (§16):
+A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly like any other capability. It is not a fixed kind of node in the model; what it *is* depends on **the purpose and behavior** it carries, and it moves between forms by the **promote** transform (§16):
 
-- **Trivial / behavior-less** — a static or host-fed panel with no contract, schema, or action of its own is **not a node**. It is a bullet in the host `## View:`'s `### Display`. Modeling it as its own facet adds a node the graph cannot check — nothing to dangle, nothing to impact — and earns it a false orphan diagnostic (§12.2).
+- **Carries its own purpose (5.7)** — a piece whose purpose is an outcome of its own, one someone could be held accountable to (§1.4) — a landing page exists to move its visitor, a checkout to complete a purchase — is a **child intent** from the moment that purpose is understood, before it owns any data or operations. The purpose becomes its `## Summary` and seeds its `## Requirements`, which is exactly what a wrapper lacks (§12.2); a Persona reaches it intent-level (`accesses` the intent, §8.2), which covers every View inside it. The requirement is the proof of work: a piece you cannot write a testable commitment for did not have a purpose of its own, it had a name. **Its sections are then what the page is made of, and each becomes a `## View:` facet on that intent** — `## View: Hero`, `## View: OurServices`, `## View: ContactBlock` — with the operations and data any of them owns as co-located sibling facets. A purpose-earned page does **not** also declare a `## View:` restating itself: the intent *is* the page, so a lone same-named View means the sections were never distributed and the level was taken without being used (§12.2). Within a section, `### Display` keeps its job: it says what that section shows.
+- **Trivial / behavior-less** — a static or host-fed panel with no contract, schema, or action of its own is **not a node**. It is a bullet in the host `## View:`'s `### Display`. This is the piece *inside* a screen — a widget on a dashboard — never the composition of a purpose-earned page, whose sections are Views by the bullet above. Modeling it as its own facet adds a node the graph cannot check — nothing to dangle, nothing to impact — and earns it a false orphan diagnostic (§12.2).
 - **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own child intent (§5, §16.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
 
 **Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*, never its placement on the screen. This is the line §15.7 draws for orchestration: AIM captures intent, not rendering mechanics.
@@ -1705,7 +1753,7 @@ The dashboard surfaces that behavior with edges it already has — no compositio
 - System counters and a current-conditions panel from the latest [reads](aim:app.admin.weather#Record:WeatherReading), refreshed via [exposes](aim:app.admin.weather#Contract:FetchWeather).
 ```
 
-The promote boundary is the §4.3 test: display-only ⇒ prose in the host; owns data or operations ⇒ its own child intent. A promoted piece that is *only* ever embedded usually should **not** declare its own `## View:` — its surface is the host's — so it owns `Contract`/`Record` and raises no orphan. If it genuinely needs its own reusable surface, the informational orphan diagnostic (§12.2) is the correct nudge: either a Persona `accesses` it, or its surface really belongs to the host.
+The promote boundary is the §1.4 test first, then the §4.3 test (5.7): a purpose that is its own accountable outcome ⇒ a child intent, before any facet exists, and its sections are that intent's Views; owns data or operations ⇒ nodes of its own — a child intent when they cohere into a capability, or a `## View:` with sibling facets on the intent they serve; display-only piece inside a screen ⇒ prose in the host. A promoted piece that is *only* ever embedded usually should **not** declare its own `## View:` — its surface is the host's — so it owns `Contract`/`Record` and raises no orphan. If it genuinely needs its own reusable surface, the informational orphan diagnostic (§12.2) is the correct nudge: either a Persona `accesses` it, or its surface really belongs to the host.
 
 ### 15.10 Proxy Verification — When The Outcome Cannot Be Checked
 

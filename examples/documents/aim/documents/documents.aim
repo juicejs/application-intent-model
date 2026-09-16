@@ -1,0 +1,81 @@
+---
+aim: documents
+kind: intent
+---
+
+# Document import
+
+## Summary
+
+An operator imports service names from a document and keeps its source alongside the imported batch.
+
+## Requirements
+
+- **IMPORT** — An operator can supply a document containing service names. Valid names are retained with the source document; unreadable documents and blank names are rejected.
+
+## Tests
+
+- Importing a readable document with two valid names retains those names and the source document in one batch.
+- An unreadable document or a blank name creates no batch.
+
+## Dependencies
+
+### Requires
+
+- DocumentReader
+
+## Persona: Operator
+
+### Role
+
+Supplies documents for import.
+
+### Access
+
+- Import a document — [invokes](aim:#Contract:ImportServices).
+
+## Record: ImportBatch
+
+### Schema
+
+```schema
+id: string required
+source: file required
+names: list(string) required
+```
+
+## Capability: DocumentReader
+
+### Summary
+
+Read service names from a supplied document.
+
+### Operations
+
+- Read(document) -> serviceNames
+
+### Bindings
+
+- binds: `system:document-reader` — as: Read
+
+## Contract: ImportServices
+
+### Summary
+
+Validate and retain service names read from the operator's document.
+
+### Authz
+
+- Operator may import documents.
+
+### Input
+
+```schema
+document: file required
+```
+
+### Ensures
+
+- Read the supplied document — [invokes](aim:#Capability:DocumentReader).
+- Reject unreadable documents and blank service names before retaining any batch.
+- Retain the names and original document together — [mutates](aim:#Record:ImportBatch), [satisfies](aim:#Requirements[IMPORT]).
