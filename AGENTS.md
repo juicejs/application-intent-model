@@ -1,12 +1,12 @@
 ---
-aim_version: 5.8
+aim_version: 5.9
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Agentic Intent Model (AIM) v5.8** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
+This project uses the **Agentic Intent Model (AIM) v5.9** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
 
 ## How to read this project
 
