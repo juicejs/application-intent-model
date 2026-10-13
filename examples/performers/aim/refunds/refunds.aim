@@ -1,0 +1,100 @@
+---
+aim: refunds
+kind: intent
+tags: [process-model]
+---
+
+# Refunds at the Till
+
+## Summary
+
+How a shop refunds a purchase at the till. Each step says in words who does it, for the reader; who performs it is declared by the edges alone (§7.3, §7.4).
+
+## Requirements
+
+- **WITHIN-30** — A refund is only possible within 30 days of the purchase.
+- **APPROVED** — Every refund is approved by the store manager before money is paid back.
+
+## Persona: Cashier
+
+### Role
+
+- Works at the till and handles the customer.
+
+### Access
+
+- Checks receipts and pays refunds — [invokes](aim:#Contract:CheckReceipt), [invokes](aim:#Contract:PayOut)
+
+## Persona: StoreManager
+
+### Role
+
+- Runs the store and approves refunds.
+
+### Access
+
+- Approves refunds — [invokes](aim:#Contract:ApproveRefund)
+
+## Trigger: CustomerAsks
+
+### Summary
+
+A customer comes to the till with a receipt and asks for their money back.
+
+### Kind
+
+- external
+
+### Fires
+
+- [triggers](aim:#Flow:Refund)
+
+## Flow: Refund
+
+### Summary
+
+From the customer's receipt to the money paid back.
+
+### Steps
+
+1. The cashier checks the receipt — [invokes](aim:#Contract:CheckReceipt).
+2. The store manager approves the refund — [invokes](aim:#Contract:ApproveRefund).
+3. The cashier pays the money back — [invokes](aim:#Contract:PayOut).
+
+## Contract: CheckReceipt
+
+### Summary
+
+Checks that the receipt belongs to this shop and that the purchase is recent enough.
+
+### Ensures
+
+- The receipt is checked against the refund window — [satisfies](aim:#Requirements[WITHIN-30])
+
+## Contract: ApproveRefund
+
+### Summary
+
+The store manager approves the refund.
+
+### Authz
+
+- Only `#Persona:StoreManager`.
+
+### Ensures
+
+- The refund is approved — [satisfies](aim:#Requirements[APPROVED])
+
+## Contract: PayOut
+
+### Summary
+
+Pays the amount back to the customer.
+
+### Authz
+
+- `#Persona:Cashier`, or `#Persona:StoreManager` when the till is busy.
+
+### Ensures
+
+- The customer has their money back.
