@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.10
+# Agentic Intent Model (AIM) v5.11
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -138,7 +138,7 @@ A node is any **addressable heading** in the resolved source. There are three ra
 | Rank | Markdown | Node-type | Example |
 |---|---|---|---|
 | Intent | `aim:` frontmatter / H1 | `intent` | `nemicko.demo.todo` |
-| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` (+ `capability` — the `## Capability:` surface, §9.2; **not** a `## Requirements` list item) | `## Contract: CreateTodo` |
+| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` `style` (+ `capability` — the `## Capability:` surface, §9.2; **not** a `## Requirements` list item) | `## Contract: CreateTodo` |
 | Facet sub-block | `### <Sub>` and its list items | `block` (addressable, not separately typed) | `### Ensures` item `[2]` |
 
 Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** as sections — a section heading is never itself the endpoint of a typed edge. Only `intent` and the facet node-types participate in the edge graph, with two defined sub-block exceptions: a **schema attribute** participates solely as an endpoint of a `refs` edge (§3.7, §8.2), and a **`## Requirements` list item** participates solely as the target of a `satisfies` edge (§8.2). Both are addressable sub-blocks, not separately typed nodes; no other sub-block is ever an edge endpoint, and `## Requirements` as a *section* stays edge-inert (only its individual items are `satisfies` targets). The node-type is read directly off the facet-heading keyword; there is no inference.
@@ -240,7 +240,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5.10
+aim_version: 5.11
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -320,6 +320,7 @@ Facet headings use the form `## <FacetType>: <Name>`:
 ## View: TaskDashboard
 ## Event: TaskCreated
 ## Trigger: NightlySweep
+## Style: Warm
 ```
 
 Realization bindings attach to a node as an inline `### Bindings` property (§10.2). The deprecated `kind: binding` sidecar addresses each node with a `## Bind: <FacetType>:<Name>` heading — the payload after `Bind:` is the bound node's in-intent address minus the leading `#`:
@@ -340,7 +341,7 @@ Top-level section headings use the bare form:
 
 Tooling MUST accept `## Subintents` and `## Subcomponents` — the headings earlier versions wrote — as deprecated aliases for `## Children`.
 
-The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.8). This keeps node boundaries deterministic.
+The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.9). This keeps node boundaries deterministic.
 
 **Facet name grammar.** A facet `<Name>` MUST match `[A-Za-z][A-Za-z0-9_]*` (PascalCase recommended) — no spaces, no punctuation. A heading whose name violates the pattern (`## Contract: Create Task`) is a hard error (§12.1). This constraint is what lets a name sit verbatim inside an `aim:` link destination and a `## Bind:` heading as a valid CommonMark link target without percent-encoding (§2.2).
 
@@ -665,7 +666,7 @@ Note: `Task` and `User` are not defined in this file — they resolve upward to 
 
 ## 7. Precision Facets
 
-The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 added the seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks.
+The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 added the seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks. 5.11 adds the eighth — **Style** (§7.8) — for how what people see should look: the one facet that declares no edges.
 
 ### 7.1 Record And The Schema Property
 
@@ -1013,7 +1014,51 @@ A webhook or external origin sets `### Kind` to `webhook` / `external` and descr
 
 Which operating calendar `business-days` names is realization, bound to whatever arms the timer — the duration and its anchor are the intent. Recurring patterns compose from this construct alone: an SLA is a deadline firing an escalation, an escalation ladder is chained deadline Triggers, an expiry is a deadline firing a revocation.
 
-### 7.8 Summary Rule
+### 7.8 Style (5.11)
+
+How what people see should look — stated by the owner, at the grain of an identity, never of a stylesheet.
+
+```markdown
+## Style: Warm
+
+### Summary
+
+Welcoming and concrete: cream and dark brown with a little warmth, never corporate blue.
+
+### Palette
+
+- surface: cream `#fbf9f6`
+- ink: dark brown `#26221f`
+- accent: one restrained warm orange, used sparingly
+
+### Type
+
+- heading: a humanist sans, generous
+- body: the same family, calm rhythm
+
+### Shape
+
+- corners: soft
+- elevation: flat — no shadows, no glass
+
+### Mark
+
+- mark: Amy's portrait, a transparent cutout the surface shows through
+```
+
+**Why the look is intent.** A product's words may change weekly without the product changing; its look may not — a rebrand changes what the owner committed to, and it is reviewed as one. 5.8 placed the visual identity beside the model as supplied material (§9.4), where neither the owner nor the model could see it; 5.11 moves it into the model. The §1.4 test decides the grain: *that* the surfaces read warm and flat is a commitment a Reviewer can hold a realization to; *how* a stylesheet achieves it is not. So a Style states the identity — palette, type, shape, mark, and the look in one breath in its `### Summary` — and stops there. Layout, component styling and the stylesheets themselves remain the Realizer's freedom (§15.9).
+
+**Sub-blocks and values.** The sub-blocks are `### Palette`, `### Type`, `### Shape` and `### Mark`, each a bullet list of `<token>: <value>` lines: the token is one lowercase word (`surface`, `ink`, `heading`, `corners`), the value is the owner's words, an exact value, or both. A realization uses an exact value verbatim — a hex, a typeface name, a measure — and elaborates words in the idiom of its stack and its time ("a clear, strong azure" becomes one blue, chosen once and recorded). All four sub-blocks are optional: a Style with only a Summary is a valid Style. Tokens are open — a domain may need `chart` or `print` — and tools MUST accept any token; a value's grain is for the owner and a Reviewer to judge, never a parser.
+
+**The mark is two things.** Its words are intent: `- mark: Amy's portrait, a transparent cutout` commits to a mark and says what it is. The picture itself is a file, and a file is supplied material (§9.4): it rides beside the model under `content/assets/` and never inside a `.aim` file. A Realizer who gets only the words still knows what to source; one who gets the file uses it verbatim.
+
+**Scope.** A Style is authored in its intent's own file — it is not a sidecar `kind` (§3.2, §4.2). An intent declares at most one Style — a second `## Style:` on the same intent is a hard error (§12.1), since nothing in the model could choose between them. The Style applies to every View of the intent it is declared on and of every intent beneath it (§5); a nearer Style wins — so a product has one look, and a page-intent that departs from it declares its own. Scope follows the tree and needs no edge: a Style declares no edges and nothing points at it, which is why it is **not** an orphan (§12.2) and takes no part in the traceability chain (§11.3). A `wears` edge from a View to a Style — a variant worn by one screen — is recorded pressure (§8.6), not admitted.
+
+**Absent Style.** A model with a View and no Style in reach is complete; the realization makes a clean neutral choice and records it, and tools report *no style declared* (§12.2) — informational, never an error. The asymmetry 5.8 named stands: invented copy asserts facts, invented dress is reversible.
+
+**Recovered and migrated identities.** An identity recovered from an existing realization (§17), or the token summary a 5.8-era handoff carried under `content/style/`, becomes a Style the way all recovered intent does: proposed to the owner with its provenance, in the owner's words where the tokens had them, and never written into the model without the owner's signature (§17.2).
+
+### 7.9 Summary Rule
 
 Every facet block must carry an explicit `### Summary` sub-block immediately following the facet heading. `Persona` may omit the summary when it acts only as a role/access declaration.
 
@@ -1162,6 +1207,8 @@ Two standing rules bound the process: **verbs are forever** — removing or rena
 
 **Record lifecycle transition legality (5.5; need demonstrated 5.9)** — the status transition table as a checkable relation. The states (a schema enum) and the transition actors (Contracts that `mutate` the Record, with `### Decides` where the transition is a judgment) are already in the graph; missing is only transition legality — "closed is terminal", "no posting against a closed period". Test 4 is now met: every house model carries lifecycle rules as prose — Expense Approval ("the claim is approved and not already reimbursed"), Task Planner ("the task is open"), Lunch orders ("until the round is closed, not after"), Sales pipeline ("starts as a lead"), and the Financial close whose lock requirement was the first evidence recorded here — and §7.1's own Record example does the same ("an approved item's amount is fixed"). What the prose cannot give is **reach**: an `### Expects` guard binds only the operation that states it, while legality declared on the Record would bind every operation that mutates it, including the ones not written yet. The construct still fails test 5 — it is not fully specified on arrival — so it stays recorded pressure with its syntax under **prototype**, not admitted: a Record-scoped block, sibling of `### Constraints` and `### Immutable` (test 1 sends rules to blocks — never a verb, never a schema-line modifier), declaring the legal moves of a status field and its final states. Three designs are on the table — the moves and final states on the Record alone; the same plus a bracketed reference to the operation that makes each move; or no block, with state guards recognized in `### Expects` — and the first is the recommended core. The options, the open questions (self-moves, whether final freezes the whole row, several lifecycle fields on one Record, the block's name) and the measurement that decides admission are kept in the proposal record, `proposals/5.9-record-lifecycle.md`. The strongest rent-payer on this list — illegal-transition as a hard diagnostic, and a refusal before commit in any realization that writes the Record.
 
+**Wears (5.11)** — a `wears` edge from a View to a `## Style:` (§7.8), for one screen that departs from the look of its intent. Fails test 4 — no real model has yet needed more than the tree's nearest-Style rule — and largely test 2: a page-intent that declares its own Style already expresses a page's departure (§15.9). What would admit it: a real model with a single View, inside a purpose-earned page, that must wear another look while its siblings keep the page's — and a diagnostic that reads the edge.
+
 ---
 
 ## 9. Dependencies, Requirements, And Mappings
@@ -1239,7 +1286,7 @@ A `Requires` alias resolves through **either of two forms (5.6)**: a **mapping**
 
 **Supply may widen beyond what is owed; the owed derivation never does (5.8).** A realization may ship starting entries for a Record the model itself mutates — the catalog a product is born with. Those entries are supplied material like any other (they ride the same channels, marked as not owed), but they create no obligation: widening the owed derivation to mutable Records would turn every CRUD application's readiness statement into false debt. And when an existing system is re-encoded (§17), its supplied material — the words and starting data the artifact already ships — is recovered *beside* the intent with the same provenance discipline as the intent itself: extracted values arrive as drafts for the owner to confirm, never as the owner's signature.
 
-**Visual identity (5.8).** A model with at least one View also owes a **visual identity**: a small curated token summary — palette, typeface, spacing grain, shape, brand mark, and the identity's own words — riding the handoff beside the model (conventionally `content/style/`). It obeys the same three-layer split: that an identity is owed is derived from the graph, the values are the owner's supplied realization, and everything below the tokens' grain — layout, component styling, the stylesheets themselves — remains the Realizer's freedom (§1.4, §15.9). Token values may be plain words ("a clear, strong azure"): the owner states the identity; the realization elaborates it in the idiom of its stack and its time. One deliberate asymmetry against copy: supplied tokens are used verbatim, but an *absent* identity licenses a clean neutral choice, recorded — invented copy asserts facts, invented dress is reversible. Owed-but-empty identity is informational (§12.2), never an error.
+**Visual identity is intent (5.11).** 5.8 placed a product's identity here, as a token summary riding the handoff under `content/style/`. 5.11 moves it into the model as the `## Style:` facet (§7.8): how the surfaces should look is a commitment the owner makes, reviewed as one when it changes, and the Style states it at identity grain — palette, type, shape, mark, the look in one breath. What stays material is the picture: a mark's words are intent, the file is supplied beside the model under `content/assets/`. The `content/style/` channel is retired (§13.12).
 
 **The material itself is realization.** A headline is not a commitment about behavior; it is one way of meeting the commitment that a screen says what it is for. Put it under intent authority and every rewrite becomes a model change, a diff and a re-review — review cost with no review value, and exactly the degree of freedom §1.4 reserves for the Realizer. What *is* authored, and stays authored, is an `### Actions` label: it names a commitment, so it belongs in intent, and material must never duplicate it.
 
@@ -1389,6 +1436,7 @@ Persona → View → Contract → Flow / Record / Event
 - `Contract` `invokes` `Flow`.
 - `Contract` and `Flow` `read`/`mutate` a `Record`.
 - `Contract`/`Flow` `emits` `Event`.
+- A `## Style:` (§7.8) takes no part in the chain: it declares no edges and nothing points at it; its scope follows the tree.
 
 In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 it is **derived from the declared edges** and therefore checkable: a Level-3 intent is exactly one whose chain has no orphan nodes and no dangling edges (§12). Intent-only intents remain valid; tools emit a reduced-fidelity informational note.
 
@@ -1416,6 +1464,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Unresolved `ref()` field** — a `ref(<Type>.<field>)` whose `<Type>` resolves to a Record but whose `<field>` is not a field of that Record's schema (§3.7).
 - **Unresolvable requirement target** — a `satisfies` key that is out of range (positional), matches no declared label (labeled), or a `## Requirements` section declaring the same label twice (§8.2, §11.1).
 - **Type-mismatch reference** — an edge target resolves but its node-type ≠ the address's `FacetType`, or the `(verb, from, to)` triple is not in the §8.2 schema.
+- **Several styles (5.11)** — more than one `## Style:` on one intent (§7.8): nothing in the model could choose between them. Scope follows the tree, so a second look belongs on the intent whose screens wear it.
 
 ### 12.2 Informational Diagnostics
 
@@ -1424,7 +1473,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - Lower-precedence facet source shadowed by a higher-precedence one.
 - Tree-shape smell (§5.5): a level outside the 3–9 breadth band, or a chain of single-child parents (§15.2).
 - Unresolved `Import` alias (not blocking but flagged for repair).
-- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — an intent-level `accesses` (§8.2) grants reachability to every View in that subtree.
+- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — an intent-level `accesses` (§8.2) grants reachability to every View in that subtree. A **Style** declares no edges and is never an orphan (§7.8).
 - **Unrefined intent subscription** — a `intent`-level `subscribes` edge (§8.2) that survives into a Level-3 intent without being refined to a flow- or contract-level edge. Valid at Level 1/2; informational at Level 3.
 - **Unrealized requirement** — a `## Requirements` list item with no inbound `satisfies` edge (§8.2): no declared behavior claims to realize it. Informational at Level 1/2; at Level 3 tools MAY promote it to a finding, since a full facet trace with no behavior for a stated requirement is a real gap.
 - **Positional `satisfies` reference** — a `satisfies` edge targeting a requirement by index rather than by label (§8.2). Fragile under reordering; labels are the durable form.
@@ -1444,6 +1493,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Ambiguous continuation (5.5)** — a deciding step is followed by a further step, but zero or several outcomes read as proceeding (none, or more than one, lacks a continuation of its own, §7.3): the model has not said which leg is the procedure. Remediation: give every non-proceeding outcome its continuation, or end the sequence at the decision and let each outcome carry its own path.
 - **Ungrounded decision (5.6)** — a `### Decides` block on a unit that declares no informational inputs: no `reads`, no capability-targeted `invokes` (§8.2), no `### Input`. A judgment with no stated basis — nothing in the model says what it is decided *from*. Remediation: declare the basis (a Record read, a Capability consulted), or accept the criteria as self-contained; the note merely surfaces the question.
 - **Unused capability (5.6)** — a `## Capability:` surface with no inbound capability-targeted `invokes` and no `Requires` alias naming it (§8.2, §9.1): declared but consulted by nothing. Remediation: wire the consuming operation, or remove the surface.
+- **No style declared (5.11)** — a View with no `## Style:` in reach: none on its intent or any ancestor (§7.8). The realization makes a clean neutral choice and records it. Informational, never an error — the absent commitment is itself reversible, which is what sets it apart from absent copy. Remediation: declare a Style on the intent whose look it is, or accept the neutral choice.
 - **Unsupplied material (5.7)** — a View with no supplied copy, or a Record read but never mutated in-model with no supplied entries (§9.4): the model says what the surface does and nothing says what it displays, so the realization has nothing to render and a conforming Realizer must stop and ask (§1.2). Reported against the *handoff*, not the model: it is not a defect, it does not affect specification level (§11.2), and it never becomes a hard error — a model is legitimately complete long before its words exist. Remediation: supply the material beside the model, never inside it. The note exists because a Level-3 graph with no material reads *finished* while being unbuildable — §15.10's false assurance at the handoff layer.
 - **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
 - **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
@@ -1595,6 +1645,16 @@ Two reading rules retired; no new headings, edges or schema-line grammar. Who do
 
 When adopting, relabel `AGENTS.md` to `aim_version: 5.10` and refresh the specification cache. Nothing becomes invalid. A model whose steps said their doer only in words now reports *no declared performer* (§12.2) for those steps: add an `invokes` from the performing Persona to the operation the step invokes, and give a human step done by someone other than the Flow's performer an operation of its own. A model whose performers are declared by `invokes` reads exactly as before. The performer conflict "a step opens with a Persona that is not among its operation's performers" no longer exists. A Persona only a step's words mention — the Client an invoice is sent to — now reads as a *role without work* (§12.2): give it its part (it invokes work, reaches a View, or an Authz names it), or let the words say it without a Persona. A model whose `### Authz` names roles only in words now permits nobody by name: its work is permitted to whoever performs it, which is what most such models meant. Where a role that does not perform the work may still do it, name that role by address. The performer conflict "Authz names several roles without saying whether any one of them suffices" no longer exists: several named roles are alternatives, and work all of them must do is one step per actor (§7.3).
 
+### 13.12 From v5.10 To v5.11
+
+Additive: one new facet heading, no new edges, no new schema-line grammar. The visual identity moves from beside the model into it.
+
+1. **Style is a facet (§7.8).** `## Style: <Name>` states how what people see should look, at identity grain: a `### Summary` for the look in one breath, and optional `### Palette`, `### Type`, `### Shape` and `### Mark` lists of `<token>: <value>` lines, in the owner's words or exact values. One per intent; scope follows the tree and the nearest Style wins; it declares no edges and is never an orphan. New hard error: *several styles* (§12.1); new informational diagnostic: *no style declared* (§12.2).
+2. **The identity leaves supplied material (§9.4).** A 5.8 handoff carried the identity under `content/style/`; that channel is retired. A mark's picture stays material under `content/assets/`.
+3. **`wears` is recorded pressure (§8.6)**, not admitted.
+
+When adopting, relabel `AGENTS.md` to `aim_version: 5.11` and refresh the specification cache. Nothing becomes invalid. A model whose identity rode the handoff as tokens now reads *no style declared*: tools SHOULD propose a `## Style:` from those tokens — in the owner's words where the tokens had them — for the owner to accept, and never write it silently (§17.2): a supplied value was never the owner's signature on the model. A model that never had an identity reads exactly as before, with the same note it had under 5.8.
+
 ---
 
 ## 14. Conformance Examples
@@ -1724,6 +1784,8 @@ A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly l
 - **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own child intent (§5, §16.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
 
 **Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*, never its placement on the screen. This is the line §15.7 draws for orchestration: AIM captures intent, not rendering mechanics.
+
+**The look is a commitment; the layout is not (5.11).** How the surfaces look — palette, type, shape, mark — lives in the `## Style:` facet (§7.8) of the intent whose look it is, and a page-intent that departs from the product's look declares its own. Where things sit on the screen, and how a stylesheet achieves the look, remain realization as above.
 
 **Worked example — the promote boundary.**
 

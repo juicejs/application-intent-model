@@ -1,6 +1,6 @@
-# Agentic Intent Model (AIM) v5.10
+# Agentic Intent Model (AIM) v5.11
 
-This revision retires the two reading rules that depended on the words a model is written in: a step's opening Persona no longer declares its performer — who performs work is declared by edges alone — and `### Authz` names the roles that may by their address, never by a name in its words; so a model reads the same in every language (§7.3, §7.4). No new syntax. See [the 5.10 migration notes](./specification.md#1311-from-v59-to-v510); the previous wave is [5.9](./specification.md#1310-from-v58-to-v59) — who performs a piece of work, continuation through an announcement, and the stale satisfier.
+This revision moves a product's visual identity into the model: how what people see should look is a commitment the owner makes, so it is a facet — `## Style:` — stated in the owner's words at identity grain, one per intent, the nearest Style winning down the tree; a mark's picture stays supplied material (§7.8, §9.4). One new heading, no new edges. See [the 5.11 migration notes](./specification.md#1312-from-v510-to-v511); the previous wave is [5.10](./specification.md#1311-from-v59-to-v510) — who does the work and who may, declared by edges alone.
 
 *Formerly "Application Intent Model" — renamed when the language generalized beyond software.*
 
@@ -93,7 +93,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v5.10 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v5.11 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -125,6 +125,6 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v5.10**
+Current spec: **AIM v5.11**
 
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License

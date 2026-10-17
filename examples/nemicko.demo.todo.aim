@@ -146,6 +146,27 @@ The main interface for viewing and interacting with the task list.
 - Submitting the "New Task" form — [exposes](aim:#Contract:CreateTodo)
 - Tapping the checkbox on a PENDING task — [exposes](aim:#Contract:CompleteTodo)
 
+## Style: Plain
+
+### Summary
+
+Quiet and legible: a white sheet, dark text, one blue for the action — nothing decorative.
+
+### Palette
+
+- surface: white
+- ink: near-black `#1f1f1f`
+- accent: one clear blue for the primary action
+
+### Type
+
+- body: the platform's own sans, comfortable size
+
+### Shape
+
+- corners: slightly rounded
+- elevation: flat
+
 ## Event: TodoCreated
 
 ### Summary
