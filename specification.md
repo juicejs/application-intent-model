@@ -1056,7 +1056,7 @@ Welcoming and concrete: cream and dark brown with a little warmth, never corpora
 
 **Absent Style.** A model with a View and no Style in reach is complete; the realization makes a clean neutral choice and records it, and tools report *no style declared* (§12.2) — informational, never an error. The asymmetry 5.8 named stands: invented copy asserts facts, invented dress is reversible.
 
-**Recovered and migrated identities.** An identity recovered from an existing realization (§17), or the token summary a 5.8-era handoff carried under `content/style/`, becomes a Style the way all recovered intent does: proposed to the owner with its provenance, in the owner's words where the tokens had them, and never written into the model without the owner's signature (§17.2).
+**Recovered and migrated identities.** An identity recovered from an existing realization (§17) becomes a Style the way all recovered intent does: proposed to the owner with its provenance, never written into the model without their signature (§17.2). The token summary a 5.8-era handoff carried under `content/style/` is different in kind: the owner typed those values into the tool, and typing them was the signature. A tool MAY move them into a Style on the intent whose look they were — in the owner's words where the tokens had them, exact values kept exact — recording the move in the file's history as a migration and keeping the tokens readable as a backup. It invents nothing the tokens did not say.
 
 ### 7.9 Summary Rule
 
@@ -1653,7 +1653,7 @@ Additive: one new facet heading, no new edges, no new schema-line grammar. The v
 2. **The identity leaves supplied material (§9.4).** A 5.8 handoff carried the identity under `content/style/`; that channel is retired. A mark's picture stays material under `content/assets/`.
 3. **`wears` is recorded pressure (§8.6)**, not admitted.
 
-When adopting, relabel `AGENTS.md` to `aim_version: 5.11` and refresh the specification cache. Nothing becomes invalid. A model whose identity rode the handoff as tokens now reads *no style declared*: tools SHOULD propose a `## Style:` from those tokens — in the owner's words where the tokens had them — for the owner to accept, and never write it silently (§17.2): a supplied value was never the owner's signature on the model. A model that never had an identity reads exactly as before, with the same note it had under 5.8.
+When adopting, relabel `AGENTS.md` to `aim_version: 5.11` and refresh the specification cache. Nothing becomes invalid. A model whose identity rode the handoff as tokens the owner supplied in the tool MAY be migrated by the tool: a `## Style:` written from those tokens onto the intent whose look they were, in the owner's words where the tokens had them, recorded in the file's history as a migration, the tokens kept as backup (§7.8). Material recovered from a re-encoded system (§17) still waits for the owner's confirmation. A model that never had an identity reads exactly as before, with the same note it had under 5.8.
 
 ---
 
