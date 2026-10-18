@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.11
+# Agentic Intent Model (AIM) v5.12
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -240,7 +240,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5.11
+aim_version: 5.12
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -948,9 +948,18 @@ The owner's primary task list view.
 - Create task — opens the creation form and [exposes](aim:#Contract:CreateTask).
 - Complete task — [exposes](aim:#Contract:CompleteTask).
 - Archive task — [exposes](aim:#Contract:ArchiveTask).
+
+### Layout
+
+- Create task sits at the left, above the list.
+- Completed tasks below the open ones.
 ```
 
 `### Display` states **what the surface shows and which Records it reads**, never the words it says. A bullet like "an empty state message when there are no tasks" commits that the message exists; the message itself is **supplied material (§9.4)** — realization the owner provides beside the model. An `### Actions` label is the exception that stays in intent: it names a commitment (5.7).
+
+**Layout (5.12).** `### Layout` states **where things sit on the surface — only what the owner stated**. One bullet per arrangement commitment, in the owner's words, at arrangement grain: relative position, order, grouping, prominence ("Create task sits at the left, above the list"), never pixels, a grid system or a stylesheet. A bullet names what it places by the surface's own words — a `### Display` section, an `### Actions` label, a Record the View reads — so a reader and a Reviewer find it, and a Reviewer can hold every realization to it: the running application, a generated screen, a developer's build. Everything the block does not state remains the Realizer's freedom (§15.9). The block is optional, admits no edges, and is never checked against the other sub-blocks by a parser — it is prose a Reviewer judges, like `### Display`.
+
+**A drafted arrangement is not a layout.** A tool may draw a screen — a sketch, a generated draft — and must arrange what the model leaves open to do so. That arrangement is the tool's suggestion, not the owner's commitment: it is never written into `### Layout` unasked, and a tool that shows a draft SHOULD distinguish what the block states from what it chose. When the owner reacts to a draft ("the button goes on the left"), their words are an ordinary change to the View: written into its `### Layout`, after which every reader of the model — the next draft included — places the button there.
 
 ### 7.6 Event
 
@@ -1046,9 +1055,11 @@ Welcoming and concrete: cream and dark brown with a little warmth, never corpora
 - mark: Amy's portrait, a transparent cutout the surface shows through
 ```
 
-**Why the look is intent.** A product's words may change weekly without the product changing; its look may not — a rebrand changes what the owner committed to, and it is reviewed as one. 5.8 placed the visual identity beside the model as supplied material (§9.4), where neither the owner nor the model could see it; 5.11 moves it into the model. The §1.4 test decides the grain: *that* the surfaces read warm and flat is a commitment a Reviewer can hold a realization to; *how* a stylesheet achieves it is not. So a Style states the identity — palette, type, shape, mark, and the look in one breath in its `### Summary` — and stops there. Layout, component styling and the stylesheets themselves remain the Realizer's freedom (§15.9).
+**Why the look is intent.** A product's words may change weekly without the product changing; its look may not — a rebrand changes what the owner committed to, and it is reviewed as one. 5.8 placed the visual identity beside the model as supplied material (§9.4), where neither the owner nor the model could see it; 5.11 moves it into the model. The §1.4 test decides the grain: *that* the surfaces read warm and flat is a commitment a Reviewer can hold a realization to; *how* a stylesheet achieves it is not. So a Style states the identity — palette, type, shape, mark, and the look in one breath in its `### Summary` — and stops there. Arrangement the owner has not stated (§7.5), component styling and the stylesheets themselves remain the Realizer's freedom (§15.9).
 
-**Sub-blocks and values.** The sub-blocks are `### Palette`, `### Type`, `### Shape` and `### Mark`, each a bullet list of `<token>: <value>` lines: the token is one lowercase word (`surface`, `ink`, `heading`, `corners`), the value is the owner's words, an exact value, or both. A realization uses an exact value verbatim — a hex, a typeface name, a measure — and elaborates words in the idiom of its stack and its time ("a clear, strong azure" becomes one blue, chosen once and recorded). All four sub-blocks are optional: a Style with only a Summary is a valid Style. Tokens are open — a domain may need `chart` or `print` — and tools MUST accept any token; a value's grain is for the owner and a Reviewer to judge, never a parser.
+**Sub-blocks and values.** The sub-blocks are `### Palette`, `### Type`, `### Shape`, `### Mark` and — since 5.12 — `### Layout`, each a bullet list of `<token>: <value>` lines: the token is one lowercase word (`surface`, `ink`, `heading`, `corners`), the value is the owner's words, an exact value, or both. A realization uses an exact value verbatim — a hex, a typeface name, a measure — and elaborates words in the idiom of its stack and its time ("a clear, strong azure" becomes one blue, chosen once and recorded). All four sub-blocks are optional: a Style with only a Summary is a valid Style. Tokens are open — a domain may need `chart` or `print` — and tools MUST accept any token; a value's grain is for the owner and a Reviewer to judge, never a parser.
+
+**Layout conventions (5.12).** A Style's `### Layout` lines state arrangement conventions for every screen that wears it — `- actions: left-aligned`, `- navigation: a bar across the top` — in the owner's words, at the grain of §7.5's block. A View's own `### Layout` bullet wins over a convention for that screen, as a nearer Style wins over a farther one.
 
 **The mark is two things.** Its words are intent: `- mark: Amy's portrait, a transparent cutout` commits to a mark and says what it is. The picture itself is a file, and a file is supplied material (§9.4): it rides beside the model under `content/assets/` and never inside a `.aim` file. A Realizer who gets only the words still knows what to source; one who gets the file uses it verbatim.
 
@@ -1295,7 +1306,7 @@ A `Requires` alias resolves through **either of two forms (5.6)**: a **mapping**
 1. **Use supplied material verbatim, and never write it back into the model.** Writing it into `.aim` converts realization into intent and is drift by definition (§1.3).
 2. **Absent material is a question, never a licence.** A missing value is the owner's to give; inventing it is the content form of inventing behavior (§1.2), and shipping a placeholder that reads like a placeholder is worse than stopping.
 
-Material is a **handoff-readiness** fact, not a model property: an unsupplied screen or an unseeded input Record is informational (§12.2), never a validation error, and never affects specification level (§11.2) — a Level 3 intent with no copy is still Level 3, and still unbuildable, which is why the readiness statement is derived separately. Presentation stays out: **which** slots a screen owes is an ecosystem concern, and where any of it sits on screen remains realization (§15.9).
+Material is a **handoff-readiness** fact, not a model property: an unsupplied screen or an unseeded input Record is informational (§12.2), never a validation error, and never affects specification level (§11.2) — a Level 3 intent with no copy is still Level 3, and still unbuildable, which is why the readiness statement is derived separately. Presentation stays out: **which** slots a screen owes is an ecosystem concern, and where any of it sits on screen remains realization unless the owner stated it in a `### Layout` (§7.5, 5.12).
 
 ---
 
@@ -1655,6 +1666,16 @@ Additive: one new facet heading, no new edges, no new schema-line grammar. The v
 
 When adopting, relabel `AGENTS.md` to `aim_version: 5.11` and refresh the specification cache. Nothing becomes invalid. A model whose identity rode the handoff as tokens the owner supplied in the tool MAY be migrated by the tool: a `## Style:` written from those tokens onto the intent whose look they were, in the owner's words where the tokens had them, recorded in the file's history as a migration, the tokens kept as backup (§7.8). Material recovered from a re-encoded system (§17) still waits for the owner's confirmation. A model that never had an identity reads exactly as before, with the same note it had under 5.8.
 
+### 13.13 From v5.11 To v5.12
+
+Additive: one optional sub-block, no new headings, edges or schema-line grammar. Stated layout becomes intent.
+
+1. **`### Layout` on a View (§7.5).** Where things sit on the surface, only what the owner stated, in their words, at arrangement grain — never pixels or a stylesheet. Everything unstated stays the Realizer's freedom (§15.9).
+2. **`### Layout` in a Style (§7.8).** Arrangement conventions for every screen that wears the Style; a View's own bullet wins for that screen.
+3. **A drafted arrangement is not a layout (§7.5).** A tool's sketch or generated draft arranges what the model leaves open; it is never written into `### Layout` unasked, and the owner's reaction to it is an ordinary change.
+
+When adopting, relabel `AGENTS.md` to `aim_version: 5.12` and refresh the specification cache. Nothing becomes invalid and no model needs to change: a View without `### Layout` reads exactly as before. A placement the owner stated somewhere the parser does not read — in `### Display` prose ("a hero band with the image on the right") — may stay there; tools SHOULD offer to move it into `### Layout` when the View is next edited.
+
 ---
 
 ## 14. Conformance Examples
@@ -1783,9 +1804,9 @@ A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly l
 - **Trivial / behavior-less** — a static or host-fed panel with no contract, schema, or action of its own is **not a node**. It is a bullet in the host `## View:`'s `### Display`. This is the piece *inside* a screen — a widget on a dashboard — never the composition of a purpose-earned page, whose sections are Views by the bullet above. Modeling it as its own facet adds a node the graph cannot check — nothing to dangle, nothing to impact — and earns it a false orphan diagnostic (§12.2).
 - **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own child intent (§5, §16.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
 
-**Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*, never its placement on the screen. This is the line §15.7 draws for orchestration: AIM captures intent, not rendering mechanics.
+**Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*; placement is never an edge. Where the owner has stated it, placement is a commitment all the same — written in the View's `### Layout` (§7.5), in their words, never inferred from code. This is the line §15.7 draws for orchestration: AIM captures intent, not rendering mechanics.
 
-**The look is a commitment; the layout is not (5.11).** How the surfaces look — palette, type, shape, mark — lives in the `## Style:` facet (§7.8) of the intent whose look it is, and a page-intent that departs from the product's look declares its own. Where things sit on the screen, and how a stylesheet achieves the look, remain realization as above.
+**The look and the stated layout are commitments (5.11, 5.12).** How the surfaces look — palette, type, shape, mark — lives in the `## Style:` facet (§7.8) of the intent whose look it is, and a page-intent that departs from the product's look declares its own. Where things sit is a commitment exactly where the owner stated it: a View's `### Layout` for one screen, a Style's `### Layout` for a convention every screen keeps (§7.5, §7.8). Everything else about placement, and how a stylesheet achieves the look, remains realization as above.
 
 **Worked example — the promote boundary.**
 

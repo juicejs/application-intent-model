@@ -146,6 +146,11 @@ The main interface for viewing and interacting with the task list.
 - Submitting the "New Task" form — [exposes](aim:#Contract:CreateTodo)
 - Tapping the checkbox on a PENDING task — [exposes](aim:#Contract:CompleteTodo)
 
+### Layout
+
+- The "New Task" form sits above the list.
+- Completed tasks below the pending ones.
+
 ## Style: Plain
 
 ### Summary
