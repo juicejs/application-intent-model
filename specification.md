@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v5.12
+# Agentic Intent Model (AIM) v5.13
 
 Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
 
@@ -138,7 +138,7 @@ A node is any **addressable heading** in the resolved source. There are three ra
 | Rank | Markdown | Node-type | Example |
 |---|---|---|---|
 | Intent | `aim:` frontmatter / H1 | `intent` | `nemicko.demo.todo` |
-| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` `style` (+ `capability` — the `## Capability:` surface, §9.2; **not** a `## Requirements` list item) | `## Contract: CreateTodo` |
+| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` `style` `state` (+ `capability` — the `## Capability:` surface, §9.2; **not** a `## Requirements` list item) | `## Contract: CreateTodo` |
 | Facet sub-block | `### <Sub>` and its list items | `block` (addressable, not separately typed) | `### Ensures` item `[2]` |
 
 Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** as sections — a section heading is never itself the endpoint of a typed edge. Only `intent` and the facet node-types participate in the edge graph, with two defined sub-block exceptions: a **schema attribute** participates solely as an endpoint of a `refs` edge (§3.7, §8.2), and a **`## Requirements` list item** participates solely as the target of a `satisfies` edge (§8.2). Both are addressable sub-blocks, not separately typed nodes; no other sub-block is ever an edge endpoint, and `## Requirements` as a *section* stays edge-inert (only its individual items are `satisfies` targets). The node-type is read directly off the facet-heading keyword; there is no inference.
@@ -240,7 +240,7 @@ Every AIM project carries an `AGENTS.md` file at its root. This is the universal
 
 ```markdown
 ---
-aim_version: 5.12
+aim_version: 5.13
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
@@ -321,6 +321,7 @@ Facet headings use the form `## <FacetType>: <Name>`:
 ## Event: TaskCreated
 ## Trigger: NightlySweep
 ## Style: Warm
+## State: TaskStatus
 ```
 
 Realization bindings attach to a node as an inline `### Bindings` property (§10.2). The deprecated `kind: binding` sidecar addresses each node with a `## Bind: <FacetType>:<Name>` heading — the payload after `Bind:` is the bound node's in-intent address minus the leading `#`:
@@ -341,7 +342,7 @@ Top-level section headings use the bare form:
 
 Tooling MUST accept `## Subintents` and `## Subcomponents` — the headings earlier versions wrote — as deprecated aliases for `## Children`.
 
-The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.9). This keeps node boundaries deterministic.
+The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.10). This keeps node boundaries deterministic.
 
 **Facet name grammar.** A facet `<Name>` MUST match `[A-Za-z][A-Za-z0-9_]*` (PascalCase recommended) — no spaces, no punctuation. A heading whose name violates the pattern (`## Contract: Create Task`) is a hard error (§12.1). This constraint is what lets a name sit verbatim inside an `aim:` link destination and a `## Bind:` heading as a valid CommonMark link target without percent-encoding (§2.2).
 
@@ -666,7 +667,7 @@ Note: `Task` and `User` are not defined in this file — they resolve upward to 
 
 ## 7. Precision Facets
 
-The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 added the seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks. 5.11 adds the eighth — **Style** (§7.8) — for how what people see should look: the one facet that declares no edges.
+The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 added the seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks. 5.11 adds the eighth — **Style** (§7.8) — for how what people see should look: the one facet that declares no edges. 5.13 adds the ninth — **State** (§7.9) — the machine one enum field of a Record moves through: its states and every move it may make, each with the operation that makes it.
 
 ### 7.1 Record And The Schema Property
 
@@ -1069,7 +1070,70 @@ Welcoming and concrete: cream and dark brown with a little warmth, never corpora
 
 **Recovered and migrated identities.** An identity recovered from an existing realization (§17) becomes a Style the way all recovered intent does: proposed to the owner with its provenance, never written into the model without their signature (§17.2). The token summary a 5.8-era handoff carried under `content/style/` is different in kind: the owner typed those values into the tool, and typing them was the signature. A tool MAY move them into a Style on the intent whose look they were — in the owner's words where the tokens had them, exact values kept exact — recording the move in the file's history as a migration and keeping the tokens readable as a backup. It invents nothing the tokens did not say.
 
-### 7.9 Summary Rule
+### 7.9 State (5.13)
+
+The machine one enum field of a Record moves through — where it starts, where it ends, and every move it may make, with the operation that makes each.
+
+```markdown
+## State: TaskStatus
+
+### Summary
+
+How a task moves from draft to done, and back from testing when it fails.
+
+### Of
+
+- `Record:Task.status`
+
+### States
+
+- Draft — initial
+- Development
+- Testing
+- Done — final
+
+### Moves
+
+- Draft → Development — [Contract:MoveTaskToDevelopment]
+- Development → Testing — [Contract:MoveTaskToTesting]
+- Testing → Development — [Contract:ReturnTaskToDevelopment]
+- Testing → Done — [Contract:MoveTaskToDone]
+- Draft → deleted — [Contract:DeleteDraftTask]
+```
+
+**Why the machine is intent.** Automation is state machines: who may move what, from which state, and what is final. Before 5.13 a status was an enum (§7.1) and every rule about how it changes was prose on the operation that makes the change — an `### Expects` *"the task is in draft"*. Such a guard binds only the operation that states it: one added later, in another intent, can reopen a done task, and nothing in the model says it may not. "Done is permanently closed" was a sentence no tool could check, and no projection could draw a record's life. A State declares the moves once, for the field, so they bind every operation that writes it — including the ones not written yet — and a chart, a validator and an interpreter read the same table.
+
+**Sub-blocks.**
+
+- **`### Of`** — exactly one bullet: a backticked reference to a Record field, `Record:<Name>.<field>` or `<ns>#Record:<Name>.<field>`, resolved upward like every reference (§5.4). The field is a **required enum** (§3.7), so every record is in exactly one of its states.
+- **`### States`** — one bullet per enum value. The bullet's word is the state's name; it stands for the value it spells, compared case-insensitively with spaces read as underscores (`In review` is `in_review`). Where the word and the value differ, the value follows in parentheses: `- Waiting (on_hold)`. Exactly one state is marked `— initial`; any number `— final`. States and values correspond one to one.
+- **`### Moves`** — one bullet per move: `<From> → <To> — <operations>`, the operations one or more bracketed references (`[Contract:X]`, `[Flow:Y]`, qualified `[ns#Contract:X]`), comma-separated; `->` is accepted for `→`. Each operation `mutates` the record (§8.2). The reserved target `deleted` declares where deletion may happen.
+- **`### Summary`** is required (§7.10). A State has no other sub-block.
+
+A move is a **structured reference, not an edge** — the form a Trigger's `after [Event:X]` already takes (§7.7): it resolves and is checked, derives no inverse and needs no verb. A State declares no edge tokens.
+
+**Meaning.** The facet is the complete list of how its field may change.
+
+| Situation | Rule |
+|---|---|
+| A write changes the field | The pair *(state before, state after)* is a declared move, **and** the operation performing the write is one the move names. |
+| Creation | A new record starts in the initial state, by any operation that creates it. Creation is no move. |
+| Deletion | When the facet declares `→ deleted` moves, a record is deleted only from those states, by those operations — a final state included: deletion is the record's end, not a move out of its state. When it declares none, the facet says nothing about deletion. |
+| A final state | No move leaves it, save a declared deletion. Other fields may still change, and other records (a task's comments) are not frozen. |
+| The same value before and after | Not a move; the operation's own rules govern the write. |
+| Who may run the operation, its input, its guards | Unchanged: `### Authz`, `### Input`, `### Expects` and `### Ensures` on the operation (§7.2). A legal move grants no permission. |
+
+"Only the assigned developer moves a task to testing" stays where that decision lives — on `MoveTaskToTesting`'s Authz and Expects. The State says only that development → testing is a move and that this operation makes it; the two together are what a reader, a chart and a realization need. A realization that commits writes to the field refuses a write whose move the State does not declare, or whose operation is not the move's — from any operation, before the write commits. A realization without that check does not enforce the State, is not described as enforcing it, and a Reviewer reports the missing check as drift (§12.3).
+
+**States are named, not addressed.** The facet is the node (`create_task#State:TaskStatus`); a state is a word inside it, as an outcome's label is a word inside `### Decides` (§7.2). Nothing points at a single state.
+
+**Scope.** A State lives in the intent that declares its Record or in any intent beneath it (§5); its references resolve upward, so a machine in `create_task.lifecycle` names its parent's `Record:Task.status` and the operations beside it. **One State per field**, across the whole model — a second machine for the same field is a hard error (§12.1), since nothing could choose between them. Two fields of one record (`status` and `paymentStatus`) are two States, checked independently; there are no combined states. A State points at its record and its operations and nothing points at it, so it is **not** an orphan (§12.2), and it takes no part in the traceability chain (§11.3). When its Record or an operation moves to another intent (§16), the State's references are rewritten with every other reference.
+
+**The graph.** A State is a node of type `state`. The graph derives, never authors, two structural edges: `governs` — State → the Record it is `### Of`; and `moved-by` — State → each operation its moves name. Neither is a verb (§8.2): they are read from the facet's structure, as `refs` are read from a schema (§3.7). The moves stay on the node, each resolved to its operations and to the roles those operations' `### Authz` admits (§7.2) — which is what a projection draws, with no model call: the initial and final markers, every move an arrow with its operation and its who. An impact query from a changed State reaches its record, its operations and every other operation that `mutates` the record — a changed policy may invalidate an operation no move names yet.
+
+**Absent State.** An enum with no State keeps its meaning: a set of values, nothing claimed about how they change. A machine is never inferred from an enum or from guard prose; one recovered from a realization (§17) is proposed to the owner with its provenance, never written without their signature (§17.2).
+
+### 7.10 Summary Rule
 
 Every facet block must carry an explicit `### Summary` sub-block immediately following the facet heading. `Persona` may omit the summary when it acts only as a role/access declaration.
 
@@ -1216,7 +1280,9 @@ Two standing rules bound the process: **verbs are forever** — removing or rena
 
 **Delivery semantics (5.5)** — at-least-once / at-most-once, ordering, consumer idempotency. Fails test 1 as a verb permanently: these are attributes of an Event's `### Routing` (`Durable: true` is the existing foothold, §7.6), not relations. The pressure recorded here is for **standard Routing keys**, admitted when a subscriber-side diagnostic — an at-least-once event whose consumer does not declare idempotency — demonstrates rent on a real model.
 
-**Record lifecycle transition legality (5.5; need demonstrated 5.9)** — the status transition table as a checkable relation. The states (a schema enum) and the transition actors (Contracts that `mutate` the Record, with `### Decides` where the transition is a judgment) are already in the graph; missing is only transition legality — "closed is terminal", "no posting against a closed period". Test 4 is now met: every house model carries lifecycle rules as prose — Expense Approval ("the claim is approved and not already reimbursed"), Task Planner ("the task is open"), Lunch orders ("until the round is closed, not after"), Sales pipeline ("starts as a lead"), and the Financial close whose lock requirement was the first evidence recorded here — and §7.1's own Record example does the same ("an approved item's amount is fixed"). What the prose cannot give is **reach**: an `### Expects` guard binds only the operation that states it, while legality declared on the Record would bind every operation that mutates it, including the ones not written yet. The construct still fails test 5 — it is not fully specified on arrival — so it stays recorded pressure with its syntax under **prototype**, not admitted: a Record-scoped block, sibling of `### Constraints` and `### Immutable` (test 1 sends rules to blocks — never a verb, never a schema-line modifier), declaring the legal moves of a status field and its final states. Three designs are on the table — the moves and final states on the Record alone; the same plus a bracketed reference to the operation that makes each move; or no block, with state guards recognized in `### Expects` — and the first is the recommended core. The options, the open questions (self-moves, whether final freezes the whole row, several lifecycle fields on one Record, the block's name) and the measurement that decides admission are kept in the proposal record, `proposals/5.9-record-lifecycle.md`. The strongest rent-payer on this list — illegal-transition as a hard diagnostic, and a refusal before commit in any realization that writes the Record.
+**Record lifecycle transition legality (5.5; need demonstrated 5.9; admitted 5.13)** — admitted as the State facet (§7.9): one facet per enum field, its states, its initial and final ones, and every move with the operation that makes it — a facet with structured references, which is where test 1 sends rules. Test 5 was met by `proposals/5.13-state-facet.md`, which keeps the evidence: every house model's lifecycle prose, and a real owner's task lifecycle whose running realization accepted done → draft.
+
+**Per-state rules (5.13)** — a rule about a state rather than a move: "editable in draft only", "no posting against a closed period" beyond the status itself. Fails test 4 for now — each case seen is carried by a requirement and the operations' guards — and test 5: whether such a rule freezes the record, some fields, or only some roles is open. Its prototype is a clause on the state's bullet (`- Draft — initial — editable by Client, Architect`); what would admit it is a real model whose per-state rule an operation added later broke.
 
 **Wears (5.11)** — a `wears` edge from a View to a `## Style:` (§7.8), for one screen that departs from the look of its intent. Fails test 4 — no real model has yet needed more than the tree's nearest-Style rule — and largely test 2: a page-intent that declares its own Style already expresses a page's departure (§15.9). What would admit it: a real model with a single View, inside a purpose-earned page, that must wear another look while its siblings keep the page's — and a diagnostic that reads the edge.
 
@@ -1448,6 +1514,7 @@ Persona → View → Contract → Flow / Record / Event
 - `Contract` and `Flow` `read`/`mutate` a `Record`.
 - `Contract`/`Flow` `emits` `Event`.
 - A `## Style:` (§7.8) takes no part in the chain: it declares no edges and nothing points at it; its scope follows the tree.
+- A `## State:` (§7.9) takes no part in the chain either: it declares no edge tokens, nothing points at it, and its structural edges (`governs`, `moved-by`) are derived.
 
 In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 it is **derived from the declared edges** and therefore checkable: a Level-3 intent is exactly one whose chain has no orphan nodes and no dangling edges (§12). Intent-only intents remain valid; tools emit a reduced-fidelity informational note.
 
@@ -1476,6 +1543,16 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Unresolvable requirement target** — a `satisfies` key that is out of range (positional), matches no declared label (labeled), or a `## Requirements` section declaring the same label twice (§8.2, §11.1).
 - **Type-mismatch reference** — an edge target resolves but its node-type ≠ the address's `FacetType`, or the `(verb, from, to)` triple is not in the §8.2 schema.
 - **Several styles (5.11)** — more than one `## Style:` on one intent (§7.8): nothing in the model could choose between them. Scope follows the tree, so a second look belongs on the intent whose screens wear it.
+- **State of no required enum (5.13)** — a State's `### Of` missing, or not resolving to a required enum field of a Record (§7.9).
+- **State and values differ (5.13)** — a state for no value of the field, a value with no state, or one value named twice.
+- **Initial state (5.13)** — a State with no state marked `— initial`, or more than one.
+- **Unknown move endpoint (5.13)** — a move whose `From` or `To` is none of the State's states; `deleted` is admitted as a target only.
+- **Move out of a final state (5.13)** — a move from a final state to anything but `deleted`.
+- **Self-move (5.13)** — a move from a state to itself: a write that keeps the value is not a move.
+- **Move operation (5.13)** — a move that names no operation, or names one that does not resolve, is no Contract or Flow, or does not `mutates` the record.
+- **Duplicate move (5.13)** — the same move with the same operation twice.
+- **Several state machines (5.13)** — two States over one field, anywhere in the model.
+- **Unknown State block (5.13)** — a State sub-block other than Summary, Of, States and Moves.
 
 ### 12.2 Informational Diagnostics
 
@@ -1484,7 +1561,7 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - Lower-precedence facet source shadowed by a higher-precedence one.
 - Tree-shape smell (§5.5): a level outside the 3–9 breadth band, or a chain of single-child parents (§15.2).
 - Unresolved `Import` alias (not blocking but flagged for repair).
-- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — an intent-level `accesses` (§8.2) grants reachability to every View in that subtree. A **Style** declares no edges and is never an orphan (§7.8).
+- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — an intent-level `accesses` (§8.2) grants reachability to every View in that subtree. A **Style** declares no edges and is never an orphan (§7.8); nor is a **State**, which points at its record and its operations (§7.9).
 - **Unrefined intent subscription** — a `intent`-level `subscribes` edge (§8.2) that survives into a Level-3 intent without being refined to a flow- or contract-level edge. Valid at Level 1/2; informational at Level 3.
 - **Unrealized requirement** — a `## Requirements` list item with no inbound `satisfies` edge (§8.2): no declared behavior claims to realize it. Informational at Level 1/2; at Level 3 tools MAY promote it to a finding, since a full facet trace with no behavior for a stated requirement is a real gap.
 - **Positional `satisfies` reference** — a `satisfies` edge targeting a requirement by index rather than by label (§8.2). Fragile under reordering; labels are the durable form.
@@ -1504,6 +1581,10 @@ In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 
 - **Ambiguous continuation (5.5)** — a deciding step is followed by a further step, but zero or several outcomes read as proceeding (none, or more than one, lacks a continuation of its own, §7.3): the model has not said which leg is the procedure. Remediation: give every non-proceeding outcome its continuation, or end the sequence at the decision and let each outcome carry its own path.
 - **Ungrounded decision (5.6)** — a `### Decides` block on a unit that declares no informational inputs: no `reads`, no capability-targeted `invokes` (§8.2), no `### Input`. A judgment with no stated basis — nothing in the model says what it is decided *from*. Remediation: declare the basis (a Record read, a Capability consulted), or accept the criteria as self-contained; the note merely surfaces the question.
 - **Unused capability (5.6)** — a `## Capability:` surface with no inbound capability-targeted `invokes` and no `Requires` alias naming it (§8.2, §9.1): declared but consulted by nothing. Remediation: wire the consuming operation, or remove the surface.
+- **Unreachable state (5.13)** — a state other than the initial one that no move reaches (§7.9): the field has the value and the model never says how a record gets there. Remediation: declare the move and its operation, or remove the value.
+- **Dead end (5.13)** — a state that is not final and has no move out: a record that reaches it waits there for good. Remediation: declare the way on, or mark the state final.
+- **Unmoved mutator (5.13)** — an operation that `mutates` a governed record and appears in no move: it may change the record, never its status. Often right (adding a note); worth one look, since it is also what a forgotten move looks like.
+- **No moves (5.13)** — a State with no moves at all: every value but the initial one is unreachable.
 - **No style declared (5.11)** — a View with no `## Style:` in reach: none on its intent or any ancestor (§7.8). The realization makes a clean neutral choice and records it. Informational, never an error — the absent commitment is itself reversible, which is what sets it apart from absent copy. Remediation: declare a Style on the intent whose look it is, or accept the neutral choice.
 - **Unsupplied material (5.7)** — a View with no supplied copy, or a Record read but never mutated in-model with no supplied entries (§9.4): the model says what the surface does and nothing says what it displays, so the realization has nothing to render and a conforming Realizer must stop and ask (§1.2). Reported against the *handoff*, not the model: it is not a defect, it does not affect specification level (§11.2), and it never becomes a hard error — a model is legitimately complete long before its words exist. Remediation: supply the material beside the model, never inside it. The note exists because a Level-3 graph with no material reads *finished* while being unbuildable — §15.10's false assurance at the handoff layer.
 - **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
@@ -1675,6 +1756,15 @@ Additive: one optional sub-block, no new headings, edges or schema-line grammar.
 3. **A drafted arrangement is not a layout (§7.5).** A tool's sketch or generated draft arranges what the model leaves open; it is never written into `### Layout` unasked, and the owner's reaction to it is an ordinary change.
 
 When adopting, relabel `AGENTS.md` to `aim_version: 5.12` and refresh the specification cache. Nothing becomes invalid and no model needs to change: a View without `### Layout` reads exactly as before. A placement the owner stated somewhere the parser does not read — in `### Display` prose ("a hero band with the image on the right") — may stay there; tools SHOULD offer to move it into `### Layout` when the View is next edited.
+
+### 13.14 From v5.12 To v5.13
+
+Additive: one new facet heading, no new edge verb, no new schema-line grammar. A record's lifecycle becomes intent.
+
+1. **State is a facet (§7.9).** `## State: <Name>` is the machine of one required enum field: `### Of` names the field, `### States` one state per value with one `— initial` and any `— final`, `### Moves` each move with the operations that make it, `deleted` as the reserved target for deletion. Moves are structured references, not edges; the graph derives `governs` and `moved-by`. One State per field; never an orphan; outside the traceability chain. New hard errors and informational diagnostics (§12.1, §12.2).
+2. **Lifecycle legality leaves recorded pressure (§8.6)** — admitted as the State. Per-state rules ("editable in draft only") are recorded in its place.
+
+When adopting, relabel `AGENTS.md` to `aim_version: 5.13` and refresh the specification cache. Nothing becomes invalid and no model needs to change: an enum without a State reads exactly as before, and a 5.12 reader meets `## State:` as an unknown facet type and reports it rather than dropping it. Lifecycle rules already written as `### Expects` prose stay valid; tools SHOULD offer a State when the record is next edited — the moves the guards describe, for the owner to confirm — and never write one unasked.
 
 ---
 

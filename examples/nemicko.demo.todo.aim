@@ -34,7 +34,7 @@ id: string generated unique
 ownerId: string required
 title: string required max(100)
 description: string optional
-status: enum(PENDING, COMPLETED) default(PENDING)
+status: enum(PENDING, COMPLETED) required default(PENDING)
 createdAt: timestamp generated
 ```
 
@@ -171,6 +171,25 @@ Quiet and legible: a white sheet, dark text, one blue for the action — nothing
 
 - corners: slightly rounded
 - elevation: flat
+
+## State: TodoStatus
+
+### Summary
+
+A todo is pending until its owner completes it; a completed todo stays completed.
+
+### Of
+
+- `Record:TodoItem.status`
+
+### States
+
+- Pending — initial
+- Completed — final
+
+### Moves
+
+- Pending → Completed — [Contract:CompleteTodo]
 
 ## Event: TodoCreated
 

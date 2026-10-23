@@ -1,6 +1,6 @@
-# Agentic Intent Model (AIM) v5.12
+# Agentic Intent Model (AIM) v5.13
 
-This revision makes stated layout intent: where things sit on a screen is a commitment exactly where the owner said it — a View's `### Layout` bullets, a Style's `### Layout` conventions, in their words, at arrangement grain — and everything unstated stays the realizer's freedom; a tool's drafted arrangement is never a commitment until the owner states it (§7.5, §7.8, §15.9). No new headings or edges. See [the 5.12 migration notes](./specification.md#1313-from-v511-to-v512); the previous wave is [5.11](./specification.md#1312-from-v510-to-v511) — the look as the `## Style:` facet.
+This revision makes a record's lifecycle intent: the machine one enum field moves through is a facet — `## State:` — its states, the initial and final ones, and every move with the operation that makes it, so what no move lists cannot happen, a chart draws the record's life exactly, and a realization can refuse an illegal move before it commits (§7.9). One new heading, no new edge verb. See [the 5.13 migration notes](./specification.md#1314-from-v512-to-v513); the previous wave is [5.12](./specification.md#1313-from-v511-to-v512) — stated layout as intent.
 
 *Formerly "Application Intent Model" — renamed when the language generalized beyond software.*
 
@@ -93,7 +93,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v5.12 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v5.13 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -125,6 +125,6 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v5.12**
+Current spec: **AIM v5.13**
 
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License
