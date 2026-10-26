@@ -10,6 +10,51 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 
 ---
 
+## What's new in 6.0 — and why it matters
+
+**The whole language, said once.** An agent reads the specification before it writes or checks a model — in practice, on every turn. 5.13 had grown to 221 KB and 34,000 words: the history of every release, tutorials, before/after demonstrations, and the same rule stated in several places. 6.0 says the same language once, in thirteen sections, about 9,900 words and 67 KB. In Amy, the prompt an agent reads per decision shrank to about a third. Less to read is less to contradict, and every rule now has one home.
+
+**Nothing to migrate.** A model valid under 5.13 is valid 6.0, read as it is (§2). The 5.13 edge shorthand and binding sidecars are still read; they are simply no longer written.
+
+**Four things a model can now say that it could not before.**
+
+1. **A process keeps its own roles, filled by the organization's people.** The Submitter and the Approver of a claim are two roles with two lanes and two sets of permissions — and both are employees. Each local role now names the shared one it is filled by, without merging them and without a second "Employee" (§6):
+
+   ```markdown
+   ## Persona: Approver
+
+   ### Role
+
+   - Approves expense claims — [plays](aim:org#Persona:Employee)
+   ```
+
+2. **Privacy that reaches what it should, and no further.** `owner` marks whose row it is, and a row that references a private row is private too — the lines of a claim are as private as the claim. Two modifiers state the exceptions exactly: `cross-owner(...)` lets one role act on other people's rows of one record, for one operation or one screen; `!owner` forbids acting on one's own (§3). "Approvers approve other people's claims, never their own" is one line:
+
+   ```markdown
+   ### Authz
+
+   - `#Persona:Approver` cross-owner(#Record:Claim) !owner
+   ```
+
+3. **A record's lifecycle can protect the rest of the record.** A State already said how the status may move. Now it can also say when the other fields may change (§6):
+
+   ```markdown
+   ### Moves
+
+   - Draft → Submitted — [Contract:SubmitClaim]
+   - Draft → unchanged — [Contract:EditClaim]
+   ```
+
+   `EditClaim` may change the claim only while it is a draft.
+
+4. **Every write is held to the model.** However an operation is performed — code, an automation, an AI interpreter — each change it makes must satisfy the schema, the immutable fields, ownership and every State of its record before it commits (§6). The model is no longer advice the realization may skip; it is the check every write passes.
+
+**Tools can trust each other's output.** A tool that reads a model and writes it back must keep every node, rule, edge, modifier, dependency, binding and authority field, and must not rewrite a file when anything would be lost (§3, *Preservation of meaning*). Models move between editors, agents and repositories without silently losing meaning.
+
+See [the 6.0 proposal](./proposals/6.0-language-revision.md) for the complete list of changes, the editorial decisions, where each 5.13 section went, and the questions still open.
+
+---
+
 ## Why AIM
 
 - **Ground agents in explicit, versioned intent** instead of loose chat context that evaporates between sessions.
@@ -23,13 +68,13 @@ AIM pays off when reading the model is meaningfully easier than inspecting the r
 
 ## The graph foundation (the v4 break)
 
-v4 was the breaking change from v3.1 that founded the language on a graph; v5 generalizes it beyond software and finishes the naming (spec §2). The three shifts:
+v4 was the breaking change from v3.1 that founded the language on a graph; v5 generalized it beyond software and finished the naming; 6.0 says it all once (spec §4). The three shifts:
 
 1. **Graph-founded model.** The `.aim` Markdown file is a *projection* of an underlying node-and-edge graph. Every heading is an addressable node.
 2. **Typed edge taxonomy.** One CommonMark-native token — `[verb](aim:<address>)` — replaces v3.1's inconsistent prose cross-references. Dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
 3. **Intent↔realization binding layer.** An inline `### Bindings` property on each node (with its own `provenance`; deprecated `kind: binding` sidecars still accepted) maps intent nodes to their realization sites — in code, in systems, in automations — turning drift detection into a graph-diff.
 
-Migrating from v3.1: see Section 13 of [specification.md](./specification.md).
+Migrating from v3.1: see Section 13 of the [5.13 specification](https://github.com/juicejs/application-intent-model/blob/5e09691/specification.md) — 6.0 keeps release history in [proposals/](./proposals/) instead of the specification.
 
 ---
 
