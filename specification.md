@@ -1,208 +1,42 @@
-# Agentic Intent Model (AIM) v5.13
+# Agentic Intent Model (AIM) v6.0
 
-Agentic Intent Model (AIM) is a specification language for humans and AI agents. It makes the **intent** of a system durable and computable — from an application's behavior to a complete business process or an organization's commitments. The model remains readable enough for the people who own the intent, while being structured enough for agents to realize it, review it, repair it, and verify reality against it. Software was AIM's first domain and remains its most fully worked example; nothing in the language is specific to it (§18).
+## 1. Core and authority
 
-**The central proposition.** Every consequential system has two forms: what its owners intend and what actually happens. For an application, reality is code, configuration, data, interfaces, and runtime behavior. For an organization, reality also includes people, approvals, operating procedures, automations, external systems, deadlines, and evidence of work performed. AIM gives both forms a shared structure. It connects purpose and requirements to the contracts, flows, views, events, roles, and resources that fulfill them, then binds those commitments to the places where they are realized.
+AIM specifies a system's commitments and their relationships. A realization is either an artifact, such as code or configuration, or a performance repeated for each process instance. AIM specifies what must hold, who may act, and observable obligations; implementation mechanisms belong to the realization. Requirements, criteria, and steps may carry normative prose. Typed edges and structured properties carry relationships and mechanically checkable constraints.
 
-The result is more than documentation. It is a navigable chain from **why** a system exists, through **what** it promises and **how** those promises are fulfilled, to **where** each part exists in reality. That chain makes drift computable. In an application, drift may be behavior implemented without intent, intent with no implementation, or a stale binding after code moves. Across a company, drift may be a policy no process enforces, an approval people routinely bypass, an automation that no longer fulfills its obligation, a manual step with no accountable performer, or a stated commitment with no capability that satisfies it. The same graph and review loop expose all of these as mismatches between declared intent and observed reality.
+An **intent** is identified by a lowercase dotted namespace, such as `juice.tasks`. It has one required intent file (`kind: intent`), optional embedded or sibling facets, optional children, optional capability mappings, and optional realization bindings. The intent file is its canonical entry point. A child is an intent with the same node type as its parent.
 
-AIM v4 was a **breaking change** from v3.1. v3.1 made AIM Markdown-native and self-bootstrapping; it succeeded at making intent *readable*, but it left AIM's highest-value job — the **linking** between the things a system is made of — almost entirely informal. Real applications are not trees; they are **graphs**. A View exposes an Action that invokes a Contract that reads or mutates a Record and emits an Event that a Persona can reach. v3.1 expressed those relations in inconsistent prose ("Invoked by Contract: X", "TRIGGER: Contract.Y", "CALL Z"), demoted the traceability chain to "a useful target, not a requirement," and offered no way to traverse, check, or diff the relation graph.
+### Authority
 
-The three structural shifts of the v4 break — still the spine of the language:
+- `.aim` files under the project's AIM root are the sole behavioral authority, including their typed edges. The graph is derived from these files and is never a competing authority.
+- Other documents may explain or summarize intent but MUST NOT introduce behavioral requirements. Behavior stated only in Markdown notes, chat history, comments, or material outside the AIM root is drift; move it into `.aim` if it is intended to be authoritative. Root `AGENTS.md` provides bootstrap and working instructions, not system behavior.
+- Bindings authoritatively locate realizations but never define behavior. Their provenance is separate from the behavioral intent's provenance.
+- Facts about authoring, review, change history, implementation status, or maintenance of the specification are metadata. They MUST NOT appear in behavioral bodies. Spec-defined frontmatter carries portable authority and accountability metadata; other metadata belongs in the collaboration/storage environment or project-specific frontmatter. AIM does not prescribe version control, review, or approval storage.
+- Actors, approvals, and evidence within the specified system are behavior and may be modeled. A fact is metadata if it would cease to apply when the specification's team and toolchain were replaced while the specified system stayed identical.
 
-1. **Graph-founded model.** The `.aim` Markdown file is understood as a *projection* of an underlying node-and-edge graph. Every heading is an addressable node; every cross-reference is a typed, directed edge. The graph is *derived* by collecting edges across files — it is never authored as a separate artifact, so `.aim` files remain the sole authority.
-2. **Typed edge taxonomy.** A single CommonMark-native edge token replaces the prose. Each edge carries a verb from a closed set and points at a canonical node address. This makes the relation graph traversable and checkable: dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
-3. **Intent↔realization binding layer.** Intent nodes may bind to their realization sites — in code (`file#symbol`, `route:…`, `table:…`), in operations (`system:…`, `agent:…`, `workflow:…`). Drift detection then becomes a **graph-diff** between the declared intent graph and the realized graph recovered from reality, yielding precise, owner-routed findings.
+The authority boundary is enforced by review, not a parser hard error. Tools MAY report apparent behavioral requirements in non-authoritative documents and recommend moving them into `.aim`.
 
-v5 keeps that foundation intact and generalizes it: the unit is named the **intent**, the tree reads parent/children (§2.1), and nothing in the language is specific to software (§13.3, §18).
+### Operating capabilities
 
-The design bar for all three is **LLM-parsability** — consistent conventions an LLM follows and traverses reliably, not a rigid grammar requiring a custom parser. AIM remains valid CommonMark that renders on GitHub with no special tooling.
+| Capability | May write |
+|---|---|
+| Architect | Intent and its relationships; bindings when realization is known |
+| Realizer, called Developer in software | Realization and its bindings |
+| Reviewer | No model or realization changes; reports drift |
 
-AIM is the authoritative shared artifact between humans and agents. Realization, review, and repair all run against AIM. When reality and intent disagree, the mismatch is resolved explicitly — either by fixing the realization or by revising intent.
+These are operating modes, not language constructs or a required agent roster. One agent may hold multiple capabilities. A Reviewer MUST run cold with read-only access to what it judges; continuing the session that produced the realization is not independent verification. Independence depends on context and permissions, not model identity.
 
-**Where AIM is going, and why the drift machinery exists.** AIM's destination is intent as source: the model is what humans maintain, and the realization — code, automations, agent behavior — is synthesized or performed from it, the same inversion every prior abstraction jump made, from assembly to compilers. Today that is not yet safe: synthesis is stochastic, humans still change reality directly, and most systems predate their model (§17). The binding layer, graph-diff, and repair loop (§10, §12) are the trust-building apparatus for exactly this transitional period — every clean report is evidence that intent → reality is reliable for that intent. The success criterion of that machinery is to make itself progressively unnecessary: for an intent that is fully confirmed, Level 3, and repeatedly clean, regeneration replaces repair, and its binding file quietly changes meaning from review tool to build manifest. Readers and agents should treat this as the interpretive key for the rest of the document: the behavioral facets and the edge graph are the destination; the drift machinery is the road.
+The Realizer MUST NOT invent material behavior absent from intent. Preserve documented intent, minimize assumptions, and surface assumptions for review or explicit intent revision. Resolve a mismatch explicitly: repair reality or revise intent; never silently substitute one for the other.
 
-**Who writes AIM, and when it is worth it.** In practice `.aim` files are authored by an agent (the Architect role, §1.2) from a human's narration — not hand-written token by token. The typed structure therefore costs the author nothing and yields a more precise, checkable artifact. This answers the obvious objection — *if an agent writes the model and an agent produces the realization, why not act directly?* The `.aim` file is the **durable, human-reviewable, machine-checkable contract** between intent and reality: a small model is something a human can read, correct, and diff — and a Reviewer can check reality against — far more cheaply than inspecting the realization itself, and it persists across sessions where a chat prompt does not. The corollary is a boundary worth stating plainly: AIM pays off when reading the model is meaningfully easier than inspecting the realization; for trivially small or throwaway work, acting directly is the right call.
+Before presenting a proposal or committing an extension/addition, the Architect MUST derive the proposed graph and repair every hard error it can resolve autonomously. Surface only decisions requiring the owner, such as canonical ownership, a confirmed duplicate merge, ambiguous bindings, or missing/conflicting performers. Never assign a performer merely to clear a finding. A rewritten requirement requires reconsidering every satisfier; state explicitly when an unchanged satisfier still holds.
 
----
+## 2. Files and project bootstrap
 
-## 1. Core Model
+All AIM source files use `.aim` and consist of YAML frontmatter followed by CommonMark Markdown. Each file has exactly one H1, its display name.
 
-An intent is identified by a dotted namespace such as `juice.tasks` or `game.snake`. Child intents extend the namespace: `juice.tasks.create_task` is a child of `juice.tasks`.
+### Frontmatter
 
-Each intent has:
-
-- one required **intent file** (a `.aim` file with `kind: intent`)
-- zero or more optional **facets**: `schema`, `flow`, `contract`, `persona`, `view`, `event`
-- zero or more optional **child intents** (each is an intent in its own right)
-- zero or more optional **mapping files** (`kind: mapping`) — capability-to-provider bindings
-- inline **`### Bindings` properties** on nodes — intent-to-realization bindings (a deprecated `kind: binding` sidecar file is still accepted)
-
-The intent file is the canonical entrypoint. All other detail attaches to it directly (embedded), indirectly (sibling facet files), or through child intents.
-
-### 1.1 What Changed From v3.1 (The v4 Break)
-
-| Concern | v3.1 | v4 |
-|---|---|---|
-| Underlying model | Namespace tree (parent/child) | Node-and-edge graph; the tree is one edge type |
-| Cross-references | Prose mentions, inconsistent forms | One typed edge token: `[verb](aim:<address>)` |
-| Traceability chain | "A useful target, not a requirement" | Derived from declared edges; checkable |
-| Inverse relations | Authored twice (`### Trigger`, `### Emitted By`) | Declared once at the acting end; inverse derived |
-| Code linkage | None | Optional `kind: binding`; drift becomes graph-diff |
-| Per-file `version`/`spec` | Contradictory in v3.1 (frontmatter omitted them, but version-inheritance, registry, and diagnostics still required them) | Removed everywhere; version lives only in `AGENTS.md` (and the external catalog) |
-
-### 1.2 Roles And Capabilities
-
-AIM is operated through three **capabilities**, each defined by what it may write — not by a roster of agents a human must choose between. In software they read as architect, developer, reviewer; in operations, as process designer, operators and automations, audit. They are **operating modes, not a menu**: one agent may hold all three, and a mature tool classifies the human's request and enters the right mode itself rather than asking which role to use.
-
-| Capability | Writes intent (`.aim`) | Writes realization | Certifies match |
-|---|---|---|---|
-| **Architect** | ✓ | — | — |
-| **Realizer** (Developer) | — | ✓ | — |
-| **Reviewer** | — | — | ✓ (writes nothing) |
-
-- **Architect** — **designs the intent graph**: translates a human's narration into intents, their facets, and the typed edges among them. The `.aim` files are the graph's serialization (§2), not the design itself — an Architect who writes facets without edges has not architected, only documented. Owns the model; authors binding facets when realization is known. The Architect works in two **directions**: *forward*, designing intent from requirements, and *reverse*, recovering intent from a system that already exists (**Encoding**, §17). The reverse direction is the same capability with one difference — its output carries `provenance: inferred` (§17.2) and awaits human confirmation, because it is read off reality rather than authored. Direction and provenance are variations of authoring, not a separate role.
-- **Realizer** — makes reality match the model: a development team implementing code and tests, an ops team wiring automations, an agent performing a process. Emits or updates bindings for what it realizes. Fixes the realization when drift is found. (In the software domain this role is conventionally called the **Developer**, and the shipped prompt templates use that name.) A realization is either an **artifact** produced once (code, a configuration) or a **performance** repeated per instance (a process executed by people or agents). In the performed case realization work happens at execution time, so the performer wears this role — an agent executing a process is a Realizer, and the conduct rules below bind it: that is precisely what forbids it from improvising behavior the model does not state.
-- **Reviewer** — diffs the declared graph against the realized graph recovered from reality (code, configuration, execution logs — §10.1) and reports drift, writing nothing.
-
-**Verification must be independent.** The Reviewer capability MUST run in a context that cannot write what it judges — a cold evaluation with read-only access to the model and the realization. An agent that both produces a realization and certifies it against intent will pass its own work; drift detection is only meaningful when something with no stake in the output re-derives the graph and diffs it. Independence is a property of the *context and its permissions*, not of the model in use: the same agent re-invoked cold and denied write access is a valid Reviewer; that agent continuing in the session that just wrote the code is not.
-
-Roles are workflow guidance, not language constructs — they do not appear in `.aim` source files. A single agent may hold multiple capabilities and multiple agents may share one; the only separation that is normative is Reviewer independence, above. See [`PROMPT.md`](./PROMPT.md) and [`agents/`](./agents/) for concrete prompt templates for the software domain.
-
-Repair is a verb, not a separate role. When the Reviewer flags drift, either the Realizer fixes the realization or the Architect revises the intent. The decision is explicit, not silent.
-
-Normative behavior across all roles:
-
-- The Realizer must not invent material behavior absent from intent.
-- When detail is missing, preserve documented intent and minimize assumptions.
-- Assumptions are surfaced for review or converted into explicit intent updates by the Architect.
-- When reality and intent disagree, the mismatch is resolved — the Realizer fixes the realization if it is wrong, the Architect revises intent if the model is outdated.
-
-**Architect: validate before present.** Before presenting a proposal to the user or committing an EXTEND or ADD (§16.1), the Architect MUST derive the graph (§2.4) over the *proposed* state and **repair every hard error (§12.1) it can resolve autonomously** — a dangling edge left by a rename, an out-of-sync `## Children` index, a path/header mismatch, an illegal `(verb, from, to)` triple. Only diagnostics that genuinely need a human decision are surfaced: a confirmed-duplicate `merge` (§16.3 invariant 6), an unresolved canonical-home choice (§15.8), an ambiguous binding (§12.3), or a missing or conflicting performer (§7.4, §12.2, 5.9). Who does the work is the owner's commitment; the Architect never assigns a performer to make a diagnostic go away. A proposal presented with unrepaired hard errors is **non-conforming Architect behavior** — the graph must be well-formed before a human is asked to review it. A proposal that rewrites a requirement MUST also revisit every item that `satisfies` it (§16.7, 5.9). A satisfier that still holds unchanged is kept and said so to the human, never silently.
-
-### 1.3 Project Authority Model
-
-AIM is Markdown-native by deliberate choice, but that choice creates a risk: AI agents already love to spawn `.md` plans, design notes, decision logs, and PRDs. Without a clear authority boundary, AIM becomes one more `.md` file in the pile instead of the artifact that displaces it. The following rules establish that boundary.
-
-**Authority hierarchy:**
-
-1. **`.aim` files are the sole behavioral authority.** Every requirement, contract, schema, flow, persona, view, event, and **edge** that defines the system's behavior must live in a `.aim` file. Tools, agents, and reviewers treat `.aim` as the only source of truth for what the system is supposed to do. The derived graph is a *view* of these files, never a competing artifact.
-
-2. **Other `.md` files are explanatory, not authoritative.** `README.md`, `CONTRIBUTING.md`, ADRs, and similar documents may describe, link to, or summarize intent — but they must not define new behavioral requirements. If a behavioral requirement appears only in an `.md` file and not in a `.aim` file, it is **drift**. The Reviewer reports it. The fix is to move the requirement into a `.aim` file.
-
-3. **Anything outside `/aim/` is invisible to authority.** Behavioral content found in `docs/`, top-level `.md` files, code comments treated as spec, or chat history transcripts is not part of the project's behavioral authority. If it matters, it gets moved into `.aim`. If it doesn't, it isn't authoritative. The lone exception is `AGENTS.md` at the project root (see §3.3) — which carries project bootstrap metadata for agents but does not define behavior itself.
-
-**Behavior vs. realization.** A binding (§10) records *where* behavior is realized. Realization is not behavior. Bindings are authoritative for the intent↔realization mapping but never define what the system should do — that always lives in the behavioral facets. A binding carries its own `provenance`, so it can go stale (code moved) without the intent being wrong — realization stays a separately-trusted layer even when it sits inline on the node (§10.2).
-
-**The system vs. the work on the system.** AIM describes the *system under specification* — its commitments, actors, data, and events. Facts about *producing and maintaining that description* — who authored a file, what review state it is in, when and by whom it changed — are **meta-level** facts. The test for any proposed field, block, or marker: *would the fact survive replacing the entire team and toolchain while the specified system stays identical?* If it would not, it is meta-level. Several existing rules are instances of this one rule: roles are workflow guidance, not language constructs (§1.2); implementation status is banned from behavioral content (§3.8 — intent, not status); work artifacts are point-in-time and non-authoritative (§16.4, §17.4); enforcement mechanics and report formats are tooling concerns this spec does not define (§10.1). Evolution history and change governance belong to the project's storage and collaboration environment — a version-control system, a product database, a reviewed file share — and AIM requires nothing of that environment: the spec defines what the files *mean*, never how they are versioned, reviewed, or approved. Meta facts that must travel *with* the files — authority and accountability — use the spec-defined frontmatter fields (`provenance`, `owner`, `status`, `approved_by`, §3.2); further project-specific keys are permitted and carry no spec semantics. Meta facts never appear in the **body**: no status markers in requirements, no changelogs, no review annotations in behavioral content. The boundary excludes only the meta level: actors *of the specified system* are object-level and fully in-model — a `Persona` is a commitment about who the system serves, never a statement about who maintains its spec. A business process specified in AIM therefore legitimately models its workers, approvals, and execution evidence as Personas, Contracts, and Events, while the question of who edits those `.aim` files stays outside the language.
-
-**Diagnostics:**
-
-- **Hard error** — none for the prose/authority boundary. The Authority Model is enforced socially and by review, not by the parser. Tools cannot reliably distinguish "describes intent" from "defines intent" in arbitrary prose.
-- **Informational diagnostic** — reviewers and validators may flag `.md` files that appear to contain behavioral requirements not present in `.aim` files. The recommended remediation is always to move the requirement into a `.aim` file.
-
-**Why this matters:**
-
-The whole point of AIM is to replace `.md` sprawl with a structured behavioral artifact agents can read once and build from. Without the Authority Model, the same agents that spawned 100 `.md` files will spawn 100 `.md` files plus a few `.aim` files. With the Authority Model, every behavioral fact has exactly one home — and drift between sources is impossible because there is only one source.
-
-### 1.4 Scope: Commitments, Not Mechanics
-
-AIM models **commitments** — what an intent promises, who may act, what must hold — and deliberately does not model the **mechanics** of meeting them (5.5). The test for any candidate construct, and for any "can AIM express X?" challenge: *is X a commitment a Reviewer can hold a realization accountable to, or is it how a realization meets one?* Expression evaluation, control flow within an operation, memory and typing semantics, isolation protocols, delivery mechanics, control laws — mechanics, all of it: it belongs to the realization's own languages (code, SQL, a workflow engine, a control system) and never to the model. The commitment each serves — "the period locks", "at most one payment per approval", "held at 22 ± 0.5 °C", "confirmed within five business days" — is what belongs in the model, and is already expressible: Requirements, `### Expects`/`### Ensures`, `### Decides` criteria, schemas and constraints, deadline Triggers.
-
-Three consequences, stated once so the boundaries elsewhere read as instances, not exceptions:
-
-- **Formalizing mechanics would make AIM a programming language** — a worse one, and it would consume the degree of freedom that makes a realization the Realizer's to choose (§1.2). The closed taxonomy (§8.6), the orchestration boundary (§15.7), and the composition boundary (§15.9) apply this rule.
-- **Prescribing procedure destroys outcome verification.** A guarantee whose procedure is fully specified can only ever be procedure-verified; §15.10 keeps the two modes distinct, and its confidence attribution caps what procedure conformance may claim.
-- **Prose is not a fallback — it is half the language.** The graph carries what a symbolic check can consume (edges, exclusivity groups, schemas, deadlines); normative prose carries what only a judging reader can (criteria, steps, requirements). AIM's readers include exactly such a judge (§1.2), and §12.3's confidence grades keep judgment labeled as judgment.
-
-The universality claim this scope supports, stated precisely: any process's *commitments* can be modeled sharply enough that an independent Reviewer can hold its realization — artifact or performance — accountable. AIM is universal at the accountability level and does not aspire to be universal at the semantics level. The pressure to become the latter is permanent; this section is the standing answer, and a candidate that survives the test anyway is admitted through §8.6's gate, on evidence.
-
----
-
-## 2. Graph Model
-
-v4 reinterpreted the v3.1 file surface as the projection of a graph. No new file format and no new parser tier: every node already has a heading, and every edge is just a typed cross-reference. This section defines what a node is and how it is addressed; §8 defines edges.
-
-**Why a graph, and what kind.** An application's intent is not a document; it is a set of commitments and the relations among them. A facet is a **unit of intent**; a typed edge is **relational intent** — `[exposes](aim:#Contract:CreateTodo)` is itself a normative statement ("this surface shall offer this operation to users"), carrying the same authority as any requirement bullet. The graph is therefore **normative, not descriptive**. A code-analysis graph is derived from source and cannot disagree with it — it has no concept of *wrong*, only of structure. The intent graph is *authored*, so it can be wrong, unrealized, or drifted-from — and that capacity for disagreement is the point: drift (§10, §12) is only a meaningful concept because the declared graph is authoritative over what the system *should* do, independent of what the code *does*.
-
-**Why prose could not hold it.** Prose and headings are trees; application behavior is a graph. Serializing a graph into a tree forces every relation that crosses the hierarchy to be stated twice — once at each end ("Invoked by Contract: X" on the flow, "CALL X" in the steps) — and duplicated statements inevitably drift apart. v3.1's "three inconsistent expressions" problem (§8.3) was the structural symptom, not sloppy authoring. v4 re-normalized this: every relation is declared once, at the acting end, and inverse views are derived, never authored. The resulting division of labor is exact — **prose carries semantics** (what a commitment means, and why), **the graph carries structure** (how commitments compose into a system). Each holds precisely what the other cannot.
-
-**Who reads which projection.** The model carries two structures for two audiences, superimposed in the same files. The **tree** — namespaces, `## Children`, headings — is the *human* projection: hierarchy gives progressive disclosure (a handful of children per level, drill down), and the parent–child edge carries explanation — descending answers *how*, ascending answers *why*. Humans navigate, review, and understand the model through the tree. The **graph** — the typed edges — is the *machine* substrate: complete, queryable, and never meant to be read whole. Humans consume the graph only as **answers**: an impact set, a satisfies-coverage report, a calendar of every Trigger, one role's operations. Tools SHOULD surface the graph as such views and queries, and SHOULD NOT require a human to comprehend the global graph — no human can, and the design never asks them to. A `.aim` file is both projections at once: its headings are the tree, its edge tokens are the graph, and each reader takes their half (§18). And the two structures are independent by design: the tree may nest intents to whatever depth they earn (§5.5 — every level re-earns the shape rules), while the typed edges form **one global graph** that crosses tree levels and intent boundaries freely (§8.1) — tree position never limits what an edge may connect; it only decides who owns the node.
-
-The split rests on a hard asymmetry: a human can hold a tree in mind; no one holds a graph. That makes the tree not a convenience view but the model's **entire human interface** — and its *shape* a first-class quality property. Every intent SHOULD read as a short table of contents for the level below; an intent that degenerates into a flat bag of technical nodes has failed its audience even while the graph beneath it validates perfectly. The noun-cluster diagnostic (§12.2) and the `promote` transform (§16.2) exist to restore the ladder.
-
-### 2.1 Nodes
-
-A node is any **addressable heading** in the resolved source. There are three ranks, all of which already exist as headings:
-
-| Rank | Markdown | Node-type | Example |
-|---|---|---|---|
-| Intent | `aim:` frontmatter / H1 | `intent` | `nemicko.demo.todo` |
-| Facet | `## <Facet>: <Name>` | `schema` `view` `contract` `flow` `persona` `event` `trigger` `style` `state` (+ `capability` — the `## Capability:` surface, §9.2; **not** a `## Requirements` list item) | `## Contract: CreateTodo` |
-| Facet sub-block | `### <Sub>` and its list items | `block` (addressable, not separately typed) | `### Ensures` item `[2]` |
-
-Top-level prose sections (`## Summary`, `## Requirements`, `## Tests`, `## Dependencies`) are nodes of type `section`. They are valid anchor targets for drift reports but are **edge-inert** as sections — a section heading is never itself the endpoint of a typed edge. Only `intent` and the facet node-types participate in the edge graph, with two defined sub-block exceptions: a **schema attribute** participates solely as an endpoint of a `refs` edge (§3.7, §8.2), and a **`## Requirements` list item** participates solely as the target of a `satisfies` edge (§8.2). Both are addressable sub-blocks, not separately typed nodes; no other sub-block is ever an edge endpoint, and `## Requirements` as a *section* stays edge-inert (only its individual items are `satisfies` targets). The node-type is read directly off the facet-heading keyword; there is no inference.
-
-Intents form a **tree**: hierarchy is a *property*, not a kind. There is exactly one intent node-type — an intent with a `parent:` (§3.2, §5) is the same kind of node as the root, and a node's tree position never changes what it is: the tree is a projection (§2.4). The relational vocabulary this spec uses for tree position is **parent**, **child** (plural **children**), **root intent**, **leaf**, and **siblings**.
-
-### 2.2 Node Addresses
-
-The canonical address of a node is:
-
-```
-<intent>#<FacetType>:<Name>[ → ### <Sub> [<index>]]
-```
-
-- `<intent>` — the dotted namespace from the file's `aim:` field. Present in any stored or derived address (fully qualified). **Elidable** at an inline reference site when the target resolves within the same intent, yielding the unqualified form `#<FacetType>:<Name>`.
-- `#<FacetType>:<Name>` — the facet heading, verbatim. `FacetType` is capitalized exactly as in the heading (`Contract`, `View`, `Record`, …). Because facet names are constrained to `[A-Za-z][A-Za-z0-9_]*` (§3.6), the address is always a valid CommonMark link destination with no percent-encoding.
-- `→ ### <Sub> [<index>]` — optional finer pointer into a sub-block list item, 1-based, matching the Reviewer's drift-report convention.
-
-This is the address scheme drift reports already use (`## Contract: CreateTask → ### Ensures [2]`), promoted from a review artifact to the language's identity scheme.
-
-**Sub-block addresses are point-in-time, not durable.** A `→ ### <Sub> [<index>]` (or `→ ## Requirements [<index>]`) pointer is 1-based and positional: inserting or reordering a list item silently re-points every later index, so such an address is valid only relative to a *specific revision* of the file. Authored `.aim` source therefore MUST NOT use a sub-block address as an edge target — typed edges (§8) target facet-level nodes only (`#<FacetType>:<Name>`). Sub-block addresses appear only in point-in-time work artifacts (drift reports and change records under `/aim/work/`), which SHOULD additionally record the item's text as a **content anchor** so the reference re-resolves after the list shifts.
-
-The one sub-block target permitted in authored source is a `## Requirements` list item referenced by a `satisfies` edge (§8.2), and it comes in two forms with different durability. A **positional** reference (`#Requirements[3]`) inherits the point-in-time fragility above: inserting or reordering requirement bullets is a `rename`-class transform (§16.2), and every inbound positional `satisfies` edge MUST be re-pointed under §16.3 invariant 1 — an edit made without tooling silently re-points them, which is why positional references are the casual form, not the durable one. A **labeled** reference (`#Requirements[NET14]`, §8.2) targets a requirement by its stable label and survives any reordering — once `satisfies` edges exist, labels SHOULD be used.
-
-### 2.3 Address Examples
-
-```
-nemicko.demo.todo                                          # intent node
-nemicko.demo.todo#Record:TodoItem                          # facet node
-nemicko.demo.todo#Record:TodoItem → ### Schema [3]     # the `title` attribute
-nemicko.demo.todo#Contract:CreateTodo
-nemicko.demo.todo#Contract:CreateTodo → ### Ensures [2]    # "Emits a TodoCreated event"
-nemicko.demo.todo#Flow:ExecuteCreateTodo → ### Steps [3]
-nemicko.demo.todo#Persona:StandardUser
-nemicko.demo.todo#View:TodoDashboard → ### Actions [1]
-nemicko.demo.todo#Event:TodoCreated
-```
-
-Within a single-file intent, every node shares the one intent prefix, so inline references drop it entirely (`#Contract:CreateTodo`).
-
-### 2.4 The Graph Is Derived
-
-There is no graph file. A tool or agent builds the project graph by:
-
-1. **Collecting nodes** — every intent/facet/sub-block heading in the resolved source becomes a node keyed by its fully-qualified address.
-2. **Collecting edges** — scanning inline edge tokens (§8) and structured `ref(Type.field)` attributes; each yields one directed, typed edge `(from = enclosing facet node, verb, to = resolved address)`.
-3. **Validating** each edge against the from→to schema (§8.2) and resolving each target via §11.1.
-4. **Adding derived inverse edges** (§8.4) and reconciling them against any authored inverse blocks.
-
-The result lives only in tool/LLM memory or a build artifact. The `.aim` files remain the sole authority (§1.3).
-
----
-
-## 3. File Format
-
-### 3.1 Extension
-
-All AIM source files use the `.aim` extension. The extension is a brand and discipline marker: a file named `*.aim` is an authoritative AIM artifact, not a generic note. (Legacy v2.2 sources used `.intent`. Every version since v3.1 uses `.aim`; neither the v3.1→v4 nor the v4→v5 break changed the extension.)
-
-Files are valid CommonMark Markdown with YAML frontmatter. Any Markdown renderer will display them correctly.
-
-### 3.2 Header (YAML Frontmatter)
-
-Every `.aim` file begins with a small YAML frontmatter block:
+Every source file begins with `---`-delimited YAML:
 
 ```yaml
 ---
@@ -212,1935 +46,525 @@ parent: juice.tasks
 ---
 ```
 
-Required fields:
+| Key | Meaning and values |
+|---|---|
+| `aim` | Required lowercase, dot-separated intent namespace; authoritative identity |
+| `kind` | Required file role: `intent`, a facet kind, `mapping`, or deprecated `binding` |
+| `parent` | Parent namespace; present on child intents |
+| `display` | Display name overriding H1 for tooling |
+| `tags` | Array of free-form discovery tags |
+| `nature` | Projection hint: `record`, `persona`, `flow`, `view`, `event`, `trigger`, or `capability`; absent defaults to capability reading |
+| `provenance` | `inferred` for unaccepted recovered intent; absent or `confirmed` means authored/accepted intent |
+| `owner` | Free-form accountable identity, used to route findings |
+| `status` | Specification lifecycle: `draft`, `review`, `approved`, or `deprecated`; absent means unspecified |
+| `approved_by` | Identity ratifying current content |
+| `approved_at` | Optional ratification date accompanying `approved_by` |
 
-- `aim` — the intent namespace (lowercase, dot-separated)
-- `kind` — the file role: one of `intent | schema | flow | contract | persona | view | event | trigger | mapping | binding`
+Only `provenance` qualifies authority. `owner`, `status`, and approval fields never change how tools treat content. `provenance: inferred` with `status: approved` or a present `approved_by` produces an informational contradiction diagnostic. Acceptance changes provenance and records the approver in the same act.
 
-Optional fields:
+`nature` MUST NOT affect resolution, edge legality, or synthesis. Tools MAY infer a projection when it is absent: a top-level Schema without acting edges reads as record; intent-level Role/Access or acting edges reads as persona; top-level Steps reads as flow. Contradiction between declared nature and content is informational; content remains authoritative.
 
-- `parent` — the parent intent namespace, present on child intents
-- `display` — a human-readable display name (overrides the H1 heading for tooling)
-- `tags` — array of free-form tags for discovery
-- `nature` — the entity kind of an intent that is *itself a thing* (§7.1, §7.4): one of the facet natures (`record | persona | flow | view | event | trigger`) or `capability` (an operation-grouping intent — also the default reading when the field is absent). **Projection-only**: tools use it for tree badges and grouped views; it never affects resolution, edge legality, or synthesis. When absent, tools MAY derive it from content — a top-level `## Schema` with no acting edges reads as `record`; intent-level `## Role`/`## Access` or acting edges read as `persona`. A declared nature that contradicts content is an informational diagnostic (§12.2), never an error: content is the authority, the badge is the hint.
-- `provenance` — `inferred` on a file produced by re-encoding existing code and not yet human-accepted (§17). Absent (the default) or `confirmed` means authored/accepted intent. This is the only field that qualifies a file's authority.
-- `owner` — the identity accountable for this file's intent (free-form — a name or an email). Tools use it as the routing target for findings (§12.3). Accountability metadata only; it never affects the file's authority.
-- `status` — the authoring lifecycle of the **specification**: `draft | review | approved | deprecated`. This is the state of the intent, never of the implementation — implementation status remains banned from `.aim` files (§3.8) and lives in the drift report. Absent means unspecified.
-- `approved_by` — the identity that ratified the current content, optionally paired with `approved_at` (a date). This records the *who* of a §17.2 acceptance — or of ordinary review — in any environment, including after export to bare files.
+Frontmatter is open: conforming tools MUST ignore unrecognized keys, with at most an informational diagnostic. Project keys MUST NOT redefine spec-defined keys. Source files have no per-file `version` or `spec`; a project declares one language version. **Compatibility:** source valid under AIM v5.13 is valid v6.0 source and is read as it is, without migration. v6.0 adds constructs (`plays`, `cross-owner(...)`, in-state guards, explicit modifier properties) and changes no existing meaning; the 5.13 edge shorthand is read as a deprecated spelling (§7). Tools MAY canonicalize older spellings only under the preservation rules of §3.
 
-**Frontmatter is an open set with reserved keys.** Keys this spec does not define are permitted: conforming tools MUST ignore keys they do not recognize (an informational diagnostic at most, §12.2), and project-specific keys MUST NOT redefine the spec-defined keys. Two consistency rules bind the defined keys: `provenance: inferred` combined with `status: approved` or a present `approved_by` is a contradiction (informational diagnostic, §12.2) — accepting an inferred file flips `provenance` and records `approved_by` in the same act — and `provenance` remains the only field that qualifies a file's *authority* (§17.3); `owner`, `status`, and `approved_by` are accountability and lifecycle metadata and never change how tools treat the file's content. The boundary all these fields sit on — what belongs to the system versus what belongs to the work on the system — is defined in §1.3.
+### Bootstrap and spec cache
 
-The frontmatter carries **no** per-file `version:` or `spec:` field. The project-wide AIM version and spec URL live in **`AGENTS.md` at the project root** (see §3.3) — a single source of truth that eliminates redundancy and drift between files. There is no per-file version anywhere in the language.
+Each project MUST have root `AGENTS.md` with frontmatter:
 
-### 3.3 `AGENTS.md` — Project Bootstrap
-
-Every AIM project carries an `AGENTS.md` file at its root. This is the universal entry point any agent (Claude, Cursor, Aider, Gemini, etc.) reads first when entering the project — the convention originated with coding agents, predates AIM, and is now the de facto standard across the agent ecosystem.
-
-**Required structure:**
-
-```markdown
+```yaml
 ---
-aim_version: 5.13
+aim_version: 6.0
 aim_root: ./aim/
-spec: https://intentmodel.dev/spec.md
+spec: <canonical specification URL>
 ---
-
-# Agents
-
-This project uses the **Agentic Intent Model (AIM) v5** for behavioral specification.
-
-[...prose explaining roles, conventions, project specifics...]
 ```
 
-The frontmatter on `AGENTS.md` carries:
+`aim_root` locates source and defaults to `./aim/`. Its prose explains roles, project conventions, graph serialization, and co-location of mappings/bindings with their intents. It may include other project working instructions.
 
-- `aim_version` — the AIM language version this project targets (e.g. `5`)
-- `aim_root` — where `.aim` files live (default `./aim/`)
-- `spec` — the canonical specification URL for the declared version
+Agents resolve the specification in this order:
 
-The prose body explains AIM to a cold-start agent in natural language: what the roles are, where `.aim` files live, what conventions apply, that `.aim` files are a projection of a node-and-edge graph, and that mapping and binding facets live alongside their intent. Anything an agent needs to know about working in this project — both AIM and non-AIM — belongs here.
+1. Read `AGENTS.md`; require the language declaration and `spec` URL. The URL is authoritative; `aim_version` provides language context.
+2. Read `<aim_root>/specs/spec.md` when present.
+3. Otherwise fetch the declared URL.
+4. Refuse to proceed if the project declaration or specification cannot be resolved.
 
-**Why this works:**
+On setup, tooling fetches the declared specification into `specs/spec.md`. On adopting a new version, it replaces the cache. The cache MUST remain a verbatim mirror; tools MUST NOT edit it. `specs/` is reserved for cached specifications and MUST NOT be an intent namespace. Other directories containing a `<name>.aim` intent file are intent directories.
 
-1. **Cold-start universally solved.** Any agent that follows the `AGENTS.md` convention finds AIM automatically. No AIM-aware tooling required for the first read.
-2. **One source of truth for version.** Bumping AIM versions is a one-line edit, not a project-wide search-and-replace. Because no `.aim` file carries a version, there is nothing else to update.
-3. **No per-file boilerplate.** `.aim` files carry only what's unique to them (namespace + facet); shared facts live once in `AGENTS.md`.
-4. **Tool interop for free.** Cursor, Copilot, Anthropic tooling, and others that already read `AGENTS.md` pick up AIM context without integration work.
+## 3. Body structure and schema grammar
 
-### 3.4 Local Spec Cache
+H2 introduces top-level sections or facets. H3 introduces facet sub-blocks. Facets use `## <FacetType>: <Name>`; top-level sections use bare names such as `## Summary`, `## Requirements`, `## Tests`, `## Children`, and `## Dependencies`. Data-bearing or acting intents may also have top-level Schema, Role, Access, and Steps as defined by their facet rules.
 
-Many agents operate without network access (sandboxed environments, CI runners, offline editing, restricted enterprise networks). To support them, AIM tooling installs a local copy of the spec under `/aim/specs/`.
+A facet name MUST match `[A-Za-z][A-Za-z0-9_]*`; PascalCase is recommended. Names with spaces or punctuation are hard errors. The facet heading MUST be immediately followed by explicit `### Summary`, except a Persona used only for role/access declaration. Realization bindings are an inline `### Bindings` property; deprecated binding sidecars use `## Bind: <FacetType>:<Name>`.
 
-**Layout:**
+Tools MUST accept deprecated `## Subintents` and `## Subcomponents` as aliases of `## Children`. `## Schema: <Name>` is the deprecated Record facet spelling; `aim-attrs` is the deprecated `schema` fence spelling. Both remain accepted and SHOULD be migrated without forced rewrites.
 
-```
-/aim/
-  specs/
-    spec.md          # the AIM specification (mirrored from spec: URL)
-  <intent>/       # one directory per intent (mapping/binding facets live inside it)
-```
+### Preservation of meaning vs. canonical formatting
 
-**Required installer behavior:**
+Tools that parse `.aim` files into an intermediate representation and re-serialize them MUST distinguish **preservation of meaning** from **canonical formatting**:
 
-1. On first project setup (performed by an agent or tooling), fetch the spec from the URL declared in `AGENTS.md` and write it to `/aim/specs/spec.md`.
-2. When the project adopts a new AIM version, the installer overwrites the local `spec.md` with the new version.
-3. The local spec file is a verbatim mirror of the URL content. Tools must not modify it.
+- **Preservation of meaning** requires retaining every intent and facet node, requirement label and text, typed edge, schema attribute and modifier, `## Dependencies` (`### Imports` and `### Requires`), frontmatter authority and lifecycle metadata (`provenance`, `owner`, `status`, `approved_by`, `approved_at`, `tags`, `display`, `nature`), and realization binding (including merging any deprecated `kind: binding` sidecar `## Bind:` entries into inline `### Bindings` before retiring the sidecar).
+- **Canonical formatting** normalizes whitespace, heading order, and deprecated spellings (`## Subintents` → `## Children`, `aim-attrs` → `schema`, inline `### Bindings` for `## Bind:`) without altering the derived graph, bindings, or authority metadata. An automated migration MUST NOT run if the intermediate representation drops any of these elements.
 
-**Agent spec-resolution order:**
+### Markdown restrictions
 
-1. **`AGENTS.md`** — read the project's frontmatter to determine the `spec` URL (the `aim_version` provides language context but the URL is the source of truth). If `AGENTS.md` declares no `aim_version`/`spec`, refuse to proceed — operating against an unknown specification is unsafe.
-2. **Local cache** — read `/aim/specs/spec.md` if present. Always works, even offline.
-3. **URL fallback** — fetch the `spec` URL declared in `AGENTS.md`.
-4. **Hard error** — if none of these resolve, refuse to proceed.
+Structured blocks use the specified bullet, `schema` fence, and edge-token forms. Requirements, Tests, Steps, Schema, Payload, Input, Authz, Expects, Ensures, Returns, Decides, Display, Actions, Access, Of, States, Moves, and Bindings are structured blocks. Tables, blockquotes, task lists, and footnotes are forbidden there. Bold, italic, links, and inline code are permitted within list items. Fences in Schema/payload blocks use `schema`; arbitrary fences are permitted elsewhere where the block's defined syntax allows them.
 
-**Reserved names under `/aim/`:**
+Free prose, including Summary and descriptive paragraphs, permits ordinary CommonMark. Raw HTML is forbidden everywhere. Task lists MUST NOT express implementation or verification status in structured intent; that status belongs in work reports. Frontmatter `status` concerns specification lifecycle only.
 
-The `aim/specs/` directory name is reserved for cached specifications (`.md` files) and must not be used as an intent namespace. Mapping and binding facets are **not** separate top-level directories — they are `kind: mapping` / `kind: binding` files that live inside their intent's own directory (§4.2, §9.3, §10.2).
+### Schema properties
 
-Any other directory under `/aim/` that contains a `<name>.aim` file is an intent.
-
-### 3.5 Body (Markdown)
-
-The body of the file is Markdown. Structure is conveyed by heading levels:
-
-- **H1** — the intent's display name (exactly one per file)
-- **H2** — top-level sections (`## Summary`, `## Requirements`, `## Tests`, `## Schema`, `## Role`, `## Access`, `## Steps`, `## Children`, `## Dependencies`) and facet blocks (`## Contract: CreateTask`, `## Flow: AssignTask`, etc.)
-- **H3** — facet sub-blocks (`### Schema`, `### Input`, `### Ensures`, `### Steps`, etc.)
-- **Bulleted lists** — for requirements, tests, steps, attributes, and any enumeration
-- **Fenced code blocks** — for attribute definitions, type expressions, and code samples
-
-### 3.6 Heading Conventions
-
-Facet headings use the form `## <FacetType>: <Name>`:
-
-```markdown
-## Contract: CreateTask
-## Flow: AssignTask
-## Persona: TaskOwner
-## View: TaskDashboard
-## Event: TaskCreated
-## Trigger: NightlySweep
-## Style: Warm
-## State: TaskStatus
-```
-
-Realization bindings attach to a node as an inline `### Bindings` property (§10.2). The deprecated `kind: binding` sidecar addresses each node with a `## Bind: <FacetType>:<Name>` heading — the payload after `Bind:` is the bound node's in-intent address minus the leading `#`:
-
-```markdown
-## Bind: Contract:CreateTask
-```
-
-Top-level section headings use the bare form:
-
-```markdown
-## Summary
-## Requirements
-## Tests
-## Children
-## Dependencies
-```
-
-Tooling MUST accept `## Subintents` and `## Subcomponents` — the headings earlier versions wrote — as deprecated aliases for `## Children`.
-
-The facet heading text is the node's address within the file (§2.2). Every facet heading MUST be immediately followed by an explicit `### Summary` sub-block, with the single exception of a `Persona` acting only as a role/access declaration (§7.10). This keeps node boundaries deterministic.
-
-**Facet name grammar.** A facet `<Name>` MUST match `[A-Za-z][A-Za-z0-9_]*` (PascalCase recommended) — no spaces, no punctuation. A heading whose name violates the pattern (`## Contract: Create Task`) is a hard error (§12.1). This constraint is what lets a name sit verbatim inside an `aim:` link destination and a `## Bind:` heading as a valid CommonMark link target without percent-encoding (§2.2).
-
-### 3.7 Attribute Syntax
-
-A node's data — its **schema property** — uses a fenced code block with a simple line format:
-
-````markdown
-### Schema
+Schemas use a fenced `schema` block, with one attribute per line:
 
 ```schema
 title: string required min(1) max(200)
-description: string optional
-ownerId: string required ref(User.id)
-status: enum(open, completed, archived) required
-createdAt: datetime required
-```
-````
-
-Format per line: `<name>: <type> <modifier>*`
-
-Scalar types: `string`, `number`, `boolean`, `date`, `datetime`; `enum(...)` and `list(...)` may stand in the type position. `file` is a scalar too (5.8): a document a person hands to an operation, or that a row keeps. It names the kind of value and nothing about its storage or its reading — how a document is held, and how its contents are parsed, are the Realizer's (§1.2). An operation that `invokes` a document-reading Capability to read a caller-supplied document declares that document as a `file` Input; that line is what lets a realization offer the upload, while the Capability parses the document and the Contract owns what becomes of the rows.
-
-Modifiers: `required`, `optional`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`, `owner`.
-
-`owner` marks a reference to the person a row is private to: `ownerId: string required ref(Member.id) owner` says a Task belongs to the Member it names — only they see it, only they change it, and a new one is theirs. It is a statement about the row, never an inference from a reference: a Round's `runnerId` names who runs it and every member still sees the round. Declare `owner` where the intent says "their own" and nobody else's; leave a reference plain where a person merely plays a role on the row.
-
-`list(<type>)` declares a repeated value: `<type>` is a scalar (`list(string)`) or a Record name — `items: list(ExpenseItem)` for a log that owns its line items as parts. A Record-typed list derives a `refs` edge to that Record (§8.2), exactly as `ref()` does.
-
-`ref(<Type>.<field>)` is a **typed graph edge** (`refs`, §8.2): it links a schema attribute to another schema's attribute and is collected into the graph alongside inline edge tokens.
-
-**Resolving `ref()`.** The `<Type>` resolves as an unqualified facet name of type `Record` through the canonical resolution algorithm (§11.1); if it resolves in more than one intent along the resolution path, first-match-wins per §11.1 (a shadow diagnostic fires on the losing sources). To pin a specific provider, use the qualified form `ref(<intent>#<Type>.<field>)`. It is a hard error (§12.1) if `<Type>` does not resolve to a Record, or if `<field>` does not exist as a field on the resolved Record's schema.
-
-### 3.8 Allowed Markdown Features
-
-`.aim` files use CommonMark Markdown, but the spec constrains which features are allowed where. The rule:
-
-- **Structured spec blocks** — facet sub-blocks like `### Requirements`, `### Tests`, `### Steps`, `### Schema`, `### Input`, `### Ensures`, `### Returns`, `### Actions`, `### Access` — use only the patterns the spec defines (bullets, fenced `schema` blocks, and the inline edge token `[verb](aim:…)`). These blocks have parseable semantics; alternative forms create parsing ambiguity.
-- **Free-form prose sections** — `## Summary`, descriptive paragraphs between facet blocks, the body of `AGENTS.md` — follow standard CommonMark without restriction.
-
-| Feature | In structured blocks | In prose |
-|---|---|---|
-| Bulleted lists | ✓ (required form) | ✓ |
-| Edge token `[verb](aim:…)` | ✓ (typed cross-reference) | ✓ |
-| Tables | ✗ | ✓ |
-| Blockquotes | ✗ | ✓ |
-| Task lists (`- [ ]`) | ✗ | ✓ |
-| Footnotes | ✗ | ✓ |
-| Bold, italic, inline links | ✓ (inside list items) | ✓ |
-| Inline code (backticks) | ✓ | ✓ |
-| Fenced code blocks | ✓ (only `schema` in `### Schema` / payload sub-blocks; arbitrary elsewhere) | ✓ |
-| Raw HTML | ✗ | ✗ |
-
-The edge token is a standard CommonMark inline link whose destination uses the `aim:` URI scheme (§8.1). It renders as a clickable link on GitHub and is therefore allowed inside structured blocks, where it carries the cross-reference semantics.
-
-**Task lists deserve specific mention.** Markdown's `- [ ]` syntax is forbidden in `## Requirements`, `## Tests`, and other structured blocks even though it looks like a bullet list. The `.aim` file is *intent*, not *status*. Implementation and verification status live in a drift report under `/aim/work/` produced by the Reviewer — see §1.3 (Authority Model) and the Reviewer's drift-report convention in [`agents/aim-reviewer.md`](agents/aim-reviewer.md). Putting status into intent makes the spec lie when code changes and the checkbox doesn't. The frontmatter `status:` field (§3.2) is unaffected by this rule: it tracks the *specification's* own authoring lifecycle, never the implementation's.
-
-**Raw HTML is banned everywhere** because it breaks parsers and circumvents the Markdown-native discipline.
-
----
-
-## 4. Project Layout
-
-### 4.1 Decomposition-First Default
-
-AIM decomposes real applications into focused child intents. Each child is a real intent with its own intent file, its own namespace, and its own facets. The parent intent serves as an index plus a home for cross-cutting requirements and shared facets.
-
-Reasons this is the default:
-
-- LLMs reason better over small focused files than large ones
-- Multiple agents can work on different children in parallel without merge conflicts
-- Diffs are meaningful when each file has a single concern
-- Synthesis maps cleanly to small focused code modules
-
-The namespace hierarchy is the `extends` edge of the graph (parent ← child); it is one relation among many, not the model's organizing principle.
-
-### 4.2 Canonical Layout
-
-```
-/aim/
-  juice.tasks/
-    juice.tasks.aim                  # parent: index + shared
-    juice.tasks.record.aim           # shared Records (Task, User refs; `kind: record` — `kind: schema` is the deprecated spelling)
-    juice.tasks.mapping.aim          # capability mappings (kind: mapping)
-    juice.tasks.binding.aim          # code bindings (kind: binding)
-    create_task/
-      juice.tasks.create_task.aim
-      juice.tasks.create_task.contract.aim
-    assign_task/
-      juice.tasks.assign_task.aim
-    complete_task/
-      juice.tasks.complete_task.aim
+code: string required unique
+ownerId: string required ref(Member.id) owner
+reviewerId: string ref(Member.id) !owner
+items: list(ExpenseItem)
 ```
 
-Rules:
+Grammar: `<name>: <type> <modifier>*`.
 
-- Each intent lives in a directory named after its namespace.
-- The intent file filename matches `<intent>.aim`.
-- Sidecar filenames match `<intent>.<kind>.aim` — facet files (schema, contract, …) and the mapping/binding files alike, all co-located with their intent.
-- Child intents live in nested directories under the parent.
-- Mapping and binding facets belong to the child they realize: a facet for `juice.tasks.create_task` lives in the `create_task/` directory, not the parent's.
-- Generic filenames (`aim.aim`, `schema.aim`, `binding.aim`) are invalid.
+| Position | Allowed forms |
+|---|---|
+| Scalar type | `string`, `number`, `boolean`, `date`, `datetime`, `file` |
+| Other type | `enum(a, b, c)`, `list(<type>)` |
+| Modifier | `required`, `optional`, `unique`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`, `owner`, `!owner` |
 
-### 4.3 When To Collapse Into A Single File
+`file` is a document value, not a storage or parsing mechanism. An operation invoking a document-reading Capability for a caller's document declares a `file` Input; the Capability reads it and the Contract owns the resulting commitments. A document acquired by an external service does not imply a caller upload. Parsed text and source addresses remain ordinary values.
 
-An intent should stay in a single `.aim` file (no children, facets embedded inline) only when **all** of the following hold:
+`unique` declares that no two rows of the Record may hold the same non-empty value for that attribute.
 
-- Total content fits comfortably in a single screen of reading.
-- There is one clear behavior, not a set of distinct features.
-- No facet needs independent ownership or review.
+`owner` and `!owner` govern row-level ownership and separation of duties:
 
-Otherwise, split. Split is the default; single-file is the exception.
+- **`owner`** marks the referenced actor (`ref(...)`) to whom the row belongs. On creation, the field is bound to the acting caller's identity. At most one field on a Record may carry `owner`; a plain reference to a person does not imply ownership. A row referencing an owned row through one or more `ref(...)` links inherits that row's ownership restriction. All applicable ownership restrictions MUST hold: by default, a caller may see or mutate a directly or indirectly owned row only when every applicable owner matches the caller's identity. Records with no ownership path are not owner-scoped. A different local Persona, including one linked through `plays`, does not widen scope.
+- **`!owner`** restricts an otherwise authorized action: the acting caller MUST differ from every applicable owner of the target row. It may follow a backticked role in `### Authz`, qualify a Contract's `### Input` field identifying the target row, or qualify a Record's reviewer `ref(...)` field. A field-level restriction applies when that Input is supplied or that Record field is written; an Authz restriction applies when acting under that entry. It never grants visibility or mutation rights. To permit action on others' rows while forbidding self-action, declare both an explicit cross-owner grant and `!owner`.
 
-### 4.4 Path Identity
+**Explicit cross-owner scope.** `cross-owner(<Record-address>)` is a modifier, not a graph verb. `<Record-address>` is `#Record:<Name>` or `<namespace>#Record:<Name>` without `aim:`, resolved by canonical address resolution from the containing intent. It MUST resolve to a Record. Repeat the modifier to name several Records. It is permitted only:
 
-The header `aim:` field is authoritative for identity. The directory and filename must agree with the header — tools treat path/header mismatch as a hard error. This lets paths function as a fast sanity check without competing with the header as the source of truth.
+- After a backticked role on a Contract or Flow's `### Authz` entry. It lifts ownership scope only for that operation's declared `reads` or `mutates` targets named by the modifier, while acting under that entry. It grants no permission beyond the entry's Authz and no scope to invoked operations.
+- After a Persona's `[accesses](aim:<View-address>)` edge in `### Access`. It qualifies that edge and lifts ownership scope only for the named Record among that View's declared `reads` targets. It grants no scope to other Views or to operations exposed or invoked by the View; each operation still needs its own authorization and scope.
 
-### 4.5 One Version Per Project
-
-A working project is **single-version**: its `/aim/` tree conforms wholly to one AIM language version, because graph derivation and conformance require one consistent model. Bringing in intents authored against an older version means migrating them first (§13) — a project never mixes versions.
-
----
-
-## 5. The Intent Tree
-
-### 5.1 Definition
-
-A child intent is an intent whose namespace extends its parent's namespace by exactly one segment:
-
-- Parent: `juice.tasks`
-- Child:  `juice.tasks.create_task`
-
-The child declares the parent in its frontmatter:
-
-```yaml
----
-aim: juice.tasks.create_task
-kind: intent
-parent: juice.tasks
----
-```
-
-A child is a real intent: it has its own intent file, its own facets, and is independently addressable. The `parent:` relation is the graph's `extends` edge.
-
-**The constraint is on the name, never the count.** "Exactly one segment" defines the shape of a single parent→child *edge* — it does not limit fan-out or depth. A parent has as many children as its capabilities demand (3–9 per level is the healthy band, §5.5), and a child nests further the moment its own behaviors earn children of their own (§15.4). One segment per edge; any number of edges.
-
-Why one segment: it keeps the namespace an honest tree coordinate. The parent chain and the namespace walk are the same walk (§5.4, §11.1); no level can exist without its own intent file and Summary; and discovery (§5.3) stays mechanical. A grouping that wants to skip a level is either a real intermediate intent or a compound leaf name (`admin_reports`) — never an unnamed level.
-
-### 5.2 Parent As Index
-
-The parent intent's intent file serves two purposes:
-
-1. **Index of children** — either auto-discovered from sibling directories or explicitly listed.
-2. **Home for cross-cutting concerns** — shared requirements, shared schemas, shared personas, shared events that apply across all children.
-
-Example parent intent:
-
-````markdown
----
-aim: juice.tasks
-kind: intent
----
-
-# Tasks
-
-A task management subsystem. Users create, assign, and complete tasks tied to projects.
-
-## Summary
-
-The tasks subsystem owns the full task lifecycle: creation, assignment, state transitions, and archival. All child intents share the `Task` schema and emit events on the `tasks.*` channel.
-
-## Requirements
-
-- Every task belongs to exactly one owner.
-- State transitions are auditable.
-- Soft-delete is preferred over hard-delete.
-
-## Children
-
-- [create_task](./create_task/juice.tasks.create_task.aim) — create a new task
-- [assign_task](./assign_task/juice.tasks.assign_task.aim) — assign a task to a user
-- [complete_task](./complete_task/juice.tasks.complete_task.aim) — mark a task completed
-
-## Record: Task
-
-### Summary
-
-The shared task record used by all children.
-
-### Schema
-
-```schema
-id: string required
-title: string required min(1) max(200)
-description: string optional
-ownerId: string required ref(User.id)
-status: enum(open, in_progress, completed, archived) required
-createdAt: datetime required
-updatedAt: datetime required
-```
-````
-
-### 5.3 Child Discovery
-
-By default, children are **auto-discovered**: any sibling directory containing a `<namespace>.aim` file with a matching `parent:` field is treated as a child of the parent.
-
-The parent may override discovery with an explicit `## Children` block. When the explicit list is present:
-
-- listed children must exist on disk
-- discovered children not in the list emit a hard error (ambiguous authority)
-- the explicit list is authoritative for the order in which children are presented to agents and tooling
-
-### 5.4 Upward Facet Resolution
-
-A child intent may reference facets defined in the parent without qualification. The complete precedence rules are defined once in §11.1 — children add one detail: the **parent chain** step walks the namespace upward (parent → grandparent → root) until a match is found or the chain ends.
-
-Tools emit an informational diagnostic when a child defines a facet that shadows one already defined in a parent. This is usually a sign that either the shared definition should move up, or the child's name should be more specific.
-
-### 5.5 Tree Shape
-
-**Breadth:** 3–9 children per level is the healthy band. A parent's children should read as a short table of contents for the level below — that is the tree's job as the human projection (§2). One child is a smell (§15.2 — no single-child parents); a dozen or more means an intermediate level wants to exist or siblings want merging.
-
-**Depth:** depth is **earned level by level, never capped**. Every level must itself hold the breadth band and read as a table of contents for the level below; depth follows from scale alone — a focused tool may need one level, a whole-organization model (§18) many. The stopping rule is content, never a count: decomposition stops where an intent holds **one clear behavior** (§4.3) — while an intent's Summary still says "and", it needs children. Level count is never a reason to stop, and never a reason to split. What tools flag is not absolute depth but *accidental* depth: a chain of single-child levels (§15.2), or a level outside the breadth band. A dotted address grown unreadable is usually breadth debt surfacing as depth, not a depth problem itself.
-
-There is no version inheritance: `.aim` files carry no version, so a child is automatically consistent with its parent. (v4 removed the v3.1 "version inheritance" rule entirely.)
-
----
-
-## 6. Intent Envelope
-
-### 6.1 Minimum Valid Intent File
+A grant applies only to rows of its named Record, including that Record's inherited ownership restrictions. It grants no access to related Records, ancestors or descendants, and is not inherited through `ref(...)`, `plays`, Imports, or other graph edges. The named Record MUST be a declared read/mutation target of the operation or a declared read target of the accessed View, respectively.
 
 ```markdown
----
-aim: demo.todo
-kind: intent
----
-
-# Todo
-
-## Summary
-
-A simple personal todo tracker.
-
-## Requirements
-
-- User can add, complete, and delete todos.
-```
-
-Hard minimum for validity:
-
-- Valid frontmatter with required fields (`aim`, `kind`).
-- Exactly one H1 heading.
-- A `## Summary` section with at least one paragraph **or** an H1 followed by a paragraph that serves as the summary.
-- A `## Requirements` section with at least one bullet.
-
-Recommended:
-
-- `## Tests` section with observable behavior bullets.
-- One or more facets when the intent has stable interfaces.
-
-### 6.2 Extended Intent Example (Child Intent)
-
-````markdown
----
-aim: juice.tasks.create_task
-kind: intent
-parent: juice.tasks
----
-
-# CreateTask
-
-## Summary
-
-Create a new task on behalf of the authenticated user. The task starts in the `open` state and is owned by the creator.
-
-## Requirements
-
-- A task must have a non-empty title (1–200 characters).
-- A description is optional.
-- The creating user becomes the owner.
-- The task is persisted with status `open`.
-- A `tasks.created` event is emitted on successful creation.
-
-## Tests
-
-- Creating a task with an empty title fails with a validation error.
-- A newly created task is visible in the owner's task list.
-- A `tasks.created` event is emitted with the new task's id.
-
-## Contract: CreateTask
-
-### Summary
-
-Create a task on behalf of the current user.
-
-### Input
-
-```schema
-title: string required min(1) max(200)
-description: string optional max(2000)
-```
-
 ### Authz
-
-- Caller must be authenticated.
-
-### Ensures
-
-- A new Task record is persisted with status="open" — [mutates](aim:#Record:Task).
-- ownerId is set to the current user's id.
-- A `tasks.created` event is emitted — [emits](aim:juice.tasks#Event:TaskCreated).
-
-### Returns
-
-- The newly created Task record.
-````
-
-Note: `Task` and `User` are not defined in this file — they resolve upward to the parent intent `juice.tasks` (§11.1).
-
----
-
-## 7. Precision Facets
-
-The six behavioral facets are unchanged in meaning from v3.1. What changes is how their cross-references are written: prose mentions become typed edge tokens (§8), and the inverse blocks `### Trigger` and `### Emitted By` are removed because they are derivable. v4 added the seventh facet — **Trigger** (§7.7) — for non-actor entry points such as schedules and webhooks. 5.11 adds the eighth — **Style** (§7.8) — for how what people see should look: the one facet that declares no edges. 5.13 adds the ninth — **State** (§7.9) — the machine one enum field of a Record moves through: its states and every move it may make, each with the operation that makes it.
-
-### 7.1 Record And The Schema Property
-
-The old `## Schema:` facet conflated two things this section now separates:
-
-- A **Record** is a passive data-thing — stored, read, and processed, and does not act (`TravelLog`, `ExpenseItem`, `Invoice`). It is a facet, `## Record: <Name>`, and — when it earns its own file — an intent. It replaces the `## Schema:` facet.
-- A **schema** is a Record's (or any node's) **data property**: its fields, constraints, and immutability. It is not a node — it lives *inside* whatever has the data.
-
-A Record *has* a schema — thing and shape. This is the fix for the old category error: `## Schema:` named the *shape* and pretended to be the *thing*.
-
-A Record facet carries its schema in a `### Schema` sub-block:
-
-````markdown
-## Record: ExpenseItem
-
-### Schema
-
-```schema
-amount: number required
-category: string required
-incurredOn: datetime required
-```
-
-### Constraints
-
-- An approved item's amount is fixed.
-
-### Immutable
-
-- `id`
-````
-
-Any other facet that carries data uses the same `schema` fence under its role sub-block — a Contract's `### Input`, an Event's `### Payload` (§7.2, §7.6). An intent that is *itself* a Record declares its data in a top-level `## Schema` section.
-
-**Deprecated, still accepted (5.1).** The `## Schema: <Name>` *facet* is read as a `## Record: <Name>`, and the `aim-attrs` fence is an alias for `schema`. Both SHOULD be migrated but require no forced rewrite (§13).
-
-### 7.2 Contract
-
-Externally observable guarantees and obligations.
-
-````markdown
-## Contract: CreateTask
-
-### Summary
-
-Create a task on behalf of the current user.
-
-### Input
-
-```schema
-title: string required
-description: string optional
-```
-
-### Authz
-
-- Caller must be authenticated.
-
-### Expects
-
-- Title is non-empty after trimming.
-
-### Ensures
-
-- A new Task record is persisted with status="open" — [mutates](aim:#Record:Task).
-- A `tasks.created` event is emitted — [emits](aim:#Event:TaskCreated).
-
-### Returns
-
-- The newly created Task record.
-````
-
-**Decisions (5.4).** A decision is the basis of most processes — "are the statements accurate?", "approve or return?" — and it is a **judgment somebody reaches against criteria**, with an owner and an audit trail. It is therefore a commitment, not control flow, and it belongs in the model.
-
-A decision is **not its own node**: the operation that reaches it *is* the decision. Reviewing *is* deciding; a Contract whose `### Authz` says who may review is already the place accountability lives, and a separate gateway node would split one act in two — divorcing the judgment from the authority over it, and minting a node with no commitment of its own. Instead the deciding Contract (or Flow) declares its outcomes in a `### Decides` block:
-
-````markdown
-## Contract: ReviewFinancialStatements
-
-### Summary
-
-The reviewer checks the draft statements against the reconciliations.
-
-### Authz
-
-- `#Persona:InternalReviewer` only.
-
-### Decides
-
-- **Accurate** — every balance ties to a reconciliation and each adjustment is supported
-  — [emits](aim:#Event:FinancialStatementsConfirmed)
-- **Inaccurate** — any balance is unexplained, or an adjustment lacks support
-  — [emits](aim:#Event:DiscrepanciesFound)
-````
-
-The grammar mirrors a Flow's `### Steps` (§7.3), so there is one form to learn:
-
-- **One bullet is one outcome.** The bolded name is the outcome's label and follows the §3.6 name grammar, which makes it addressable as `#Contract:<Name> → Decides[<Label>]` (§2.2).
-- **The prose after the dash is the criteria** — what the judgment turns on. It is normative: realization must decide on this basis, and the Reviewer checks that it does (§15.10 — for a judgment no output can verify, the criteria are the proxy).
-- **The outcome's edge tokens ride inside its bullet**, exactly as a step's do. Usually one `emits`; `invokes`/`mutates` are legal where an outcome acts directly.
-- **The block asserts that its outcomes are mutually exclusive and exhaustive** — that is what `### Decides` *means*, so no further marker is needed. Two or more bullets are required; a single-outcome block is not a decision.
-
-Exclusivity is the fact the graph cannot otherwise derive: without it, "either A or B" and "both A and B" produce identical edges, and any projection that draws a branch must guess. The block adds no new verb and no new node type — every outcome's edge derives exactly as before (§8.1) — so the addition is additive and needs no migration. What it adds to the derived graph is one **exclusivity group** per deciding node: the ordered outcome labels, each with its events and its criteria.
-
-Two consequences elsewhere. A `### Steps` item whose operations are the outcomes of a deciding Contract is **exclusive**; anything else in one item is joint work — which settles the ambiguity §7.3's step grammar otherwise leaves open. And a Flow's `### Steps` stay the procedure: where the path forks, the fork belongs to the deciding Contract the step invokes, keeping sequencing and judgment separate. Where each leg of the fork lands — the proceeding outcome as the next step, every other on its own bullet — is the continuation convention (§7.3, 5.5).
-
-### 7.3 Flow
-
-Operational sequencing, branching, retries, and error handling.
-
-```markdown
-## Flow: CreateTask
-
-### Summary
-
-Persists a new task and emits the creation event.
-
-### Steps
-
-1. Validate input against the contract.
-2. Persist the task — [mutates](aim:#Record:Task).
-3. Emit the creation event — [emits](aim:#Event:TaskCreated).
-4. Return the persisted task.
-
-### On Error
-
-- Storage failures: surface as `PersistenceError` and emit no event.
-- Event bus failures: persisted task is retained; emission is retried via outbox.
-```
-
-The flow's trigger (which contract invokes it) is **not** authored here — it is derived from the `invokes` edge declared at the contract or view that calls the flow (§8.4).
-
-When a guarantee cannot be cheaply and completely verified from its outcome, a Flow's `### Steps` take on a second job: they are the normative **proxy verifier** for that guarantee (§15.10).
-
-**Step grammar (5.3).** `### Steps` is a structured ordered list, and tools parse it — projections (the process chart, the sidebar, verifiers) read the steps directly rather than re-deriving them from prose:
-
-- **One numbered item = one step.** Sequencing is *between* steps, never within one. The authored numbers are display; position is authority.
-- **Inline edge tokens are the step's operations.** An `[invokes](aim:#Contract:X)` inside item 4 belongs to step 4; the edge carries its step index into the graph.
-- **Two or more `invokes` in one item are not a sequence** — they are one step with several ways through it: "Wash — `[invokes](aim:#Contract:Wash)` — or shower — `[invokes](aim:#Contract:Shower)`". A projection renders them side by side, never chained. Whether they are *exclusive* is decided by the model, not guessed by the reader: they are alternatives when they are the outcomes of a deciding Contract (`### Decides`, §7.2), and joint work otherwise.
-- **A step with no edges is a human step.** "Get undressed." is first-class: it appears in every process projection (§17 — a manual step remains a Flow step). A step whose only edges are `mutates`/`emits`/`reads` is work the flow performs itself.
-- **A step's words describe; they never declare its performer (5.10).** "The Manager reviews the evidence — [invokes](aim:#Contract:Review)." tells the reader who reviews; the edges tell everyone else (§7.4): the operation is performed by the Persona that `invokes` it, and what has no performer of its own — a human step, an operation nobody invokes — by the Flow's performer. A step done by someone other than the Flow's performer therefore invokes an operation its performer `invokes`. No tool reads a performer out of a step's sentence — its first words, an article, a name anywhere in it — so a model reads the same in every language. (5.9 read a step's opening Persona as its performer; §13.11.)
-- Indented continuation lines belong to the step above them.
-
-**Joint work is unordered (5.5).** The grammar above places sequencing *between* steps and never within one; this paragraph makes the implication normative. Operations sharing one step have no order among them: a realization MAY perform them concurrently, in any order, or interleaved. Conformance is their joint completion — the following step is the **join**, and MUST NOT begin until the step's joint operations have completed. Fork-join therefore needs no construct: several `invokes` in one item fan out, and the next step is the barrier. A *multi-step* parallel branch is expressed by promotion — each branch becomes a Flow (or a process-intent, below) and one step invokes the branches jointly. What a joint step does **not** express is a **race** — first-completes-wins, remainder abandoned: racing and cancellation are recorded pressure, not admitted (§8.6). Where a race is the actual commitment, state it in the step's prose and treat the guarantee per §15.10 — procedure the output cannot verify.
-
-**Continuation after a decision (5.5).** A step that `invokes` a deciding Contract carries the fork, and the legs land in different places: the outcome on which the procedure *proceeds* continues as the **next step** and declares no continuation of its own; every other outcome's consequence — a corrective `invokes`, an abort `emits` — rides its bullet in `### Decides` (§7.2). A correction loop therefore reads: the losing outcome `invokes` the corrective operation, and the corrective operation `invokes` the deciding Contract again — a legal cycle among contracts — while `### Steps` remain the linear procedure. When no single outcome proceeds — a true multi-way branch — the deciding step is the sequence's last, and each outcome carries its own continuation. Declaring the proceeding outcome's continuation on the outcome *as well as* in the next step is redundant and flagged (§12.2), mirroring §8.4's stale-inverse rule; the bound on a correction loop is a deadline Trigger, not a count (§15.7).
-
-**Continuation through an announcement (5.9).** This rule says where an *announcement* leads; it never shortens the sequence that made it. A Flow's next step always follows by position (above), whatever its predecessor emitted and whether or not anything heard it. What leads *along an edge* out of a step or an outcome is only `invokes` and `emits`; `reads`, `mutates` and `satisfies` lead nowhere. An `emits` leads to the Event's subscribers: a subscriber without `### Steps` of its own — typically a Contract — is the next work on that branch; a subscriber with steps of its own — a Flow, or a promoted process — starts a run of its own and does not continue this one. An Event nothing subscribes to ends that branch and nothing else — the emitting sequence proceeds to its next step, and only an outcome whose sole edge is such an `emits` (an abort, above) ends its leg there. A Trigger anchored on the Event (§7.7) arms a timer and does not continue the branch.
-
-**The promoted form — a process-intent (5.3).** A Flow with substance of its own — several steps, its own contracts and records, its own requirements — outgrows facet-hood the same way a Persona or Record does (§16.5): it becomes its **own intent**. The intent *is* the process; no self-named `## Flow:` facet sits inside it. Its sequence moves to a **top-level `## Steps`** section (same grammar as above, edges declared from the intent node — the intent-level `invokes` §8.2 already permits); its operations and records co-locate as facets under it; `nature: flow` is the badge (§3.2).
-
-````markdown
----
-aim: org.reimbursement
-kind: intent
-nature: flow
-parent: org
----
-
-# Monthly Reimbursement
-
-## Requirements
-
-- **R1** — Every approved expense is paid in the month it was approved.
-
-## Steps
-
-1. Collect expense logs — [invokes](aim:#Contract:CollectLogs).
-2. Manager reviews and approves the batch.
-3. Issue payments — [invokes](aim:#Contract:IssuePayments).
-
-## Contract: CollectLogs
-
-…
-````
-
-The promotion cue mirrors entity promotion (§16.5): promote a process when it has grown its own operations, data, and requirements **and** it is not alone — an organization with several processes gives each one a flow-natured sub-intent. A project that *is* one process does **not** wrap itself in a single child: the root intent already is the process (§15.2 — never mint a single-child parent).
-
-**Phases (5.4).** That last rule forbids exactly one shape — a lone flow-natured child — and it is routinely over-read as "a single-process project stays flat forever". It does not: §4.3's line still binds, and a process that has accreted twenty or thirty facets has crossed it. What such a process decomposes into is **phases**.
-
-A phase is a **run of consecutive steps that produce one artifact**: collect-reconcile-adjust yields the close package; draft-review-correct yields the confirmed statements. That run is the temporal cousin of the noun-cluster (§12.2) — cohesive, but grouped by *when* rather than by a shared noun, which is why the noun-cluster heuristic will not find it. Each phase that has earned a Record of its own plus its operations becomes a flow-natured sub-intent, and because a real process has several, no single-child parent appears:
-
-- The **root keeps** the Personas, the entry Trigger, its cross-cutting `## Requirements`, the `## Children` index, and the **orchestrating spine** — a `## Steps` (or `## Flow:`) whose items `invokes` each phase in order.
-- Each **phase carries** `nature: flow`, its own `## Steps`, its Contracts, its Events, and its Record.
-- **Where "every step" binds:** a parent spine names its *phases*; a phase spine names its *steps*. The completeness rule applies at the level that owns the step, never twice.
-- Edges cross the boundary freely (§8.1): a phase's operation may `satisfies` a root requirement, `reads` a previous phase's Record, or `subscribes` to its Event. Decomposition partitions ownership, not the graph.
-
-A process kept flat past this point is the monolith of §12.2, and the repair is the **promote** transform (§16.2, §16.5) — which changes addresses, never commitments (§16.3).
-
-### 7.4 Persona
-
-Actor identity, role semantics, and view access.
-
-```markdown
-## Persona: TaskOwner
-
-### Role
-
-- Authenticated user who owns one or more tasks.
+- `#Persona:Approver` cross-owner(#Record:Claim) !owner
 
 ### Access
-
-- [accesses](aim:#View:TaskDashboard)
-- Create and complete tasks — [invokes](aim:#Contract:CreateTask), [invokes](aim:#Contract:CompleteTask)
+- Review claims — [accesses](aim:#View:Claims) cross-owner(#Record:Claim)
 ```
 
-**Entity and role are two things wearing one facet.** `Persona` covers both an actor that *exists* — `Employee`, a person the organization employs, whose existence predates any process that uses them — and a role that actor *plays here*: `Traveler`, `Approver`, a way one intent reads that actor. A Persona facet expresses whichever the declaring intent needs, and nothing in the syntax marks which. The distinction is inert until a facet is shared, and then it decides the outcome (§15.2): **the entity canonicalizes upward; the role stays with the intent that reads it.** Lifting a role to an ancestor merges actors a process deliberately holds apart — a travel process whose `Traveler` and `Accountant` both resolve to one `Employee` still needs two actors to read as a process at all, and the projection that collapses them has erased the handoff (§18). Where one canonical entity must be read under a local name, give it an `## Dependencies → Imports` alias (§9.1); never a second Persona.
+The first entry permits the Approver to act on others' claims under that operation's rules. The second permits that Persona to see claims across owners in Claims; it does not authorize approval.
 
-**Who does the work (5.9, 5.10).** Performing, being permitted and being able to reach are three different facts, and the model states each in its own place. A piece of work — an operation, or a step of a Flow or promoted process — is **performed** by the first of these that applies:
+`list(<type>)` holds repeated scalars or owned Record parts. A Record-typed list derives a `refs` edge to the Record. `ref(Type.field)` derives a `refs` edge between schema attributes. Resolve the Type as a Record using canonical resolution; its field MUST exist. A non-Record target or missing field is a hard error. The qualified form `ref(<intent>#<Type>.<field>)` selects the namespace from which canonical resolution begins, allowing unrelated Records with the same name (such as `billing#Record:Account` and `identity#Record:Account`) to coexist without collision. Resolution shadows are informational.
 
-1. **The Persona that `invokes` it** (§8.2) — its direct performer. Several Personas that each `invokes` the same operation are its **alternative** performers: any one of them performs it, and the operation alone does not say which. Where one particular of them acts in one step, that step invokes an operation of its own that only they `invoke`. Joint performance — all of them must act — is never written as several invokers; it is one step per actor (§7.3).
-2. **The flow itself** — a step whose only operations are `reads`, `mutates` or `emits` is work the flow performs (§7.3). It owes no Persona and inherits none: the Flow's performer may be waiting on it, but is not doing it.
-3. **The performer of the enclosing Flow** — a human step, or an invoked operation with no performer of its own, inherits the nearest enclosing Flow's (or promoted process's) performer, which is that Flow's direct performer or what it inherited in turn. The first declaration stops the inheritance.
+## 4. Graph identity and derivation
 
-None of the following is evidence of who performs work:
+The graph is normative. Relations are declared once at the acting end; inverse relations are derived. Tree position determines ownership but does not constrain cross-intent or cross-level edges. Tools SHOULD expose useful graph queries and views without requiring people to comprehend the entire graph.
 
-- **`### Authz`** states who *may* — permission. Work can be permitted to three roles and performed by one. Authz names a role by its address in backticks — `` `#Persona:Approver` ``, or `` `org#Persona:Employee` `` for another intent's (5.10) — resolved as a link's address is (§8.1); several named roles are alternatives: any one of them may. A role's name in Authz's words names nobody; the words are for the reader, and an address is only ever written for a role that may. Where Authz names roles, the performer MUST be among them; Authz never names the performer. Work whose Authz names no role is permitted to whoever performs it.
-- **Reach.** A Persona that `accesses` a View exposing an operation can get to it; that is not a commitment that they do it.
-- **A Trigger** starts work (§7.7); it never does it. Work a schedule or deadline starts still owes a performer.
-- **`### Role` prose** describes the actor, not an assignment of any particular work.
-- **A step's words (5.10).** Naming a Persona in a step — at its start or anywhere in it — tells the reader; it declares nothing (§7.3).
+| Node | Source | Identity/type |
+|---|---|---|
+| Intent | `aim` and H1 | Namespace; `intent` |
+| Facet | `## <FacetType>: <Name>` | Heading keyword determines type; no inference |
+| Section | Bare top-level section | `section` |
+| Sub-block/item | H3 and its list items | Addressable `block`, not an independent facet type |
 
-Work is **owed** a performer when something obliges it to happen: it is a step of a Flow or promoted process, work a step invokes, or work a Trigger or a subscription starts. Owed work with no performer by rules 1–3 has **no declared performer**, and the model is incomplete at that point (§12.2). Work that is only offered — an operation a View exposes, which whoever reaches it may do within its Authz — owes no performer.
+Sections are valid report anchors but are edge-inert. Typed edges connect intents/facets, with only two sub-block exceptions: schema attributes participate in `refs`; individual top-level Requirements items are targets of `satisfies`. No other sub-block is an edge endpoint.
 
-**The promoted form — an entity-intent (5.2).** A Persona with substance of its own — canon attributes, and eventually its own operations — outgrows facet-hood and becomes its **own intent**. The intent *is* the actor; no self-named facet sits inside it. Its acting face moves to **top-level sections**: `## Role` and `## Access` carry exactly what the facet's `### Role`/`### Access` carried, with the actor's edges declared from the intent node itself (`accesses`/`invokes` from an intent, §8.2 — the same intent-level form `subscribes` has always had). Its data is a top-level `## Schema` (§7.1); its operations co-locate as facets under it; `nature: persona` is the badge (§3.2).
+An intent address is its namespace. A facet address is:
 
-````markdown
----
-aim: app.employee
-kind: intent
-nature: persona
-parent: app
----
-
-# Employee
-
-## Role
-
-- Submits expense logs; the subject of the monthly reimbursement cycle.
-
-## Access
-
-- [accesses](aim:app.expenses#View:SubmitForm)
-
-## Schema
-
-```schema
-id: string required
-homeAddress: string required
+```text
+<intent>#<FacetType>:<Name>
 ```
 
-## Contract: UpdateHomeAddress
+Store and derive fully qualified addresses. At an inline reference site the namespace may be omitted when resolution is within the same intent, producing `#Contract:CreateTask`. Facet type capitalization and name match the heading verbatim; no percent encoding is required for valid names.
 
-### Summary
+A report may add ` → ### <Sub> [<index>]`, or ` → ## Requirements [<index>]`, to identify a 1-based list item. Such pointers are revision-specific and MUST NOT be authored edge targets. Work artifacts SHOULD include the item's text as a content anchor. Authored `satisfies` targets use `#Requirements[<key>]`: a stable declared label (or a numeric 1-based index in legacy source). Once edges exist, labels SHOULD be used. Inserting or reordering positional requirements is a rename-class transform and MUST re-point all inbound positional edges.
 
-Change the employee's verified home address — [mutates](aim:app.employee).
-````
+Derive the graph by collecting fully qualified intent/facet/sub-block nodes; collecting inline edge tokens and structured references; resolving targets and validating legal source/verb/target triples; and adding inverses, reconciling any authored inverse blocks. The graph may live in memory or a build artifact, never as an independent source file.
 
-The cue for the promotion is the moment an entity grows an **operation of its own** (`UpdateHomeAddress`): entity-specific behavior belongs under the entity, not scattered on the parent (§16.5). A Record promotes the same way — top-level `## Schema`, `nature: record` — when its data and lifecycle earn a file of their own.
+## 5. Layout, tree, and resolution
 
-### 7.5 View
+### Layout and decomposition
 
-Shared interface surfaces and user-visible actions.
+Decompose into focused child intents by default. The parent indexes children and owns shared facets and cross-cutting requirements. A single file with embedded facets and no children is appropriate only when all content fits comfortably on one screen, specifies one clear behavior, and no facet needs independent ownership/review.
 
-```markdown
-## View: TaskDashboard
+The intent file is `<intent>.aim`; sibling facet, mapping, and deprecated binding files are `<intent>.<kind>.aim`. All are co-located in the intent directory. A root directory uses its full namespace; each nested child directory uses its added namespace segment. Children occupy nested directories under their parent. A child's mapping/binding files belong alongside that child, never in the parent directory. Generic filenames `aim.aim`, `intent.aim`, `schema.aim`, `mapping.aim`, and `binding.aim` are invalid. Header identity is authoritative; directory and filename MUST agree with it, otherwise a hard error results.
 
-### Summary
+A child namespace extends its parent by exactly one segment and declares `parent`. No intermediate level may be skipped without its own intent file and Summary. The one-segment constraint applies to each edge, not total breadth or depth.
 
-The owner's primary task list view.
+Children are auto-discovered from directories containing intent files whose `parent` matches. An explicit `## Children` list overrides discovery: listed children MUST exist, every discovered child MUST be listed, and the list controls presentation order. Omitted discovered children are hard errors.
 
-### Display
+Each level SHOULD form a short table of contents, normally 3–9 children. Single-child chains and levels outside this band merit diagnostics. Depth has no absolute cap: each level earns its place, and decomposition stops at one clear behavior. A Summary that still combines distinct behaviors calls for children; depth count alone neither requires nor forbids a split.
 
-- A list of [reads](aim:#Record:Task) records grouped by due date.
-- Completed tasks collapsed by default.
+### Minimum intent envelope
 
-### Actions
+An intent file requires valid `aim`/`kind` frontmatter, exactly one H1, a Summary containing at least one paragraph (or an H1-following paragraph serving as Summary), and Requirements containing at least one bullet. Observable Tests and precision facets for stable interfaces are recommended.
 
-- Create task — opens the creation form and [exposes](aim:#Contract:CreateTask).
-- Complete task — [exposes](aim:#Contract:CompleteTask).
-- Archive task — [exposes](aim:#Contract:ArchiveTask).
+### Canonical resolution
 
-### Layout
+All references MUST use this algorithm; implementations MUST NOT substitute another precedence order:
 
-- Create task sits at the left, above the list.
-- Completed tasks below the open ones.
-```
+1. Select the exact namespace if an intent prefix is present; otherwise select the current intent. A named namespace MUST exist.
+2. Resolve the facet name by first match: embedded facet in the intent file; sibling facet file; explicit Imports in the current file; parent, grandparent, and continuing upward; required alias through mapping or Capability binding; absent.
+3. If a facet type is specified, require agreement with the resolved node's type. A mismatch is a hard error.
+4. Resolve any report sub-block pointer by heading and 1-based item index. Resolve a Requirements key against the chosen intent's top-level Requirements, by numeric position or a bullet label declared as `- **Label** — …`. Missing/out-of-range keys and duplicate labels are hard errors.
 
-`### Display` states **what the surface shows and which Records it reads**, never the words it says. A bullet like "an empty state message when there are no tasks" commits that the message exists; the message itself is **supplied material (§9.4)** — realization the owner provides beside the model. An `### Actions` label is the exception that stays in intent: it names a commitment (5.7).
+A required unresolved name is a hard error. Lower-precedence definitions produce informational shadow diagnostics. Explicit Imports take precedence over inherited parent definitions.
 
-**Layout (5.12).** `### Layout` states **where things sit on the surface — only what the owner stated**. One bullet per arrangement commitment, in the owner's words, at arrangement grain: relative position, order, grouping, prominence ("Create task sits at the left, above the list"), never pixels, a grid system or a stylesheet. A bullet names what it places by the surface's own words — a `### Display` section, an `### Actions` label, a Record the View reads — so a reader and a Reviewer find it, and a Reviewer can hold every realization to it: the running application, a generated screen, a developer's build. Everything the block does not state remains the Realizer's freedom (§15.9). The block is optional, admits no edges, and is never checked against the other sub-blocks by a parser — it is prose a Reviewer judges, like `### Display`.
+### Levels and traceability
 
-**A drafted arrangement is not a layout.** A tool may draw a screen — a sketch, a generated draft — and must arrange what the model leaves open to do so. That arrangement is the tool's suggestion, not the owner's commitment: it is never written into `### Layout` unasked, and a tool that shows a draft SHOULD distinguish what the block states from what it chose. When the owner reacts to a draft ("the button goes on the left"), their words are an ordinary change to the View: written into its `### Layout`, after which every reader of the model — the next draft included — places the button there.
-
-### 7.6 Event
-
-Asynchronous payloads, emissions, and routing.
-
-````markdown
-## Event: TaskCreated
-
-### Summary
-
-Emitted when a new task is persisted.
-
-### Payload
-
-```schema
-taskId: string required
-ownerId: string required
-createdAt: datetime required
-```
-
-### Routing
-
-- Channel: `tasks.created`
-- Durable: true
-````
-
-The event's emitters (`### Emitted By`) are **not** authored here — they are derived from the `emits` edges declared at the contracts/flows that emit the event (§8.4).
-
-### 7.7 Trigger
-
-Non-actor entry points: schedules, webhooks, and external origins that initiate behavior without a Persona or View. A Trigger is the source of a `triggers` edge into a Flow or Contract — which gives a cron job or inbound webhook a place in the graph, and gives the flow it starts a legitimate inbound edge (so it is not flagged as an orphan).
-
-```markdown
-## Trigger: NightlySweep
-
-### Summary
-
-Runs the stale-ticket sweep every night.
-
-### Kind
-
-- schedule
-
-### Schedule
-
-- cron: `0 2 * * *`
-
-### Fires
-
-- [triggers](aim:#Flow:EscalateStale)
-```
-
-A webhook or external origin sets `### Kind` to `webhook` / `external` and describes the source in prose instead of `### Schedule`. **Externally-originated events** need no special construct: model the origin as a Trigger that `triggers` an ingest Flow, and let that Flow `emits` the internal Event — the event then has a real emitter. Note: the `## Trigger:` *facet* defined here (an entry-point node) is distinct from v3.1's removed `### Trigger` *inverse block* (§8.3).
-
-**Deadlines and calendar rhythms.** Time commitments — SLAs, escalation windows, expiries, recurring obligations — are all this one construct: a Trigger with `### Kind` `deadline` (event-anchored) or `schedule` (calendar-recurring). Its `### Schedule` lines take one of two forms, each with an optional informal *unless-clause* naming what disarms the timer:
-
-- **Event-anchored:** `<n> <unit> after [Event:<Name>]` with units `minutes | hours | days | business-days | weeks` — e.g. `5 business-days after [Event:ContractSigned] — unless [Event:KickoffScheduled]`.
-- **Calendar-recurring:** `monthly on the <n>th` / `weekly on <weekday>` / `yearly on <date>`, alongside the machine-precise `cron:` form — e.g. `monthly on the 8th — unless [Event:ReportReceived] for the period`.
-
-**The unless-clause is informal prose and therefore not conformance-checkable** — a tool arms and disarms timers from the realization; nothing evaluates the clause text. When disarm verification matters, the disarming condition SHOULD be an **Event** emitted by the fulfilling operation, and the clause SHOULD name it (`— unless [Event:KickoffScheduled]`): the disarm condition then references a node the graph can check — the Event exists and has an emitter (§12.2) — while a clause naming anything else remains documentation.
-
-Which operating calendar `business-days` names is realization, bound to whatever arms the timer — the duration and its anchor are the intent. Recurring patterns compose from this construct alone: an SLA is a deadline firing an escalation, an escalation ladder is chained deadline Triggers, an expiry is a deadline firing a revocation.
-
-### 7.8 Style (5.11)
-
-How what people see should look — stated by the owner, at the grain of an identity, never of a stylesheet.
-
-```markdown
-## Style: Warm
-
-### Summary
-
-Welcoming and concrete: cream and dark brown with a little warmth, never corporate blue.
-
-### Palette
-
-- surface: cream `#fbf9f6`
-- ink: dark brown `#26221f`
-- accent: one restrained warm orange, used sparingly
-
-### Type
-
-- heading: a humanist sans, generous
-- body: the same family, calm rhythm
-
-### Shape
-
-- corners: soft
-- elevation: flat — no shadows, no glass
-
-### Mark
-
-- mark: Amy's portrait, a transparent cutout the surface shows through
-```
-
-**Why the look is intent.** A product's words may change weekly without the product changing; its look may not — a rebrand changes what the owner committed to, and it is reviewed as one. 5.8 placed the visual identity beside the model as supplied material (§9.4), where neither the owner nor the model could see it; 5.11 moves it into the model. The §1.4 test decides the grain: *that* the surfaces read warm and flat is a commitment a Reviewer can hold a realization to; *how* a stylesheet achieves it is not. So a Style states the identity — palette, type, shape, mark, and the look in one breath in its `### Summary` — and stops there. Arrangement the owner has not stated (§7.5), component styling and the stylesheets themselves remain the Realizer's freedom (§15.9).
-
-**Sub-blocks and values.** The sub-blocks are `### Palette`, `### Type`, `### Shape`, `### Mark` and — since 5.12 — `### Layout`, each a bullet list of `<token>: <value>` lines: the token is one lowercase word (`surface`, `ink`, `heading`, `corners`), the value is the owner's words, an exact value, or both. A realization uses an exact value verbatim — a hex, a typeface name, a measure — and elaborates words in the idiom of its stack and its time ("a clear, strong azure" becomes one blue, chosen once and recorded). All four sub-blocks are optional: a Style with only a Summary is a valid Style. Tokens are open — a domain may need `chart` or `print` — and tools MUST accept any token; a value's grain is for the owner and a Reviewer to judge, never a parser.
-
-**Layout conventions (5.12).** A Style's `### Layout` lines state arrangement conventions for every screen that wears it — `- actions: left-aligned`, `- navigation: a bar across the top` — in the owner's words, at the grain of §7.5's block. A View's own `### Layout` bullet wins over a convention for that screen, as a nearer Style wins over a farther one.
-
-**The mark is two things.** Its words are intent: `- mark: Amy's portrait, a transparent cutout` commits to a mark and says what it is. The picture itself is a file, and a file is supplied material (§9.4): it rides beside the model under `content/assets/` and never inside a `.aim` file. A Realizer who gets only the words still knows what to source; one who gets the file uses it verbatim.
-
-**Scope.** A Style is authored in its intent's own file — it is not a sidecar `kind` (§3.2, §4.2). An intent declares at most one Style — a second `## Style:` on the same intent is a hard error (§12.1), since nothing in the model could choose between them. The Style applies to every View of the intent it is declared on and of every intent beneath it (§5); a nearer Style wins — so a product has one look, and a page-intent that departs from it declares its own. Scope follows the tree and needs no edge: a Style declares no edges and nothing points at it, which is why it is **not** an orphan (§12.2) and takes no part in the traceability chain (§11.3). A `wears` edge from a View to a Style — a variant worn by one screen — is recorded pressure (§8.6), not admitted.
-
-**Absent Style.** A model with a View and no Style in reach is complete; the realization makes a clean neutral choice and records it, and tools report *no style declared* (§12.2) — informational, never an error. The asymmetry 5.8 named stands: invented copy asserts facts, invented dress is reversible.
-
-**Recovered and migrated identities.** An identity recovered from an existing realization (§17) becomes a Style the way all recovered intent does: proposed to the owner with its provenance, never written into the model without their signature (§17.2). The token summary a 5.8-era handoff carried under `content/style/` is different in kind: the owner typed those values into the tool, and typing them was the signature. A tool MAY move them into a Style on the intent whose look they were — in the owner's words where the tokens had them, exact values kept exact — recording the move in the file's history as a migration and keeping the tokens readable as a backup. It invents nothing the tokens did not say.
-
-### 7.9 State (5.13)
-
-The machine one enum field of a Record moves through — where it starts, where it ends, and every move it may make, with the operation that makes each.
-
-```markdown
-## State: TaskStatus
-
-### Summary
-
-How a task moves from draft to done, and back from testing when it fails.
-
-### Of
-
-- `Record:Task.status`
-
-### States
-
-- Draft — initial
-- Development
-- Testing
-- Done — final
-
-### Moves
-
-- Draft → Development — [Contract:MoveTaskToDevelopment]
-- Development → Testing — [Contract:MoveTaskToTesting]
-- Testing → Development — [Contract:ReturnTaskToDevelopment]
-- Testing → Done — [Contract:MoveTaskToDone]
-- Draft → deleted — [Contract:DeleteDraftTask]
-```
-
-**Why the machine is intent.** Automation is state machines: who may move what, from which state, and what is final. Before 5.13 a status was an enum (§7.1) and every rule about how it changes was prose on the operation that makes the change — an `### Expects` *"the task is in draft"*. Such a guard binds only the operation that states it: one added later, in another intent, can reopen a done task, and nothing in the model says it may not. "Done is permanently closed" was a sentence no tool could check, and no projection could draw a record's life. A State declares the moves once, for the field, so they bind every operation that writes it — including the ones not written yet — and a chart, a validator and an interpreter read the same table.
-
-**Sub-blocks.**
-
-- **`### Of`** — exactly one bullet: a backticked reference to a Record field, `Record:<Name>.<field>` or `<ns>#Record:<Name>.<field>`, resolved upward like every reference (§5.4). The field is a **required enum** (§3.7), so every record is in exactly one of its states.
-- **`### States`** — one bullet per enum value. The bullet's word is the state's name; it stands for the value it spells, compared case-insensitively with spaces read as underscores (`In review` is `in_review`). Where the word and the value differ, the value follows in parentheses: `- Waiting (on_hold)`. Exactly one state is marked `— initial`; any number `— final`. States and values correspond one to one.
-- **`### Moves`** — one bullet per move: `<From> → <To> — <operations>`, the operations one or more bracketed references (`[Contract:X]`, `[Flow:Y]`, qualified `[ns#Contract:X]`), comma-separated; `->` is accepted for `→`. Each operation `mutates` the record (§8.2). The reserved target `deleted` declares where deletion may happen.
-- **`### Summary`** is required (§7.10). A State has no other sub-block.
-
-A move is a **structured reference, not an edge** — the form a Trigger's `after [Event:X]` already takes (§7.7): it resolves and is checked, derives no inverse and needs no verb. A State declares no edge tokens.
-
-**Meaning.** The facet is the complete list of how its field may change.
-
-| Situation | Rule |
+| Level | Specification |
 |---|---|
-| A write changes the field | The pair *(state before, state after)* is a declared move, **and** the operation performing the write is one the move names. |
-| Creation | A new record starts in the initial state, by any operation that creates it. Creation is no move. |
-| Deletion | When the facet declares `→ deleted` moves, a record is deleted only from those states, by those operations — a final state included: deletion is the record's end, not a move out of its state. When it declares none, the facet says nothing about deletion. |
-| A final state | No move leaves it, save a declared deletion. Other fields may still change, and other records (a task's comments) are not frozen. |
-| The same value before and after | Not a move; the operation's own rules govern the write. |
-| Who may run the operation, its input, its guards | Unchanged: `### Authz`, `### Input`, `### Expects` and `### Ensures` on the operation (§7.2). A legal move grants no permission. |
+| 1 | Intent only |
+| 2 | Intent plus some facets and edges |
+| 3 | Full facet trace with bindings, enabling declared/realized graph comparison |
 
-"Only the assigned developer moves a task to testing" stays where that decision lives — on `MoveTaskToTesting`'s Authz and Expects. The State says only that development → testing is a move and that this operation makes it; the two together are what a reader, a chart and a realization need. A realization that commits writes to the field refuses a write whose move the State does not declare, or whose operation is not the move's — from any operation, before the write commits. A realization without that check does not enforce the State, is not described as enforcing it, and a Reviewer reports the missing check as drift (§12.3).
+Levels govern expected realization precision and traceability/review strictness. Tools MAY report the level. Intent-only source remains valid with reduced fidelity. At Level 3, unbound declared nodes become enforceable findings; review verifies edges at bound sites with confidence, or uses a supplied realized-graph manifest.
 
-**States are named, not addressed.** The facet is the node (`create_task#State:TaskStatus`); a state is a word inside it, as an outcome's label is a word inside `### Decides` (§7.2). Nothing points at a single state.
+Traceability begins at individual Requirements satisfied by behavior. Behavioral entry points are a Persona accessing a View/screen intent or a Trigger starting a Flow/Contract. Views expose Contracts; Contracts may invoke Flows; Contracts/Flows read or mutate Records and emit Events. Following derived `satisfied-by` reaches a requirement's realizers; no inbound `satisfies` is a coverage gap. Style and State do not join this behavioral chain: Style has no edges; State's structural edges are derived. A complete Level-3 trace has no orphan behavioral nodes or dangling edges.
 
-**Scope.** A State lives in the intent that declares its Record or in any intent beneath it (§5); its references resolve upward, so a machine in `create_task.lifecycle` names its parent's `Record:Task.status` and the operations beside it. **One State per field**, across the whole model — a second machine for the same field is a hard error (§12.1), since nothing could choose between them. Two fields of one record (`status` and `paymentStatus`) are two States, checked independently; there are no combined states. A State points at its record and its operations and nothing points at it, so it is **not** an orphan (§12.2), and it takes no part in the traceability chain (§11.3). When its Record or an operation moves to another intent (§16), the State's references are rewritten with every other reference.
+## 6. Precision facets
 
-**The graph.** A State is a node of type `state`. The graph derives, never authors, two structural edges: `governs` — State → the Record it is `### Of`; and `moved-by` — State → each operation its moves name. Neither is a verb (§8.2): they are read from the facet's structure, as `refs` are read from a schema (§3.7). The moves stay on the node, each resolved to its operations and to the roles those operations' `### Authz` admits (§7.2) — which is what a projection draws, with no model call: the initial and final markers, every move an arrow with its operation and its who. An impact query from a changed State reaches its record, its operations and every other operation that `mutates` the record — a changed policy may invalidate an operation no move names yet.
+The facets are Record, Contract, Flow, Persona, View, Event, Trigger, Style and State. Capability is the external surface defined under Dependencies. Properties belong to their node; a schema is a property, not a node.
 
-**Absent State.** An enum with no State keeps its meaning: a set of values, nothing claimed about how they change. A machine is never inferred from an enum or from guard prose; one recovered from a realization (§17) is proposed to the owner with its provenance, never written without their signature (§17.2).
+### Record
 
-### 7.10 Summary Rule
+A Record is passive data that operations store, read or process. It declares its fields in `### Schema` using the schema grammar. `### Constraints` declares data constraints as bullets; `### Immutable` lists fields that must not change after row creation. Other nodes use the same schema grammar in their data properties: Contract `### Input`, Event `### Payload`, or an entity-intent's top-level `## Schema`.
 
-Every facet block must carry an explicit `### Summary` sub-block immediately following the facet heading. `Persona` may omit the summary when it acts only as a role/access declaration.
+A Record may become an intent when its data and lifecycle warrant a file. Its schema becomes top-level `## Schema`, it carries `nature: record`, and its operations co-locate as facets. The intent is the entity; it MUST NOT contain a redundant same-named Record facet.
 
----
+### Contract
 
-## 8. Graph Edges
+A Contract specifies externally observable guarantees and obligations:
 
-This section defines the typed edges that connect nodes. An edge is declared once, inline, at the node that *acts* — and the graph (§2.4) is derived by collecting edges across the project.
+- `### Summary`: the operation's purpose.
+- `### Input`: caller-supplied fields, in a `schema` fence.
+- `### Authz`: who may perform it, as bullets.
+- `### Expects`: preconditions, as bullets.
+- `### Ensures`: postconditions and resulting graph actions, as bullets.
+- `### Returns`: externally returned results, as bullets.
 
-### 8.1 The Edge Token
+An operation acquiring external information MUST declare the Capability it consults with `invokes`; a source named only in prose is insufficient. For caller-supplied documents, the Input declares a `file`; the reading Capability parses it, and the Contract owns the resulting records. Acquisition may be a collect operation that invokes the Capability and mutates a Record; downstream operations read that Record.
 
-A typed cross-reference is a standard CommonMark inline link whose link text is an edge **verb** and whose destination is an `aim:` URI carrying a node address:
+#### Decisions
 
-```
-[verb](aim:<address>)
-```
+A decision is the Contract or Flow that reaches a judgment, with its authority and criteria. It is not a separate node. The deciding node declares `### Decides`:
 
-- It renders on GitHub as a clickable link reading the verb (e.g. "invokes").
-- It is LLM- and regex-parsable: `\[(\w+)\]\(aim:([^)]+)\)`.
-- It is valid CommonMark with no raw HTML, honoring §3.8.
+```markdown
+### Decides
 
-An **authoring shorthand** is permitted for same-intent references: the verb followed by a backticked address, `invokes` `` `#Contract:CreateTask` ``. Tools normalize the shorthand to the canonical link form when deriving the graph. The shorthand is the smallest possible delta from what v3.1 authors already typed (`` `Contract: CreateTask` ``): prepend the verb, switch to the address form.
-
-**Normalization is in-memory only.** Normalizing the shorthand to the canonical link form happens *during graph derivation*; a tool MUST NOT rewrite authored source as a side effect of deriving the graph (consistent with the §1.3 authority model — the author owns the file). Both the shorthand and the canonical link form are valid on disk indefinitely, and every conforming parser MUST accept both. A formatter or linter MAY offer canonicalization to the link form as an explicit, user-invoked operation, never as an automatic rewrite.
-
-**Prose convention.** The recommended style for an edge token inside a list item is *human label — [verb](aim:…)*: a plain-language label, an em-dash, then the token. The prose SHOULD NOT restate the verb the link text already carries (write `Create task — [exposes](aim:#Contract:CreateTask)`, not `Create task exposes [exposes](aim:…)`). A bare token with no label (`- [accesses](aim:#View:TaskDashboard)`) is equally valid where no label adds meaning.
-
-The **`from` node** of an edge is the nearest enclosing facet node of the line the token sits on (the Contract / Flow / View / Persona whose block contains it). The **`to` node** is the resolved address.
-
-For a cross-intent reference, the address is fully qualified:
-
-```
-- [invokes](aim:company.storage#Contract:PersistTask)
+- **Approved** — every claim is supported — [emits](aim:#Event:Approved)
+- **Returned** — any claim lacks support — [invokes](aim:#Contract:Correct)
 ```
 
-This subsumes the *use site* of a v3.1 `## Dependencies → Imports` alias: the import still declares the alias (§9), but the call site now points at a real node address, so a dangling import becomes checkable.
+Each bullet is one outcome. Its bold label follows the facet-name grammar and is addressable as `#Contract:<Name> → Decides[<Label>]` for a deciding Contract. Text after the dash states normative judgment criteria. The realization MUST decide on those criteria. Edge tokens belong to their outcome bullet; `emits`, `invokes`, `mutates` and `reads` may describe its effects and data access.
 
-### 8.2 Closed Verb Taxonomy
+The block MUST contain at least two outcomes and asserts that they are mutually exclusive and exhaustive. It derives one exclusivity group for the deciding node, containing ordered labels, criteria and their edges. These are alternatives; operations sharing a step without such a decision relationship are joint work.
 
-There are eleven **declared** verbs and three **derived** inverses. Each declared verb has a fixed from→to node-type schema. A verb used between disallowed node-types is a **hard error**.
+#### Every write is held to the model
 
-| Verb | from | to | Meaning | Kind |
+However a realization performs a Contract — coded, interpreted or by a runtime engine — every Record mutation it makes MUST satisfy `### Schema`, `### Immutable`, `owner`/`!owner` and every `## State` governing the Record, before the mutation commits. When a realization may perform a Contract without interpretation is realization, not language.
+
+### Flow
+
+A Flow declares operational sequencing, branching, retries and error handling. It declares sequencing in an ordered `### Steps` list and may declare error handling under `### On Error`. Its callers are derived from their `invokes` edges; a Flow MUST NOT author an inverse `### Trigger` block.
+
+#### Steps
+
+1. One numbered list item is one step. List position determines sequence; authored numbers are display only. Indented continuation lines belong to the preceding step.
+2. Inline edge tokens are that step's operations. Every such edge retains the step index in the derived graph.
+3. Multiple `invokes` in one item are one step, never an internal sequence. They are exclusive alternatives only when they are outcomes of a deciding Contract; otherwise they are unordered joint work.
+4. Joint operations MAY run concurrently, in either order or interleaved. The following step is a join and MUST NOT begin until all joint operations complete. Multi-step parallel branches are separate Flows or process-intents jointly invoked by one step.
+5. An item without edges is a human step and appears in process projections. An item whose only operations are `reads`, `mutates` or `emits` is work performed by the Flow itself.
+6. A step's words describe work but never declare a performer. Performer resolution uses Persona `invokes` edges and Flow inheritance, independently of language or names in prose.
+
+Joint work does not express a race or cancellation. Where first-completes-wins is a real commitment, state it in step prose and verify its procedure; race and cancellation constructs are not admitted language features.
+
+#### Decision continuation
+
+A step invoking a deciding Contract carries the fork. If one outcome continues the procedure, its continuation is the next step and MUST NOT also be declared on that outcome. Every other outcome declares its own consequence in its Decides bullet. A corrective outcome may invoke corrective work that invokes the deciding Contract again; such Contract cycles are legal while Steps remain the linear procedure.
+
+If no single outcome proceeds, the deciding step is last and every outcome declares its continuation. Express a correction loop's bound as a deadline Trigger anchored on the phase's start and disarmed by the confirming Event. A count bound such as a maximum number of failed reviews is not expressible.
+
+#### Event continuation
+
+Sequence always proceeds to its next step by position, regardless of emissions or subscribers. Only `invokes` and `emits` continue work along an edge; `reads`, `mutates` and `satisfies` do not.
+
+An emitted Event continues a branch through its subscribers. A subscriber without Steps is the next work on that branch. A subscriber with its own Steps starts a separate run; it does not continue the emitting run. An Event without subscribers ends only that event branch. Thus an outcome whose sole consequence emits an unobserved Event ends its leg; the emitting Flow's remaining steps still proceed. A Trigger anchored on an Event arms a timer and does not continue the branch.
+
+#### Process-intents and phases
+
+A process with its own operations, records and requirements may become an intent carrying `nature: flow`. Its sequence is top-level `## Steps`, with the same grammar and edges declared from the intent node. Its operations and records co-locate as facets; no same-named Flow restates the process.
+
+Where an organization has several such processes, each may own a flow-natured child intent. A project consisting of one process uses the root as that process; it MUST NOT introduce a lone flow-natured child merely to wrap it.
+
+A large single process decomposes into phases: consecutive steps producing one artifact. A phase with its own Record and operations becomes a flow-natured child. The root keeps shared Personas, the entry Trigger, cross-cutting Requirements, the Children index, and an orchestrating Steps list or Flow invoking the phases in order. Each phase keeps its Steps, Contracts, Events and Record. The parent sequence names phases; a phase sequence names its steps. Each step is declared at its owning level, not repeated at both. References cross phase boundaries normally.
+
+Long-running orchestration uses existing constructs: a Flow invokes work, mutates a progress Record, and emits or subscribes to compensation Events. Durable timer and signal mechanics belong to realization.
+
+### Persona, permission and performance
+
+A Persona declares an actor's identity or a role played in one intent. `### Role` describes the actor; `### Access` declares the Views or intents it accesses and operations it invokes.
+
+An entity shared across processes has a canonical home; a process-specific role remains with the intent reading that role. Moving shared entities upward MUST NOT merge distinct roles and erase a handoff. Use `[plays](aim:...)` where a local process role is filled by a canonical organizational Persona, or use an Imports alias when the canonical entity is referenced directly without splitting into multiple roles; do not create a second canonical entity for the same organizational group.
+
+#### Role-in-context (`plays`)
+
+When an intent distinguishes local roles that are filled by the same shared organizational Persona (for example, both `Submitter` and `Approver` are employees, or a `Reviewer` is a member of `HR`), each local role is declared as its own `Persona` and links to the underlying organizational Persona in `### Role` with `[plays](aim:<address>)`:
+
+```markdown
+## Persona: Submitter
+
+### Role
+- Submits expense claims for reimbursement — [plays](aim:org#Persona:Employee)
+
+### Access
+- [invokes](aim:#Contract:SubmitClaim)
+
+## Persona: Approver
+
+### Role
+- Reviews and approves submitted expense claims — [plays](aim:org#Persona:Employee)
+
+### Access
+- [invokes](aim:#Contract:ApproveClaim)
+```
+
+`Submitter` and `Approver` remain distinct performers in process projections and handoffs, while inheriting candidate identity records from the played organizational Persona. `plays` grants no permission or cross-owner scope; each local role's Authz and View-access declarations apply separately.
+
+#### Performer resolution
+
+Resolve the performer of work in this order:
+
+1. A Persona directly invoking the operation is its performer. Several Personas invoking the same operation are alternative performers; any one may act. To require a particular actor in a particular step, that step invokes an operation only that actor invokes. Joint performance requires a step per actor, not several invokers of one operation.
+2. A step containing only `reads`, `mutates` or `emits` is performed by the Flow itself and inherits no Persona.
+3. A human step or invoked operation without its own performer inherits the nearest enclosing Flow's or promoted process's performer. That Flow's performer is direct or inherited in turn; the first declaration stops inheritance.
+
+These facts MUST remain distinct:
+
+- `Authz` declares permission, never performance. It names roles by backticked addresses, for example `#Persona:Approver` or `org#Persona:Employee`, resolved like link addresses. An entry may carry `cross-owner(<Record-address>)` and `!owner` under the scope rules in §3. Several named roles are alternatives. A role mentioned only in Authz prose names nobody. Where Authz names roles, the performer MUST be among them; with no named role, whoever performs the operation is permitted.
+- A Persona accessing a View that exposes an operation can reach it; that does not commit the Persona to performing it.
+- A Trigger starts work and never performs it.
+- Role prose and step prose do not assign work.
+
+Work owes a performer when it is a Flow or process step, is invoked by a step, or is started by a Trigger or subscription. Such work is incomplete without a performer under these rules. An operation merely offered through a View owes no performer; whoever reaches it may act within its Authz.
+
+A Persona that acquires its own data and operations may become a `nature: persona` intent. Its acting face becomes top-level `## Role` and `## Access`, its data top-level `## Schema`, and its operations co-located facets. The intent is the actor and MUST NOT contain a same-named Persona. An entity-specific operation belongs under the entity, not scattered on its parent.
+
+### View
+
+A View declares a shared interface surface. `### Display` states what it shows and which Records it reads. `### Actions` names user-visible commitments and exposes or invokes their operations. Display declares that copy exists, not the words of that copy: the words are supplied material. Action labels remain intent because they name commitments.
+
+When a View reads directly or indirectly owned rows, ownership scope applies by default regardless of the caller's Persona or `plays` links. Only `cross-owner(<Record-address>)` on that Persona's access edge to that View widens its reads for the named Record. Authz on an exposed operation does not widen the View's reads, and View access does not widen any operation's scope.
+
+Optional `### Layout` states only arrangements the owner has specified: one bullet per commitment, in the owner's words, describing relative position, order, grouping or prominence. A bullet identifies its subject through the View's Display terms, Action labels or read Records. It declares no edges; parser validation MUST NOT compare its prose with other blocks. Review judges it. Pixels, grid systems and stylesheet mechanics are realization.
+
+Unstated arrangement remains realization freedom. A tool-generated arrangement MUST NOT become Layout unasked; a tool SHOULD distinguish owner commitments from its choices. Owner feedback on a draft may become an ordinary Layout change.
+
+#### Surface ownership
+
+A page or UI piece with its own accountable outcome is a child intent once that purpose is understood, before it owns data or operations. Its Summary and testable Requirements express that purpose; its constituent sections are View facets. The page-intent MUST NOT add a same-named View restating itself. A Persona may access the intent, covering every View inside it.
+
+A static or host-fed piece within a screen, with no behavior of its own, is a Display bullet, not a node. A piece acquiring its own data, operations or surface owns corresponding facets: a child intent when they form a coherent capability, or a View with sibling facets on the intent served. A promoted piece used only inline usually SHOULD NOT declare its own View; its host owns the surface. A reusable surface must be reachable by a Persona or belong to its host.
+
+Behavior and reachability use existing `reads`, `exposes`, `invokes` or `navigates` edges. Inline visual composition itself has no edge and is realization, except owner-stated arrangement committed in Layout.
+
+### Event
+
+An Event declares an asynchronous announcement and its data. `### Payload` uses a schema fence. `### Routing` may state routing properties as bullets, such as `Channel: tasks.created` and `Durable: true`. Emitters are derived from emitting nodes' `emits` edges; an Event MUST NOT author `### Emitted By`.
+
+### Trigger
+
+A Trigger declares a non-actor entry point and uses `### Fires` with `triggers` edges to the Flow, Contract or promoted process-intent it starts. Its `### Kind` names `schedule`, `deadline`, `webhook` or `external`. Event-anchored timing uses `deadline`; calendar recurrence uses `schedule`. Webhook and external origins describe their source in prose rather than a Schedule. External announcements enter through a Trigger that `triggers` an ingest Flow which emits the internal Event, so that Event has an emitter.
+
+Schedules, polling loops, external systems, SLAs, escalation windows, expiries and recurring obligations use this construct. `### Schedule` admits:
+
+- Machine-precise `cron: <expression>`.
+- Event-anchored `<n> <unit> after [Event:<Name>]`, with `minutes`, `hours`, `days`, `business-days` or `weeks`.
+- Calendar-recurring `monthly on the <n>th`, `weekly on <weekday>` or `yearly on <date>`.
+
+The latter forms may include informal disarming prose, such as `— unless [Event:Confirmed]` or `— unless [Event:ReportReceived] for the period`. This clause is not executable or conformance-checkable. Where disarming verification matters, its condition SHOULD be an Event emitted by the fulfilling operation, and the clause SHOULD name it; the graph can then check the Event and its emitter, not evaluate the words. The calendar used for business-days is realization; duration and anchor are intent. Escalation ladders chain deadline Triggers; expiry triggers revocation.
+
+### Style
+
+A Style declares owner-stated visual identity at identity grain, not stylesheet mechanics. It is authored in its intent file, never a separate sidecar kind. Each intent declares at most one Style. It applies to every View in that intent and its descendants; a nearer Style wins. No edge selects it. Style declares no edges, receives none, is not an orphan and is outside behavioral traceability.
+
+Besides Summary, optional sub-blocks are `### Palette`, `### Type`, `### Shape`, `### Mark` and `### Layout`. Each uses bullets of `<token>: <value>`. A token is one lowercase word; the token vocabulary is open and tooling MUST accept any token. Values are owner words, exact values or both. A realization MUST use exact values verbatim and elaborate descriptive words consistently, recording its choice. A Summary-only Style is valid; a parser does not judge the grain of its values.
+
+Style Layout declares conventions for every screen wearing it. A View's Layout wins over a Style convention for that screen. Unstated arrangement and implementation remain realization.
+
+A Mark's description is intent. Its image file is supplied material under `content/assets/`, never inside an AIM file; a supplied file is used verbatim. A View without a reachable Style is complete: realization chooses and records a clean neutral style, and tooling reports only an informational absence.
+
+A recovered identity is proposed with provenance and requires the owner's signature before entering the model. Owner-entered legacy `content/style/` tokens MAY be moved into a Style without inventing values: preserve words and exact values, record the migration in file history, and keep the tokens readable as backup.
+
+### State
+
+A State exhaustively specifies permitted changes and state-gated mutations of one Record enum field. It has only Summary and these sub-blocks:
+
+- `### Of`: exactly one bullet containing a backticked `Record:<Name>.<field>` or `<ns>#Record:<Name>.<field>`. It resolves upward; the target MUST be a required enum field.
+- `### States`: one bullet per enum value, corresponding one to one. Names compare case-insensitively, with spaces treated as underscores; `In review` denotes `in_review`. An explicit different value follows in parentheses: `Waiting (on_hold)`. Exactly one state is marked `— initial`; any number may be marked `— final`.
+- `### Moves`: one bullet per move or in-state guard, `<From> → <To> — <operations>`. `->` is accepted for `→`. Operations are one or more comma-separated bracketed Contract or Flow references, local or qualified: `[Contract:Approve]`, `[Flow:Close]`, `[org.close#Contract:Approve]`. Each named operation MUST mutate the governed Record. Reserved target `deleted` declares deletion; reserved target `unchanged` declares an **in-state guard** (`<From> → unchanged — [Contract:EditDraft]`), permitting the named operations to mutate other fields of the Record only while the governed field is in `<From>` without changing the state value. An explicit self-move `<From> → <From>` remains a hard error.
+
+Moves are structured references, not edge tokens. A State declares no edge tokens; states are names within its node, not separately addressable nodes.
+
+The following rules apply to every operation writing the Record:
+
+- A changed state value MUST match a declared before/after `<From> → <To>` move and the writing operation MUST be named on that move. Realization MUST reject any other change before committing it.
+- Creation starts in the initial state, by any creating operation; creation is not a move.
+- If deletion moves (`<From> → deleted`) exist, deletion is permitted only from their named states and by their named operations. A declared deletion may leave a final state. With no deletion moves, State imposes no deletion rule.
+- No other move leaves a final state. Other fields and related records are not frozen unless gated by an in-state guard (`<From> → unchanged`).
+- Writing the same state value is not a transition; if the operation is named on one or more `<From> → unchanged` guards, the row MUST be in one of those `<From>` states, otherwise the operation's own rules govern it.
+- A legal move grants no permission and changes no operation Input, Authz, Expects or Ensures.
+
+Failure to enforce this check is realization drift; such a realization MUST NOT be described as enforcing the State.
+
+A State lives with its Record or in a descendant intent. Exactly one State may govern a field across the whole model. Separate fields have independent States, not combined states. References are rewritten when their Record or operations move.
+
+The derived graph contains a `state` node, a `governs` structural edge to the Record, and `moved-by` structural edges to named operations. These are derived structure, not authored verbs. Moves retain resolved operations and the roles admitted by those operations' Authz. A State is not an orphan and is outside the traceability chain. Its impact includes its Record, named operations and every other operation mutating that Record.
+
+An enum without State declares only its values. A machine MUST NOT be inferred from an enum or guard prose. A recovered machine is proposed with provenance and requires the owner's signature before entering the model.
+
+## 7. Edges
+
+Declare each relation once, at its acting node, with `[verb](aim:<address>)`. This is the edge syntax authors write. The 5.13 same-intent shorthand — a declared verb immediately followed by a backticked same-intent address, as in `invokes` `` `#Contract:CreateTask` `` — is a deprecated spelling: tools MUST read it as that link, authors MUST NOT write it, and a tool that rewrites a file writes the link form. A backticked address not immediately preceded by a declared verb (an Authz role, a Dependencies target) is never an edge. The `from` node is the nearest enclosing facet node, or the intent for a top-level declaration; the `to` node is the resolved address. Cross-intent addresses are fully qualified (`aim:<namespace>#<FacetType>:<Name>`); same-intent addresses may omit the namespace (`aim:#<FacetType>:<Name>`). A prose label before the token is optional; it SHOULD NOT repeat the verb.
+
+### Closed taxonomy
+
+Only these verbs and endpoint types are allowed. A disallowed `(verb, from, to)` triple is a hard error.
+
+| Verb | From | To | Meaning | Kind |
 |---|---|---|---|---|
-| `exposes` | view | contract | a View action surfaces a Contract to users | declared |
-| `invokes` | flow, view, contract, persona, intent | contract, flow, intent, capability | a call into another behavioral unit — from a Persona (or a persona-natured intent, §7.4): the actor performs the operation directly; **to** an intent when the callee is a promoted process (§7.3), whose sequence is its own `## Steps` and which therefore has no facet node to name; **to** a Capability (§9.2): the unit consults that source-kind (5.6) | declared |
-| `reads` | contract, flow, view | record | reads a persisted Record | declared |
-| `mutates` | contract, flow | record | creates / updates / deletes a Record | declared |
-| `emits` | flow, contract | event | produces an event | declared |
-| `subscribes` | flow, contract, intent | event | consumes an event | declared |
-| `accesses` | persona, intent | view, intent | a persona — as a facet or a promoted persona-intent (§7.4) — may reach a view, or a whole screen/route intent | declared |
-| `navigates` | view | view | UI navigation between surfaces | declared |
-| `triggers` | trigger | contract, flow, intent | a schedule, webhook, or external origin initiates a behavioral unit — an intent target being a promoted process (§7.3) | declared |
-| `refs` | record field | record field | data-level foreign reference (the `ref()` modifier) | declared |
-| `satisfies` | contract, flow, view, trigger | requirement item | a behavioral unit (or a deadline Trigger enforcing a time policy) realizes a `## Requirements` item | declared |
-| `triggered-by` | flow, contract | contract / view / trigger / persona / intent | inverse of `invokes`/`exposes`/`triggers` — a persona (or promoted persona-intent) appears here when it invokes the unit directly (§7.4) | derived |
-| `emitted-by` | event | flow / contract | inverse of `emits` | derived |
-| `satisfied-by` | requirement item | contract / flow / view / trigger | inverse of `satisfies` | derived |
+| `exposes` | view | contract | A View action surfaces a Contract to users. | declared |
+| `invokes` | flow, view, contract, persona, intent | contract, flow, intent, capability | Calls a behavioral unit; from a Persona or persona-natured intent, performs it directly; to a Capability, consults that source-kind. | declared |
+| `reads` | contract, flow, view | record | Reads a persisted Record. | declared |
+| `mutates` | contract, flow | record | Creates, updates or deletes a Record. | declared |
+| `emits` | flow, contract | event | Produces an Event. | declared |
+| `subscribes` | flow, contract, intent | event | Consumes an Event. | declared |
+| `accesses` | persona, intent | view, intent | Permits a Persona or promoted persona-intent to reach a surface or screen/route intent. | declared |
+| `plays` | persona | persona | Binds a local role Persona to a shared organizational Persona while preserving distinct performer lanes. | declared |
+| `navigates` | view | view | UI navigation between surfaces. | declared |
+| `triggers` | trigger | contract, flow, intent | A schedule, webhook or external origin initiates a behavioral unit. | declared |
+| `refs` | record field | record field | Data foreign reference declared by `ref()`. | declared |
+| `satisfies` | contract, flow, view, trigger | requirement item | Realizes a `## Requirements` item; a deadline Trigger may enforce a time policy. | declared |
+| `triggered-by` | flow, contract, intent | flow / contract / view / trigger / persona / intent | Inverse of `invokes` / `exposes` / `triggers`. | derived |
+| `emitted-by` | event | flow / contract | Inverse of `emits`. | derived |
+| `satisfied-by` | requirement item | contract / flow / view / trigger | Inverse of `satisfies`. | derived |
 
-`requires` is **not** a graph verb — it stays as `## Dependencies → Requires` (a capability alias resolved by a mapping, §9). `extends` is **not** a graph verb — it is the `parent:` frontmatter relation (§5.1). **Render/layout composition** — a screen displaying another view inline (a dashboard laying out widget-panels) — is **not** a graph verb either: a UI piece has fluid granularity (`### Display` prose in its host view when simple, a promoted child intent owning its own facets once it earns them, §15.9), and the inline arrangement is realization expressed in code and bindings (§1.3), not an intent edge.
+`requires` is the capability-alias relation in Dependencies, not an edge verb. `extends` is the `parent:` relation, not an edge verb. Render/layout composition is not an edge verb.
 
-An `accesses` edge may target a **View** (access to one surface) **or** a **intent** (route/screen-level access — the persona may reach that whole feature). Use the intent form for role-gated screens that aggregate several views; `[accesses](aim:app.profile)` is valid and means "this persona may reach the profile screen."
+Use View `exposes` for user-initiated actions and View `invokes` for programmatic calls. Both count as reaching a Contract. `accesses` an intent grants reachability to every View in its subtree. Intent-level `accesses` and `invokes` in a promoted Persona's top-level `## Access` are permanent declarations, not placeholders.
 
-**`invokes` and `triggers` to an intent (5.4).** A promoted process (§7.3) keeps its sequence in a top-level `## Steps` and therefore holds **no facet node to name** — so without an intent target it could not be called at all, only entered by invoking its inner Contracts one at a time, which defeats the promotion. Both verbs therefore accept an intent whose content is a process: `[invokes](aim:org.reimbursement)` from an orchestrating Flow's step, `[triggers](aim:org.reimbursement)` from a schedule. This is the symmetric completion of `invokes` **from** an intent (a promoted Persona acting, §7.4): promotion must not cost a node its reachability. Use the facet form (`#Flow:X`) whenever the callee *is* a facet; the intent form is for the promoted case only, and a `triggers`/`invokes` edge into an intent that holds no `## Steps` is a modeling smell rather than a legal shortcut for "somewhere in there".
+Use `invokes` or `triggers` to an intent for a promoted process with top-level `## Steps`; use the facet address when the callee is a facet. Targeting an intent without Steps is a modeling smell. Capability-targeted `invokes` means consulting an external source-kind; its target must be a required capability of the resolving scope. It derives no `triggered-by`. Intent-level `subscribes` is valid when an internal handler is not yet named; at Level 3 it SHOULD be refined to the consuming Contract or Flow.
 
-**`invokes` to a Capability (5.6).** An operation that acquires information or service from **outside the system** declares the Capability surface it consults: `[invokes](aim:#Capability:WeatherSource)`. The edge means *consults this source-kind* — the declared basis of the acting unit — and inside a `### Steps` item the token is the step's operation exactly as any `invokes` (§7.3). **No inverse derives** from a capability-targeted `invokes`: a capability is a surface being consulted, not a behavioral unit being entered, so `triggered-by` derives only for contract/flow/intent targets (§8.4). The target must be a required capability of the resolving scope (`## Dependencies → Requires`, §9.1); how the alias resolves — mapping or binding — is §9.3's concern, not the edge's. A Capability with no inbound `invokes` and no `Requires` alias is declared-but-unused (informational, §12.2).
+`satisfies` targets only a Requirements item, never a Capability. Its address is `aim:[<intent>]#Requirements[<key>]`, without a facet-type colon. A key is either a label matching `[A-Za-z][A-Za-z0-9_-]*` or a 1-based integer. Declare a label at the bullet's start: `- **NET14** — The invoice is payable within fourteen days.` Labels MUST be unique within the intent and SHOULD be used once satisfies edges exist. Labeled and unlabeled bullets may coexist; all remain position-addressable. Inserting or reordering items changes positional targets; renaming a label changes identity and requires a rename transform.
 
-**`exposes` vs `invokes` from a View.** Both are legal view→contract edges, and the choice carries meaning. Use **`exposes`** when the contract is reached through a *user-initiated action* on the view — a button, a form submit, a gesture. Use **`invokes`** when the view calls the contract *programmatically*, with no user initiation — an on-load data fetch, a poll, a prefetch. Either inbound edge counts as the contract being "reached" for the orphan check (§12.2); the distinction records whether the behavior is user-driven, which matters for reading intent and for realization.
+Inverse relations are derived, never authored. Behavioral-unit-targeted `invokes`/`exposes`/`triggers` derive `triggered-by`; `emits` derives `emitted-by`; `satisfies` derives `satisfied-by`. Legacy authored `### Trigger` or `### Emitted By` blocks are reconciled against derived sets, with an informational stale-inverse finding on mismatch.
 
-**`subscribes` from a `intent`.** Almost every `subscribes` edge is declared at the consuming Flow or Contract. A `intent`-level `subscribes` is a deliberate early-stage exception: it declares that an intent consumes an event *without yet naming the internal handler* — `[subscribes](aim:#Event:TicketResolved)` written at the intent root. It is valid at Level 1/2; at Level 3 it SHOULD be refined to a flow- or contract-level edge once the handler exists (an informational diagnostic flags an intent-level `subscribes` that survives into a Level-3 intent, §12.2).
+### Language extension policy
 
-**`accesses`/`invokes` from an `intent` are different in kind:** they are not an early-stage placeholder but the **permanent form of a promoted Persona** (§7.4) — the entity-intent acting directly. They are declared in the intent's top-level `## Access` section and never need refinement.
+A future verb is admitted only if it (1) expresses a relational commitment between existing node types, (2) cannot already be expressed with existing verbs plus prose without losing checkability, (3) enables a new query or diagnostic, (4) has demonstrated need in real models, and (5) arrives with endpoint types, inverse or explicit absence of one, and diagnostics. Attributes, sequencing, composition and accountability prose belong in their existing constructs. The same tests apply to proposed blocks or attribute families, routing non-relational proposals to those forms. Removing or renaming a verb is breaking; aliases and domain synonyms are forbidden. No additional race/cancellation, delivery, per-View-style or implicit foreign-key-by-naming construct is admitted.
 
-**`satisfies` and its target.** `satisfies` is the one edge that reaches a sub-block target: its `to` is a `## Requirements` list item, not a facet node. It is declared at the acting unit — the Contract, Flow, or View that realizes the requirement, or the deadline Trigger that enforces a time policy (§7.7). The token URI form is `aim:[<intent>]#Requirements[<key>]`: the reserved section address carries **no** `FacetType:` colon, which is exactly what distinguishes it from the facet form `#<FacetType>:<Name>` and keeps it a valid CommonMark link destination (§2.2, §3.6). The `<key>` takes two forms, discriminated by grammar:
+## 8. Dependencies and supplied material
 
-- **Positional** — a 1-based integer: `[satisfies](aim:#Requirements[2])`. Valid everywhere, but fragile: reordering bullets re-points it (§2.2, §16.3 invariant 1). The casual form for small models.
-- **Labeled** — a name matching `[A-Za-z][A-Za-z0-9_-]*` — the facet-name grammar (§3.6) widened by the hyphen, so ticket-style labels (`PAY-REQ-01`) are valid: `[satisfies](aim:#Requirements[NET14])`. A requirement declares its label by opening the bullet with a bolded name and an em-dash:
+`## Dependencies` contains `### Imports` for concrete provider surfaces and `### Requires` for capability aliases. Requires entries use `- <capability-kind> as <Alias>`, for example `- Identity as AssigneeUsers`. Imports declare file-local aliases, such as ``- `org.Employee` as Traveler``; aliases have no separate identity. Use-site edges name the canonical node. Tools MAY display an alias beside the canonical name, consulting the importing file. Where a process has multiple distinct roles played by the same shared organizational Persona, model each local role as a `Persona` with `[plays](aim:...)` (§6) rather than collapsing them through `Imports`.
 
-  ```markdown
-  ## Requirements
+A required external service or information source may have a `## Capability: <Alias>` surface with Summary and Operations. These declare the required kind; provider, transport, query mechanics and credentials are realization. A consuming operation invokes the Capability. Acquire document-shaped information in a collect Contract that invokes the Capability and mutates a Record; downstream operations read that Record. Unresolved capabilities, Records read but never mutated in-model, and schedules to arm derive what a performed intent needs supplied.
 
-  - **NET14** — The invoice is issued within one business day of signature, net-14.
-  - **COUNTERSIGN** — No work is scheduled before the contract is countersigned.
-  - Requesters see only their own tickets.        (unlabeled — positional only)
-  ```
+Each Requires alias resolves either through a co-located `kind: mapping` file or inline Bindings on its Capability. A mapping has `## Map: <Alias>`, `### Target` with a backticked provider intent bullet, and `### Operation Map` bullets in the form ``- `<Alias>.<Operation>` → `<provider>.<Operation>` ``. It is intent-to-intent. Bindings resolve an external provider with no intent model and remain intent-to-realization. A Capability binding MAY name the Capability operation it realizes after `— as:`. An alias unresolved by either form is a hard validation error.
 
-  A labeled reference survives any insertion or reordering; the label is part of the requirement's identity, so *renaming a label* is the `rename`-class transform instead. Labels MUST be unique within their intent's `## Requirements` and SHOULD be used once `satisfies` edges exist; labeled and unlabeled bullets may coexist, and an unlabeled bullet remains addressable by position.
+Supplied material is concrete copy, seed data and media beside the model, never authored into `.aim` and never a new facet, verb or block. A View reading a Record owes displayed data and any stated empty-state message; a Record read but never mutated in-model owes externally supplied contents. Optional starting entries for mutable Records are permitted material but create no owed-material obligation. Visual identity belongs in Style; a mark's words are intent, its image file is supplied material. Action labels remain intent and material MUST NOT duplicate them.
 
-Cross-intent targets are fully qualified either way: `aim:app.tasks#Requirements[NET14]`. This makes "which behavior satisfies this requirement?" a graph query, and the derived inverse `satisfied-by` (§8.4) makes the reverse computable.
+The conventional handoff channels are `records/<Name>/` for seed entries and `content/` for copy/media (`content/assets/` for image assets). Their file shapes are not specified. Consumers MUST use supplied material verbatim and never write it back into the model. Missing material is a question for the owner, never permission to invent content or ship placeholders. Material recovered from an existing realization is a draft for owner confirmation, with the same provenance discipline as inferred intent. Material readiness is derived from the handoff; it never changes specification level or becomes a hard model error. Ecosystem tooling determines owed content slots; placement remains realization unless stated in Layout.
 
-`satisfies` targets **only** a `## Requirements` list item. It never targets a `## Capability:` surface (§9.2) — that is a facet node resolved by a mapping, not a requirement statement; `[satisfies](aim:#Capability:AssigneeUsers)` is a hard error (type mismatch, §12.1). *(v4 named this surface `## Requirement:`; v5 renamed it to end the collision with `## Requirements` items — §13.3.)*
+## 9. Bindings and review
 
-### 8.3 Declared vs Derived
+A binding connects an intent node to its realization site. Bindings are optional; missing coverage is informational at Level 1/2. Writing bindings opts into Level-3 graph-diff responsibility for those claims.
 
-- **Declared once, at the acting end.** The node that performs the verb owns the edge: a View declares `exposes`/`navigates`/`reads`, a Flow declares `invokes`/`emits`/`reads`/`mutates`, a Persona declares `accesses`/`invokes`, a Contract declares `emits`/`mutates`/`invokes`, a Trigger declares `triggers`, a Record's schema field declares `refs`.
-- **Inverse views are derived, never authored.** The v3.1 blocks `### Trigger` ("Invoked by Contract: X") on a Flow and `### Emitted By` on an Event are inverse projections of `invokes`/`emits` edges. v4 removed them from authored source. A tool may render them as read-only views.
+Canonical bindings are a node's inline `### Bindings` property containing bullets such as ``- binds: `src/tasks/create.ts#createTask` — as: handler``. Multiple sites are allowed. Advisory `as` roles include handler, model, component, route, topic and test; text after the backticked locator is prose a parser may ignore. An optional `- provenance: inferred` bullet in the Bindings block carries its trust until human-confirmed, independent of the surrounding intent's trust. The accepted deprecated sidecar form is `kind: binding` with `## Bind: <FacetType>:<Name>` entries; conforming tools MUST read it and MUST merge its locators into inline `### Bindings` before any migration that removes the sidecar file.
 
-This is the structural fix for v3.1's "three inconsistent expressions" problem: there is now exactly one authoritative direction per relation, so the forward and backward statements can never fall out of sync.
+Locators have an open scheme set, `<scheme>:<opaque-locator>`. Code-family locators include `path#symbol`, a whole path, `path#L40-L72` (last resort), `route:POST /api/tasks`, `topic:tasks.created` and `table:tasks`. Domains may use system, workflow, form, agent, queue, calendar or other schemes. Unknown schemes are valid; an unsupported scheme is unverifiable, never invalid.
 
-### 8.4 Inverse Derivation
+The declared graph consists of intent nodes and declared relations; the realized graph consists of sites and recovered relations. Bindings project them into a common space for diffing. Review is bounded: for each declared edge, inspect the bound site and check that claim rather than reconstructing the entire system. Tools MAY supply a precomputed realized-graph manifest; its format, enforcement mechanics and report formats are not specified. Structural counterparts are checked by graph-diff; guarantee semantics require inspecting realization. Guarantees whose outcomes cannot be verified use procedure verification.
 
-For every declared `invokes`/`exposes` edge `A → B` whose target is a Contract, Flow, or intent — a capability-targeted `invokes` derives no inverse (§8.2, 5.6) — the graph contains a derived `triggered-by` edge `B → A`. For every declared `emits` edge `A → E`, the graph contains a derived `emitted-by` edge `E → A`. For every declared `satisfies` edge `A → R` (R a `## Requirements` item), the graph contains a derived `satisfied-by` edge `R → A`. Derived edges are computed during graph derivation (§2.4 step 4) and are available to tooling and reviewers exactly like declared edges, but they never appear in source.
-
-If an author writes a `### Trigger` or `### Emitted By` block anyway (e.g. migrated content not yet cleaned up), tools reconcile it against the derived set and emit an informational "redundant inverse, possibly stale" diagnostic on mismatch.
-
-### 8.5 Before / After
-
-The `View: TodoDashboard` facet from the canonical example, v3.1 prose vs the graph form (v4 onward):
-
-**v3.1:**
-
-```markdown
-### Actions
-
-- Submitting the "New Task" form → invokes `Contract: CreateTodo`.
-- Tapping the checkbox on a PENDING task → invokes `Contract: CompleteTodo`.
-```
-
-**Graph form:**
-
-```markdown
-### Actions
-
-- Submitting the "New Task" form — [exposes](aim:#Contract:CreateTodo)
-- Tapping the checkbox on a PENDING task — [exposes](aim:#Contract:CompleteTodo)
-```
-
-Both forms render on GitHub. The graph form additionally yields two first-class edges `View:TodoDashboard → exposes → Contract:CreateTodo|CompleteTodo`, so renaming a contract dangles the edge (hard error), an orphan check confirms every contract is exposed, and the impact set of either contract now formally includes the view. The free prose ("Submitting the New Task form") survives as the human label; only the edge is now machine-recognizable.
-
-### 8.6 Extending The Verb Set
-
-The taxonomy is closed on purpose: every verb an author must learn taxes every author, and a verb that means "relates to" is prose with extra syntax. Pressure to add verbs is permanent; this policy is the gate. A verb is admitted into a future version only when **all** of the following hold:
-
-1. **It is a relational commitment** between existing node types — not an attribute (belongs in `schema`), not sequencing (belongs in a Flow's `### Steps`), not composition or layout (realization, §15.9), not accountability metadata (prose in `### Role`/`### Authz`).
-2. **It is not expressible today** — no existing verb plus prose carries the meaning without losing checkability. (`satisfies` passed this test: requirement linkage was uncheckable prose; `performs` fails it: it is `invokes` from a persona.)
-3. **It pays rent** — at least one question becomes computable, or one diagnostic becomes possible, *only* with the new verb. A verb that no validator, query, or reviewer check ever consumes is decoration.
-4. **It has demonstrated need** — real models worked around its absence (in prose, in convention) before it is canonized. Verbs are admitted from evidence, never from anticipation.
-5. **It is fully specified on arrival** — a fixed `(verb, from, to)` schema, its derived inverse (or the explicit statement that none is derived), and its diagnostics.
-
-Two standing rules bound the process: **verbs are forever** — removing or renaming one is a breaking change to every model in existence, so the default answer is no; and **one verb, one meaning** — no aliases, no domain-specific synonyms (a domain may *read* a verb in its own vocabulary, never spell it differently).
-
-**Recorded pressure, not admitted.** Test 4 asks for evidence that accumulates before a construct is canonized — a verb, a block, an attribute family (5.5); the five tests apply unchanged, with test 1 routing non-relational candidates toward attributes and blocks rather than rejecting them outright. This is where that evidence is kept, together with the reason each candidate is still refused. **Role-in-context** — an assertion that a locally-named Persona (`Traveler`) and a canonical entity (`Employee`) are the same actor (§7.4) — fails tests 2 and 3. It is expressible today: an `## Dependencies → Imports` alias names one node under a local reading (§9.1), and every query the verb would answer is already computable from that one node's edges. What the pressure actually exposes is a limit of **projection**, not a missing relation: the alias does not survive below the file that declares it, so a swimlane or an actor roster cannot render the local name (§9.1). Fix the projection; leave the taxonomy closed.
-
-**Race and cancellation (5.5)** — a step whose joint operations compete (first completes, remainder abandoned or compensated), or a cancellation window pairing each mutating step with its compensator. Fails test 4 — no real model has yet needed more than step prose plus §15.10's procedure verification — and largely test 2: saga-style compensation is expressible today (§15.7). What would admit it: a model that needs compensation-pairing *checked* — "every mutating step inside the window has a compensator" as a diagnostic. That diagnostic is the rent.
-
-**Delivery semantics (5.5)** — at-least-once / at-most-once, ordering, consumer idempotency. Fails test 1 as a verb permanently: these are attributes of an Event's `### Routing` (`Durable: true` is the existing foothold, §7.6), not relations. The pressure recorded here is for **standard Routing keys**, admitted when a subscriber-side diagnostic — an at-least-once event whose consumer does not declare idempotency — demonstrates rent on a real model.
-
-**Record lifecycle transition legality (5.5; need demonstrated 5.9; admitted 5.13)** — admitted as the State facet (§7.9): one facet per enum field, its states, its initial and final ones, and every move with the operation that makes it — a facet with structured references, which is where test 1 sends rules. Test 5 was met by `proposals/5.13-state-facet.md`, which keeps the evidence: every house model's lifecycle prose, and a real owner's task lifecycle whose running realization accepted done → draft.
-
-**Per-state rules (5.13)** — a rule about a state rather than a move: "editable in draft only", "no posting against a closed period" beyond the status itself. Fails test 4 for now — each case seen is carried by a requirement and the operations' guards — and test 5: whether such a rule freezes the record, some fields, or only some roles is open. Its prototype is a clause on the state's bullet (`- Draft — initial — editable by Client, Architect`); what would admit it is a real model whose per-state rule an operation added later broke.
-
-**Wears (5.11)** — a `wears` edge from a View to a `## Style:` (§7.8), for one screen that departs from the look of its intent. Fails test 4 — no real model has yet needed more than the tree's nearest-Style rule — and largely test 2: a page-intent that declares its own Style already expresses a page's departure (§15.9). What would admit it: a real model with a single View, inside a purpose-earned page, that must wear another look while its siblings keep the page's — and a diagnostic that reads the edge.
-
----
-
-## 9. Dependencies, Requirements, And Mappings
-
-### 9.1 Dependencies Block
-
-External providers and required capabilities are declared in a `## Dependencies` block:
-
-```markdown
-## Dependencies
-
-### Imports
-
-- `company.storage.Contract` as Storage
-- `company.events.EventBus` as EventBus
-
-### Requires
-
-- Identity as AssigneeUsers
-```
-
-- **Imports** reference concrete provider surfaces from other intents. An import declares an alias; the *use site* is a cross-intent edge token (§8.1) whose address names the real node. The alias is **local to the file that declares it** and carries no identity of its own: the graph holds exactly one node, under its canonical address. This is what makes an import the right way to read one canonical entity under a local name (`org.Employee as Traveler`, §7.4) — and also its present limit, since a projection wanting to show that local reading must consult the importing file's aliases rather than the graph alone. Tools MAY surface the alias beside the canonical name; §8.6 records why this is a projection concern and not a new verb.
-- **Requires** declares required capabilities by alias (the `requires` relation). The alias is resolved via a mapping file.
-
-### 9.2 Capability Surfaces
-
-Required capabilities may be documented inline with a `## Capability: <Alias>` block:
-
-```markdown
-## Capability: AssigneeUsers
-
-### Summary
-
-Capability required to resolve user identities.
-
-### Operations
-
-- `ResolveUser(id) -> UserRecord`
-```
-
-**A Capability is any required external surface — a service *or an information source* (5.6).** "Official company registry lookups", "daily FX rates", "an official weather source: current conditions and active warnings, per city" are capabilities exactly as an identity resolver is: the surface's Summary and Operations state the **kind**, and the kind is the commitment — the provider and its transport are not (§1.4). The consuming operation declares what it consults with a capability-targeted `invokes` (§8.2). For document-shaped information the doctrine is **acquisition-as-step**: a collect Contract consults the capability and `mutates` a Record; downstream operations `read` the Record — the informational basis of every judgment stays a graph derivation end to end. This is also what makes a performed intent's required inputs derivable (§1.2 performance): unresolved capabilities, Records read but never mutated in-model, and schedules to arm are exactly the graph's statement of "what must be provided for this to run."
-
-### 9.3 Mapping Files
-
-Mappings bind required aliases to concrete providers. A mapping is a `kind: mapping` file that co-locates with its intent, exactly like any other facet (§4.2).
-
-```markdown
----
-aim: juice.tasks
-kind: mapping
----
-
-# Tasks Mappings
-
-## Map: AssigneeUsers
-
-### Target
-
-- `company.identity`
-
-### Operation Map
-
-- `AssigneeUsers.ResolveUser` → `company.identity.ResolveUser`
-```
-
-A `Requires` alias resolves through **either of two forms (5.6)**: a **mapping** (above), when the provider is a modeled intent — or a **`### Bindings` property declared on the `## Capability:` surface itself** (§10.2 — a `system:`, `agent:`, or other locator), when the provider is an **external system** that has no intent model and should not be forced to masquerade as one. In the bound form the *kind* stays intent-side on the surface while the *where* is realization — provenance-stamped like every binding, so it can go stale without the commitment being wrong (§1.3). An external capability MAY bind **per operation**: the binding's `— as:` names the operation the site realizes — `` - binds: `table:erp.customers#credit_limit` — as: CreditLimit `` — the external analogue of the Operation Map below, with the same division of labor: the operation is the commitment, the site is realization, and query mechanics and credentials are the realization's own concern, never modeled (5.6). Unresolved by either form remains a hard error at validation time.
-
-**Mappings vs bindings.** A mapping is an **intent→intent** capability binding: it resolves a required-capability alias to a concrete provider *intent*. A binding (§10) is an **intent→realization** binding: it links a node to the code/system that implements it. They are distinct — a mapping is a `kind: mapping` facet; a binding is an inline `### Bindings` property (§10.2) — and must not be confused with each other. (A capability resolved by a binding, above, does not blur the line: the binding still records realization — the external system — while the surface remains the intent-side declaration of kind.)
-
-### 9.4 Supplied Material (5.7)
-
-**Supplied material** is the concrete displayable content a realization needs and the model deliberately does not state: the copy on a screen, the starting entries of a Record nothing in the model writes, the images. It completes the same three-layer split as external information (§9.2) — *the obligation is intent, the concrete thing is supplied, the mechanics are realization* — and it admits **no new syntax**: no facet, no verb, no authored block. Material is never written into `.aim`.
-
-**That material is owed is derived, not authored.** A View that `reads` a Record commits to displaying that data, so it owes the reader something when there is none — `### Display`'s *"empty state message if no tasks exist"* (§7.5) commits that the message exists and stops exactly where its words begin. A Record read but never mutated in-model commits to having contents that originate outside the model — the category §9.2 already names as part of "what must be provided for this to run". Both facts are graph derivations, so nothing new is declared to obtain them.
-
-**Supply may widen beyond what is owed; the owed derivation never does (5.8).** A realization may ship starting entries for a Record the model itself mutates — the catalog a product is born with. Those entries are supplied material like any other (they ride the same channels, marked as not owed), but they create no obligation: widening the owed derivation to mutable Records would turn every CRUD application's readiness statement into false debt. And when an existing system is re-encoded (§17), its supplied material — the words and starting data the artifact already ships — is recovered *beside* the intent with the same provenance discipline as the intent itself: extracted values arrive as drafts for the owner to confirm, never as the owner's signature.
-
-**Visual identity is intent (5.11).** 5.8 placed a product's identity here, as a token summary riding the handoff under `content/style/`. 5.11 moves it into the model as the `## Style:` facet (§7.8): how the surfaces should look is a commitment the owner makes, reviewed as one when it changes, and the Style states it at identity grain — palette, type, shape, mark, the look in one breath. What stays material is the picture: a mark's words are intent, the file is supplied beside the model under `content/assets/`. The `content/style/` channel is retired (§13.12).
-
-**The material itself is realization.** A headline is not a commitment about behavior; it is one way of meeting the commitment that a screen says what it is for. Put it under intent authority and every rewrite becomes a model change, a diff and a re-review — review cost with no review value, and exactly the degree of freedom §1.4 reserves for the Realizer. What *is* authored, and stays authored, is an `### Actions` label: it names a commitment, so it belongs in intent, and material must never duplicate it.
-
-**Conventional channel.** A handoff carries material beside the model, not inside it: seed entries for an input Record under `records/<Name>/` (the same place §9.2's manifest and a performed intent's own state already use), and screen copy and media under `content/`. On-disk shapes are a tooling concern this spec does not define (as with the realized-graph manifest, §10.1). Two rules are normative for anyone consuming a handoff:
-
-1. **Use supplied material verbatim, and never write it back into the model.** Writing it into `.aim` converts realization into intent and is drift by definition (§1.3).
-2. **Absent material is a question, never a licence.** A missing value is the owner's to give; inventing it is the content form of inventing behavior (§1.2), and shipping a placeholder that reads like a placeholder is worse than stopping.
-
-Material is a **handoff-readiness** fact, not a model property: an unsupplied screen or an unseeded input Record is informational (§12.2), never a validation error, and never affects specification level (§11.2) — a Level 3 intent with no copy is still Level 3, and still unbuildable, which is why the readiness statement is derived separately. Presentation stays out: **which** slots a screen owes is an ecosystem concern, and where any of it sits on screen remains realization unless the owner stated it in a `### Layout` (§7.5, 5.12).
-
----
-
-## 10. Binding Layer
-
-A binding records *where* an intent node is realized — in code, in a system configuration, in an automation, in an agent — so the Reviewer can diff the declared intent graph against the realized graph (§12). Bindings are optional: an intent with no bindings is a valid Level 1/2 intent (§11.2). Bindings raise fidelity, exactly as facets do.
-
-### 10.1 Drift As Graph-Diff
-
-Two graphs:
-
-- **Declared graph (D)** — nodes are AIM intents/facets; edges are the typed relations of §8. Authored by the Architect; behavioral authority.
-- **Realized graph (R)** — nodes are realization sites (functions, routes, tables, SaaS workflows, agent skills); edges are relations recovered from the realization — code, system configuration, or execution logs (this handler writes that table; this automation fires on that event; these log entries show the step performed).
-
-A **binding** connects a node in D to a node in R. Drift detection projects D and R into a common space through the bindings and diffs them.
-
-**Building R is bounded, not global.** A tool does **not** statically analyze the whole codebase to reconstruct R. Bindings localize the work: for each *declared* edge, the Reviewer opens the *bound site* and checks that one claim — "does `src/todos/create.ts#createTodo` actually mutate `Ticket` and emit `TicketCreated`?" That is read-the-bound-file, not map-the-system, and it is **polyglot by default** (an agent reads any language, where a static analyzer needs one parser per language; dynamic code that defeats static analysis can still be reasoned about and flagged). Because R is *inferred* this way, every graph-diff finding carries a **confidence** (§12.3). Tooling that *does* have static analysis MAY supply a precomputed **realized-graph manifest** for deterministic diffing — this spec does not define that manifest's format; it is an ecosystem concern.
-
-**What graph-diff verifies — and what it cannot.** Graph-diff verifies *structure*: that each declared edge has a realized counterpart at its bound site. The *semantic* content of a guarantee — what an `### Ensures` bullet claims — is verified by reading the bound code, and the finding carries a confidence (§12.3). A third class of guarantee is not cheaply and completely verifiable from output or code at all — judgment-shaped claims ("the summary is accurate," "the review was performed diligently"). For those, the declared *procedure* stands in as the verifier: see §15.10 (proxy verification).
-
-### 10.2 Binding Notation And Location
-
-A binding target is a portable **locator URI**, written as inline code. The scheme set is **open**: the generic form is `<scheme>:<opaque-locator>`, this specification registers the code family, and other domains register theirs (a process model binds to `system:`, `workflow:`, `form:`, `agent:`, `queue:`, `calendar:` locators). Unknown schemes are valid; a tool that cannot check a scheme reports the binding as unverifiable, never as an error. The code family:
-
-```
-src/todos/create.ts#createTodo        # file # symbol  (functions, classes, methods)
-src/todos/create.ts                    # file only      (a whole module realizes a node)
-src/todos/create.ts#L40-L72            # file # line span (last resort; lines drift fastest)
-route:POST /api/todos                  # HTTP endpoint
-topic:todos.created                    # message / event channel
-table:todo_items                       # database table / model
-```
-
-A binding line is a normal Markdown bullet:
-
-```markdown
-- binds: `src/todos/create.ts#createTodo` — as: handler
-```
-
-`as` (`handler | model | component | route | topic | test`) is optional and advisory. One node may declare multiple bindings (a Contract realized by both a route and a handler). Everything after the backticked locator is prose a tool may use but the parser may ignore.
-
-Bindings attach to the node they realize as an inline **`### Bindings` property** — a sub-block on the node itself (an intent, or a facet such as a `## Record:` or `## Contract:`). The `binds:` bullets list that node's locators, and an optional `provenance:` line carries the binding's trust:
-
-````markdown
-## Record: ExpenseItem
-
-### Schema
-
-```schema
-amount: number required
-```
-
-### Bindings
-
-- binds: `table:expense_items` — as: table
-- binds: `src/expenses/model.ts#ExpenseItem` — as: model
-- provenance: inferred
-````
-
-**Per-node provenance.** A binding is *read off reality* while the intent around it is *authored*, so an inline binding carries its own `provenance` — `inferred` until a human confirms it (§17.2). A node's authored meaning and its guessed realization are trusted separately: the volatile, lower-trust locator sits beside the behavior without contaminating it. This is what makes the inline form safe — it is the isolation the old separate-file rule was really buying. What the binding exists *for* is the reconciliation join (§10.1): *change → follow the binding → adjust*, which needs the binding **addressable on the node**.
-
-**Deprecated, still accepted (5.1): the `kind: binding` sidecar file.** Earlier versions kept every binding in a dedicated `kind: binding` file co-located with its intent, each node addressed by a `## Bind: <FacetType>:<Name>` heading — the node's in-intent address minus the leading `#`:
-
-```markdown
----
-aim: nemicko.demo.todo
-kind: binding
----
-
-# TaskManager Bindings
-
-## Bind: Contract:CreateTodo
-
-- binds: `src/todos/create.ts#createTodo` — as: handler
-- binds: `route:POST /api/todos` — as: route
-
-## Bind: Record:TodoItem
-
-- binds: `src/models/todo.ts#TodoItem` — as: model
-- binds: `table:todo_items` — as: table
-
-## Bind: Event:TodoCreated
-
-- binds: `topic:todos.created` — as: topic
-```
-
-A conforming tool MUST still read that sidecar form, but the inline `### Bindings` property is now canonical. The file-per-realization rule existed to keep volatile locators out of behavioral diffs; per-node `provenance` achieves that same isolation on the node itself, so a separate file is no longer required — only its provenance stamp was ever load-bearing (§1.3).
-
-### 10.3 Optional-Capability Invariant
-
-- An intent with no binding facet is fully valid (Level 1/2). Binding coverage is reported as informational, never a hard error.
-- Bindings become load-bearing only at Level 3 graph-diff — which the author opted into by writing the bindings. You are never punished for a binding you did not write.
-
----
-
-## 11. Resolution And Synthesis
-
-### 11.1 Canonical Resolution Algorithm
-
-This algorithm is **authoritative**. All other sections that describe resolution (notably §5.4 for child intents and §9.3 for mappings) defer to this order. It resolves both unqualified facet names and full node addresses (§2.2).
-
-For any reference within an intent:
-
-1. **Intent part.** If the address carries an intent prefix, resolve to that exact namespace (which must exist). If absent, the intent is the current one.
-2. **Facet name**, resolved within the chosen intent in this precedence order:
-   1. **Embedded** — a facet block in the same intent file.
-   2. **Sibling facet file** — `<intent>.<kind>.aim` next to the intent file.
-   3. **Explicit Imports** — entries under `## Dependencies → Imports` in the current file. Explicit author intent beats implicit parent inheritance.
-   4. **Parent chain** — facets defined in the parent intent, then the grandparent, and so on up the namespace until a match is found or the chain ends.
-   5. **Required alias via mapping** — names declared under `## Dependencies → Requires`, resolved through a mapping file (§9.3).
-   6. **Absent** — the name does not resolve. If it was required by another facet or edge, this is a hard error.
-3. **Type agreement.** If the reference is an address with a `FacetType` (e.g. `#Contract:X`), the resolved node's type must match. A `#Contract:X` that resolves to a `## Record: X` is a hard error.
-4. **Sub-block part.** If the address carries `→ ### Sub [n]`, resolve within the facet node by heading text and 1-based list index. The reserved requirement-item form `#Requirements[<key>]` (§8.2) resolves against the resolved intent's top-level `## Requirements` section: a numeric `<key>` by 1-based list index, a named `<key>` by matching a bullet's declared **label** (`- **<Label>** — …`). An out-of-range index, an unknown label, or a duplicate label in the section is a hard error.
-
-The first match wins. Lower-precedence sources for the same name emit an informational diagnostic ("shadowed by higher-precedence source"). Tools must implement this exact order — there are no implementation-defined variations.
-
-### 11.2 Specification Levels
-
-- **Level 1** — Intent only. Useful for early exploration and simple intents.
-- **Level 2** — Intent plus some facets and edges. Most production intents.
-- **Level 3** — Full facet trace **with bindings present**, so the declared graph can be diffed against the realized graph. Highest fidelity for implementation and review.
-
-The level affects expected implementation precision, expected code-generation precision, and strictness of traceability and graph-diff checks. Tools may report an intent's level as an informational diagnostic. Level 3 is the precise condition under which an unbound declared node becomes an enforceable finding (§12). Level-3 graph-diff is enforced by the Reviewer verifying each edge at its bound site with a confidence (§10.1, §12.3), or by a supplied realized-graph manifest.
-
-### 11.3 Traceability Chain
-
-The traceability chain is the set of typed declared edges through the behavioral facets:
-
-```
-Requirement → Contract / Flow / View → … → Flow / Record / Event
-Persona → View → Contract → Flow / Record / Event
-```
-
-- The **root** of the chain is a **`## Requirements` item**: a behavioral unit `satisfies` it (§8.2), so following `satisfied-by` from a requirement reaches the behavior that realizes it, and a requirement with no inbound `satisfies` is an unrealized-requirement gap (§12.2). This closes the loop from stated requirement to running behavior.
-- Entry points are a **Persona** (actor, `accesses` a View or screen intent) **or** a **Trigger** (schedule/webhook/external, `triggers` a Flow/Contract).
-- `Persona` `accesses` `View` (or a whole screen intent).
-- `View.Actions` `exposes` `Contract`.
-- `Contract` `invokes` `Flow`.
-- `Contract` and `Flow` `read`/`mutate` a `Record`.
-- `Contract`/`Flow` `emits` `Event`.
-- A `## Style:` (§7.8) takes no part in the chain: it declares no edges and nothing points at it; its scope follows the tree.
-- A `## State:` (§7.9) takes no part in the chain either: it declares no edge tokens, nothing points at it, and its structural edges (`governs`, `moved-by`) are derived.
-
-In v3.1 this chain was prose and "a useful target, not a requirement." Since v4 it is **derived from the declared edges** and therefore checkable: a Level-3 intent is exactly one whose chain has no orphan nodes and no dangling edges (§12). Intent-only intents remain valid; tools emit a reduced-fidelity informational note.
-
----
-
-## 12. Tooling Diagnostics
-
-**Conformance and diagnostics are evaluated over the complete derived project graph** — every `.aim` file resolved together (§2.4) — never a single file. An intent is "clean" only when the whole graph it participates in is: duplicate entities, dangling references, and orphans are cross-file properties, so judging one file in isolation is never sufficient.
-
-### 12.1 Hard Errors
-
-- Missing or malformed frontmatter.
-- Missing required frontmatter fields (`aim`, `kind`).
-- Frontmatter `aim` does not match the file path.
-- `parent:` declared but no parent intent file exists.
-- Missing H1 heading, missing `## Requirements`, or empty `## Requirements`.
-- Invalid facet type in heading (e.g. `## Data: X`).
-- Facet name violating the `[A-Za-z][A-Za-z0-9_]*` grammar (e.g. `## Record: Todo Item`) (§3.6).
-- Duplicate facet definitions with the same name within the effective source.
-- Ambiguous child-intent authority (auto-discovered child not in explicit `## Children` list).
-- Unresolved `Requires` aliases — no matching mapping and no `### Bindings` on the Capability surface (§9.3, 5.6).
-- Child-intent facet name collision with a parent facet name (when the parent definition is authoritative).
-- Generic filenames (`intent.aim`, `schema.aim`, `mapping.aim`, `binding.aim`).
-- **Dangling reference** — an edge token's `to` address resolves to Absent (§11.1). Same class as an unresolved `ref()` (`<Type>` resolves to no Record).
-- **Unresolved `ref()` field** — a `ref(<Type>.<field>)` whose `<Type>` resolves to a Record but whose `<field>` is not a field of that Record's schema (§3.7).
-- **Unresolvable requirement target** — a `satisfies` key that is out of range (positional), matches no declared label (labeled), or a `## Requirements` section declaring the same label twice (§8.2, §11.1).
-- **Type-mismatch reference** — an edge target resolves but its node-type ≠ the address's `FacetType`, or the `(verb, from, to)` triple is not in the §8.2 schema.
-- **Several styles (5.11)** — more than one `## Style:` on one intent (§7.8): nothing in the model could choose between them. Scope follows the tree, so a second look belongs on the intent whose screens wear it.
-- **State of no required enum (5.13)** — a State's `### Of` missing, or not resolving to a required enum field of a Record (§7.9).
-- **State and values differ (5.13)** — a state for no value of the field, a value with no state, or one value named twice.
-- **Initial state (5.13)** — a State with no state marked `— initial`, or more than one.
-- **Unknown move endpoint (5.13)** — a move whose `From` or `To` is none of the State's states; `deleted` is admitted as a target only.
-- **Move out of a final state (5.13)** — a move from a final state to anything but `deleted`.
-- **Self-move (5.13)** — a move from a state to itself: a write that keeps the value is not a move.
-- **Move operation (5.13)** — a move that names no operation, or names one that does not resolve, is no Contract or Flow, or does not `mutates` the record.
-- **Duplicate move (5.13)** — the same move with the same operation twice.
-- **Several state machines (5.13)** — two States over one field, anywhere in the model.
-- **Unknown State block (5.13)** — a State sub-block other than Summary, Of, States and Moves.
-
-### 12.2 Informational Diagnostics
-
-- Missing optional `## Tests`.
-- Intent-only intent (no facets).
-- Lower-precedence facet source shadowed by a higher-precedence one.
-- Tree-shape smell (§5.5): a level outside the 3–9 breadth band, or a chain of single-child parents (§15.2).
-- Unresolved `Import` alias (not blocking but flagged for repair).
-- **Orphan node** — a facet node with no inbound edges of its expected kind: a Contract no View `exposes` and nothing `invokes`/`triggers`; an Event nothing `emits`; a View no Persona `accesses`; a Trigger with no outbound `triggers`. (A Flow or Contract entered via `triggers` or `subscribes` has a valid inbound edge and is not an orphan.) A **View is not an orphan** if (a) a Persona `accesses` it directly, **or** (b) a Persona `accesses` its intent or any ancestor intent — an intent-level `accesses` (§8.2) grants reachability to every View in that subtree. A **Style** declares no edges and is never an orphan (§7.8); nor is a **State**, which points at its record and its operations (§7.9).
-- **Unrefined intent subscription** — a `intent`-level `subscribes` edge (§8.2) that survives into a Level-3 intent without being refined to a flow- or contract-level edge. Valid at Level 1/2; informational at Level 3.
-- **Unrealized requirement** — a `## Requirements` list item with no inbound `satisfies` edge (§8.2): no declared behavior claims to realize it. Informational at Level 1/2; at Level 3 tools MAY promote it to a finding, since a full facet trace with no behavior for a stated requirement is a real gap.
-- **Positional `satisfies` reference** — a `satisfies` edge targeting a requirement by index rather than by label (§8.2). Fragile under reordering; labels are the durable form.
-- **Unconfirmed provenance** — a `provenance: inferred` file (§17) not yet human-accepted. A project's confirmation coverage (fraction of nodes confirmed) is reported as an informational metric, never a hard error.
-- **Provenance/lifecycle contradiction** — `provenance: inferred` combined with `status: approved` or a present `approved_by` (§3.2). Accepting an inferred file flips `provenance` and records `approved_by` in the same act.
-- **Unrecognized frontmatter key** — a frontmatter key this spec does not define (§3.2). Project-specific keys are permitted and ignored by conforming tools; the note exists for visibility only.
-- **Stale inverse** — an authored `### Trigger`/`### Emitted By` block disagrees with the derived inverse set (§8.4).
-- **Probable duplicate entity** — two nodes with the same facet-type and name in intents not linked by an import or reference (e.g. `auth#Record:User` and `billing#Record:User`). Same name is not proof of same entity, so this is a smell, not a hard error: the remediation is to make one canonical and reference it (§15.8), or to confirm they are genuinely distinct.
-- **Over-embedded intent file (monolith)** — an intent file that embeds many facets instead of distributing them. The dual of duplication: both fragment maintainability at scale. **Which repair applies depends on why the facets are there**, and a tool SHOULD say which it means: when the facets are *shared across* intents, **extract** them into sibling facet files or a `<app>.core` intent (§15.2, §15.8); when the intent has simply outgrown one behavior, **promote** the clusters into child intents (§15.2, §16.5) — for a process, into phases (§7.3), since extraction has nothing to extract *to* in an intent that has no siblings yet. Detection is heuristic and tools MAY tune it; the count that matters is facets **with no children present**, since an index legitimately holds a handful alongside its `## Children`. A smell, not a hard error.
-- **Over-hoisted facet** — a facet defined at an ancestor intent whose consumers all lie inside a single descendant subtree (§15.2): it was lifted for a sharing that never materialized, or it is a **role** that should have stayed with the intent reading it (§7.4). Remediation: move it down to its actual consumer — or, when it is a canonical entity whose second consumer has not arrived yet (§18: structure decisions are cheap, missing commitments are not), leave it and expect the note to stand. Detection counts the distinct subtrees that reference the node, so it is exact wherever edges are declared and silent where they are not; informational, and expected while a shared set is still forming. The inverse of the monolith smell: one lifts too little, this lifts too early.
-- **Unanchored deadline** — an event-anchored Trigger schedule whose anchor Event (`after [Event:X]`) or disarming Event (`unless [Event:Y]`) does not resolve to an existing Event node (§7.7): the timer has nothing checkable to arm or disarm on. Remediation: create the Event and `emits` it from the operation that starts / fulfills the countdown.
-- **Unhandled outcome (5.4)** — a `### Decides` outcome whose Event nothing consumes: no operation `subscribes` to it, and no Trigger anchors on or is disarmed by it (§7.2). This is the half-modelled decision a flowchart author writes when the losing branch trails off the page — the model claims a judgment with a path that goes nowhere. Distinct from an ordinary dead-end Event because the decision states that this outcome *will* occur. Remediation: wire the consumer, or ask the owner what actually happens on that branch — never quietly drop it.
-- **Single-outcome decision (5.4)** — a `### Decides` block with fewer than two outcomes (§7.2): either it is not a decision and its content belongs in `### Ensures`, or an outcome is missing. Remediation: name the other outcome, or remove the block.
-- **Criteria-free outcome (5.4)** — a `### Decides` outcome with a label and edges but no criteria prose (§7.2): the judgment is unauditable, and §15.10's proxy verification has nothing to check. Remediation: state what the outcome turns on.
-- **Undeclared branch (5.4)** — an operation emitting two or more Events whose consumers diverge, with no `### Decides` block (§7.2): probably a decision left implicit, since the graph alone cannot tell an either/or from concurrent announcements. Remediation: declare the outcomes if it is a decision — and if it is not, no change is needed. Informational by design: this is the question a tool should raise rather than the guess it should make.
-- **Redundant continuation (5.5)** — the proceeding outcome of a deciding step also declares the continuation the next step already carries (§7.3): the same operation reached twice — duplicate, possibly stale; the `### Decides` analogue of the stale-inverse rule (§8.4). Remediation: drop the edge from the outcome; the next step is the continuation's one home.
-- **Ambiguous continuation (5.5)** — a deciding step is followed by a further step, but zero or several outcomes read as proceeding (none, or more than one, lacks a continuation of its own, §7.3): the model has not said which leg is the procedure. Remediation: give every non-proceeding outcome its continuation, or end the sequence at the decision and let each outcome carry its own path.
-- **Ungrounded decision (5.6)** — a `### Decides` block on a unit that declares no informational inputs: no `reads`, no capability-targeted `invokes` (§8.2), no `### Input`. A judgment with no stated basis — nothing in the model says what it is decided *from*. Remediation: declare the basis (a Record read, a Capability consulted), or accept the criteria as self-contained; the note merely surfaces the question.
-- **Unused capability (5.6)** — a `## Capability:` surface with no inbound capability-targeted `invokes` and no `Requires` alias naming it (§8.2, §9.1): declared but consulted by nothing. Remediation: wire the consuming operation, or remove the surface.
-- **Unreachable state (5.13)** — a state other than the initial one that no move reaches (§7.9): the field has the value and the model never says how a record gets there. Remediation: declare the move and its operation, or remove the value.
-- **Dead end (5.13)** — a state that is not final and has no move out: a record that reaches it waits there for good. Remediation: declare the way on, or mark the state final.
-- **Unmoved mutator (5.13)** — an operation that `mutates` a governed record and appears in no move: it may change the record, never its status. Often right (adding a note); worth one look, since it is also what a forgotten move looks like.
-- **No moves (5.13)** — a State with no moves at all: every value but the initial one is unreachable.
-- **No style declared (5.11)** — a View with no `## Style:` in reach: none on its intent or any ancestor (§7.8). The realization makes a clean neutral choice and records it. Informational, never an error — the absent commitment is itself reversible, which is what sets it apart from absent copy. Remediation: declare a Style on the intent whose look it is, or accept the neutral choice.
-- **Unsupplied material (5.7)** — a View with no supplied copy, or a Record read but never mutated in-model with no supplied entries (§9.4): the model says what the surface does and nothing says what it displays, so the realization has nothing to render and a conforming Realizer must stop and ask (§1.2). Reported against the *handoff*, not the model: it is not a defect, it does not affect specification level (§11.2), and it never becomes a hard error — a model is legitimately complete long before its words exist. Remediation: supply the material beside the model, never inside it. The note exists because a Level-3 graph with no material reads *finished* while being unbuildable — §15.10's false assurance at the handoff layer.
-- **Wrapper intent** — a child intent holding exactly one facet, with no requirements of its own and no children (§15.2): a navigation level with no meaning of its own. Remediation: fold the facet into the parent (or its entity-intent) — or grow the child. The inverse of the noun-cluster smell; informational, and legitimate as a brief growth stage.
-- **Nature mismatch** — a declared `nature:` contradicting the intent's content: a `nature: record` intent declaring `accesses`/`invokes`, a `nature: persona` intent with neither an acting face nor acting edges. Informational; content is the authority and the badge is the hint (§3.2).
-- **Noun-cluster (a child intent wanting to exist)** — inside a *mixed* intent, one noun has claimed a Record plus several like-named Contracts/Flows (often a View too) while the intent's other facets serve different concerns — a `Note` Record with add/edit/list-note contracts and a notes view lying flat in `customer_management` next to customer CRUD. The cluster is a cohesive capability that accreted past the §4.3 line without any single change crossing it, and the tree has stopped telling its story (§2). Remediation is the **promote** transform (§16.2, §16.5): move the cluster — existing facets included — into its own child intent. Detection is heuristic and tools MAY tune it (a reasonable default: a Record whose name recurs across three or more sibling Contracts/Flows, with at least two unrelated content facets remaining). It MUST NOT fire on an intent that holds *only* the cluster — that intent is already focused, and wrapping it would mint a single-child parent (§15.2). A smell, not a hard error.
-- **No declared performer (5.9)** — owed work (§7.4) with no performer by §7.4's rules: nothing names one; or only `### Authz` names who may, and permission is not performance; or only a Trigger starts it, and a timer is not a doer. Tools SHOULD say which of the three applies, and SHOULD ask once of a Flow when several of its steps lack the same answer, since one declaration on the Flow answers every step that inherits from it. Remediation: the performing Persona `invokes` the work, or the Flow whose steps it does — a step's words never declare it (5.10). Only the owner can answer this; the Architect never assigns a performer to close it (§1.2).
-- **Performer conflict (5.9)** — the performer the model declares for a piece of work is not among the roles its `### Authz` permits. The model says two things. Remediation: align performer and permission, or make separate steps when all must act — several roles Authz names are always alternatives (5.10).
-- **Role without work (5.9, 5.10)** — a declared Persona that performs nothing, reaches nothing, and no `### Authz` names (§7.4); a mention in a step's words is no part (5.10). Remediation: give the role its part, or remove it.
-- **Stale satisfier (5.9)** — computed over a change, never over a model at rest (§16.7): a requirement whose text changed while an item carrying a `satisfies` edge to it did not. The edge survived the edit, so the requirement still reads as realized and *Unrealized requirement* stays quiet. Remediation: revise the item to keep the new rule, or confirm that it still does; removing the `satisfies` edge is never the repair — the behavior stays and only the claim disappears.
-
-### 12.3 Graph-Diff Findings (Reviewer)
-
-When bindings are present, the Reviewer diffs the declared graph against the realized graph and produces drift findings. These map onto the Reviewer's existing missing / incorrect / undocumented kinds:
-
-| Finding | Meaning | Severity / owner |
+| Finding | Condition | Severity / owner |
 |---|---|---|
-| `UNBOUND_NODE` | declared node has no binding | informational at Level 1/2; MISSING at Level 3 |
-| `DANGLING_BINDING` | binding points at a realization site that no longer exists | INCORRECT → Realizer |
-| `MISSING_EDGE` | declared edge has no realized counterpart at the bound site | MISSING → Realizer |
-| `EDGE_MISMATCH` | edge exists on both sides but endpoints differ | INCORRECT → Realizer |
-| `UNDECLARED_EDGE` | realized code has an edge with no declared counterpart | UNDOCUMENTED → Architect |
-| `AMBIGUOUS_BINDING` | one node binds to conflicting sites, or two nodes bind the same site | ambiguous → user input |
+| `UNBOUND_NODE` | Declared node has no binding. | Informational at Level 1/2; MISSING at Level 3. |
+| `DANGLING_BINDING` | Site no longer exists. | INCORRECT; Realizer. |
+| `MISSING_EDGE` | Declared edge has no realized counterpart at its bound site. | MISSING; Realizer. |
+| `EDGE_MISMATCH` | Edge exists on both sides with different endpoints. | INCORRECT; Realizer. |
+| `UNDECLARED_EDGE` | Realized behavior has no declared counterpart. | UNDOCUMENTED; Architect. |
+| `AMBIGUOUS_BINDING` | Conflicting sites for one node, or two nodes share one site. | Ambiguous; user input. |
 
-Because R is inferred by reading the bound code (§10.1), **every finding carries a confidence** — `high` (the bound code clearly matches or clearly does not) or `needs-human-check` (dynamic or ambiguous code the Reviewer could not settle). A `clean` drift report (`status: clean`) means every declared edge was **reviewed as realized** at its bound site, and no undeclared behavior was found at those sites, *at the stated confidence* — not a proof of isomorphism. It is a materially stronger guarantee than "no prose mismatch found," but exactly as strong as the confidence attached and no stronger: R was examined at the bound sites, not reconstructed globally. For a proxy-verified guarantee (§15.10), confidence attaches to *procedure-conformance*, never to the outcome. The **impact set** (the nodes reachable from a changed node along inbound edges) is not a violation but a reporting capability, and is the headline payoff of the derived graph.
+Every finding carries confidence: `high` when the bound realization clearly matches or clearly does not; `needs-human-check` when dynamic or ambiguous realization prevents a conclusion. A clean report means every declared edge was reviewed as realized and no undeclared behavior was found at inspected bound sites, at stated confidence; it is not global proof. Proxy confidence concerns procedure conformance, never outcome truth. The impact set is every node reachable from a changed node by following inbound edges.
 
----
+### Verification modes
 
-## 13. Migration
+For cheaply and completely checkable outcomes, state Ensures and verify the result; do not also prescribe a procedure. For an unverifiable guarantee, state a Flow invoked by the Contract and verify its normative Steps. These modes compose per guarantee: output-check what is observable and cover only the remainder by procedure. Procedure conformance MUST NOT be reported as outcome verification; proxy-verified guarantees never earn high outcome confidence. When uncertain, check output and prescribe procedure only where output cannot answer.
 
-### 13.1 From v3.1
+## 10. Diagnostics
 
-v4 is a breaking change. Migration tooling (outside this specification) converts v3.1 sources to v4 by:
+Evaluate conformance over the complete resolved project graph, never a file alone. Tools MAY further partition informational conditions into readiness tiers (such as structural `gap`, owner `question`, and advisory `note`) to gate build or process execution, provided every hard error and informational condition below is preserved.
 
-1. **Relabel.** Update `AGENTS.md` frontmatter `aim_version: 3.1` → `5`; update the body's version references. The `.aim` extension does **not** change (unlike the v2.2→v3.1 `.intent`→`.aim` rename).
-2. **Strip per-file version/spec.** Remove any lingering `version:`/`spec:` keys from `.aim` frontmatter. Fully automatable.
-3. **Prose mentions → typed edges.** v3.1 already expresses the chain in recognizable patterns: backticked facet references inside `### Actions`, `### Ensures`, `### Emitted By`, `### Trigger`, and `CALL X.Y` lines in `### Steps`. A migration pass deterministically pre-extracts edges from these patterns and proposes them; edges implied only by free prose require an LLM-assisted pass with Architect confirmation. **Edges are never silently invented.**
-4. **Delete derived inverse blocks.** Remove `### Trigger` and `### Emitted By` once their forward edges are declared (§8.4).
-5. **Bindings are not generated by migration.** Migration leaves intents at Level 1/2 (valid, §10.3). A separate code-reading pass (Realizer- or tool-driven) proposes bindings against actual code afterward, raising a project to Level 3 without migration ever assuming code exists or is correct.
+### Hard errors
 
-A project's `/aim/` tree must be wholly one AIM version (§4.5). The migration is one-shot per project. Projects still on v2.2 migrate v2.2 → v3.1 first (see the v3.1 spec), then v3.1 → v4 → v5 (§13.2, §13.3).
+- Missing/malformed frontmatter or required `aim`/`kind`; path/header mismatch; declared parent without an intent file; missing H1; missing/empty Requirements; invalid facet heading type/name; duplicate effective facet definitions; child collision with an authoritative parent facet; generic filenames; auto-discovered child omitted from an explicit Children list.
+- Unresolved Requires alias; dangling edge or unresolved `ref()` Record; `ref()` field absent from a resolved Record; multiple `owner` fields on one Record; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
+- `cross-owner(...)` outside a backticked Authz role entry or Persona View-access edge; unresolved or non-Record grant target; grant target absent from the operation's declared reads/mutations or the accessed View's declared reads.
+- More than one Style on an intent.
+- State Of absent or not a required Record enum field; State values and enum values differing or repeated; zero or multiple initial states; unknown move endpoint (`deleted` and `unchanged` allowed only as target); move out of final state except to `deleted`; explicit self-move (`<From> → <From>`); missing/unresolved move operation, operation not Contract/Flow or not mutating the Record; duplicate same move/operation; multiple States governing one field anywhere; State sub-block other than Summary, Of, States or Moves.
 
-### 13.2 From v4.0 To v4.1
+### Informational conditions
 
-v4.1 is the July 2026 amendment wave. Most of it is additive — the `satisfies` verb and `satisfied-by` inverse (§8.2, §8.4), re-encoding with provenance (§17), the normative-graph rationale (§2), graph-first authoring guidance (§1.2, §15.1) — and requires no migration. Three changes are breaking for on-disk v4.0 projects, all mechanical:
+- Missing Tests; intent without facets; shadowed lower-precedence source; unresolved Import alias; inferred/unconfirmed provenance; confirmation coverage; unrecognized frontmatter keys (permitted and ignored).
+- Inferred provenance combined with approved status or approved_by: acceptance changes provenance and records approval together.
+- Breadth outside 3–9 or single-child chains; wrapper child with exactly one facet, no own requirements and no children; nature contradicting content.
+- Orphan: Contract with no exposes/invokes/triggers entry; Event with no emitter; View with no Persona access to it, its intent or an ancestor; Trigger with no outbound triggers. A Flow/Contract entered by triggers or subscribes is not orphaned. Style and State are never orphaned.
+- Intent-level subscription retained at Level 3; Requirements item with no inbound satisfies (tools MAY promote this to a Level-3 finding); positional satisfies reference; authored inverse differing from derivation.
+- Probable duplicate: same type/name in intents not linked by import/reference/`plays`. Confirm distinction or canonicalize; name equality alone proves nothing.
+- Monolith: excessive embedded facets. Extract genuinely shared facets to sibling files/core; promote distinct behavioral clusters, or process phases. Detection is heuristic/tunable and should distinguish these remedies; facet count matters principally without children.
+- Over-hoisted facet: all consumers lie in one descendant subtree. Move it to its consumer, unless retaining a canonical entity awaiting further consumers; count reference subtrees where edges exist. Preserve local roles separately from canonical entities.
+- Noun-cluster: inside a mixed intent, a Record plus several like-named operations, often a View, form an unpromoted capability. Promote the existing cluster together. Detection is heuristic/tunable; a reasonable default is a Record named in at least three sibling operations with at least two unrelated content facets remaining. MUST NOT flag an intent containing only that focused cluster.
+- Unanchored deadline: after/unless Events do not resolve. Declare the Event and its actual emitter.
+- Decision outcome Event with no subscriber or Trigger anchor/disarmer; fewer than two outcomes; outcome lacking criteria; two or more emitted Events with divergent consumers but no Decides (ask whether it is a decision; concurrent announcements need no change).
+- Redundant continuation: an outcome repeats the next step's operation. Keep continuation on the next step only. Ambiguous continuation: a deciding step precedes further Steps but zero or several outcomes are proceeding (lack their own continuation). Specify non-proceeding continuations or end the sequence at the decision.
+- Flow step reachability and termination: a process sequence with no entry point, a step unreachable from any entry point, a non-terminal step that cannot reach any terminal outcome, or a cycle (such as a correction loop) with no decision outcome or deadline Trigger that exits the loop.
+- Ungrounded decision: no reads, capability invokes or Input; declare the basis or confirm self-contained criteria. Unused Capability: no inbound invokes and no Requires alias.
+- State unreachable from any move except initial; nonfinal state with no outgoing move; mutator of a governed Record named in no move or in-state guard; State with no moves. A mutator outside moves may legitimately leave status unchanged when not constrained by an in-state guard.
+- View without an in-scope Style: Realizer chooses and records a clean neutral look; accept it or declare Style.
+- Unsupplied material: missing View copy or entries for a read-but-never-mutated Record. This is a handoff finding, never a model defect, hard error or level change; supply material beside the model.
+- Owed work without a declared performer: no performer, permission only (`Authz` without Persona `invokes`), or Trigger only. Tools SHOULD distinguish these and ask once per Flow where inherited performance answers several steps. The owner supplies the commitment; the Architect never invents it. Performer outside Authz: align the declarations, or separate work when all roles must act. Multiple Authz roles are alternatives. Persona with no performance, reachability, `plays` link or Authz role: give it its part or remove it; step prose does not declare performance.
+- Stale satisfier: a requirement changed but an item carrying satisfies did not. Apply the commitment-change rule below; never remove the edge as repair.
 
-1. **Co-locate mapping and binding facets.** Move each `aim/mappings/<intent>/<intent>.mapping.aim` and `aim/bindings/<intent>/<intent>.binding.aim` into the intent's own directory; delete the emptied `aim/mappings/` and `aim/bindings/` trees, which are now invalid (§4.2, §14.3).
-2. **Colon in binding headings.** `## Bind: <FacetType> <Name>` → `## Bind: <FacetType>:<Name>` (§3.6, §10.2).
-3. **Facet name grammar.** Facet names must match `[A-Za-z][A-Za-z0-9_]*` (§3.6); rename any facet whose name contains spaces or punctuation, re-pointing inbound edges per §16.3 invariant 1.
+## 11. Decomposition and verification rules
 
-Relabel `AGENTS.md` to `aim_version: 5` and refresh the local spec cache (§3.4). Adoption of the additive features (`satisfies` edges, `provenance:`) is encouraged but not required for conformance.
+Design nodes and relations before serializing files. Parents are lean indexes of cross-cutting requirements, Children and dependencies. Shared facets belong at their consumers' lowest common ancestor; only entities move upward, never the local roles reading them. Embed a handful there; sibling facet files earn themselves when the set grows. Cross-top-level entities have one importable canonical home, conventionally `<app>.core`. Before defining an entity, search the project graph and reference an existing definition rather than regenerate it.
 
-This section covers migration *within* AIM (an older model version to the current one). Producing intent from a codebase that was **never** authored in AIM — reading code to infer the graph — is the reverse direction, defined in §17 (Re-Encoding).
+A child owns one observable capability, its requirements/tests and specific facets. A child with only one facet and no own commitments adds no meaning; keep the facet on its parent/entity until it earns a level through purpose, requirements, entry points or multiple facets. Split distinct behaviors, preserving the shape rules. Promote noun-clusters together when the next change touches them. Promote substantive Persona/Record entities with their own operations into entity-intents; their operations arrive as facets, not one-operation child wrappers.
 
+Organizational process boundaries follow end-to-end commitments across people, software and systems. A project's root Summary states purpose; Requirements state existential commitments and the root canonically owns organization-wide shared entities. Children fulfill ancestor commitments through satisfies; organizational requirements use labels. Software, processes and obligations may be siblings. Derive structure from commitments, bottom-up or top-down; do not mirror reporting lines. Represent actors as Personas, permission as Authz and performance by declared performer relations.
 
-### 13.3 From v4.x To v5
+## 12. Evolution
 
-v5 is the **generalization release**: the language that specified software now specifies any system of commitments — an application, a business process, an organization (§18). Most of the wave is additive; four changes are breaking, all mechanical:
+Authoring operations are EXTEND an existing intent and ADD an intent. Tools reshape structure using promote (capability to child), split (distinct behaviors to siblings under an index), move/re-home, merge or rename. These are transforms, not language syntax or additional author primitives.
 
-1. **Frontmatter key `facet:` → `kind:`.** The old key named the file's *role*, colliding with "facet" the node concept (§2.1). Sed-able: `facet: intent` → `kind: intent` across the tree. Tools SHOULD dual-read (`kind` falling back to `facet`) through the transition.
-2. **`## Requirement:` → `## Capability:`** (§9.2). Ends the near-collision with `## Requirements` items that `satisfies` targets (§8.2).
-3. **Binding advisory suffix `— kind:` → `— as:`** (§10.2), freeing `kind` for the frontmatter key.
-4. **The core unit is named what it is: *intent*.** Since v3.1 the unit was called the *component* — software heritage in a language named the Intent Model. v5 names it the **intent** everywhere: the tree is intents all the way down (§2.1, §5), the parent index heading `## Subcomponents` → `## Children` (the old spellings remain deprecated aliases, §3.6), the node-type `component` → `intent`, addresses read `<intent>#<FacetType>:<Name>`.
+A transform changes addresses, never commitments. It MUST preserve behavior and relations, and:
 
-Identity and structure: the language was renamed **Agentic Intent Model** (formerly *Application* Intent Model); the roles generalized to Architect / **Realizer** / Reviewer (§1.2); the Distribution section was removed (single-version rule now §4.5) and later sections renumbered accordingly.
+1. Repoint all inbound references across the whole graph; introduce no dangling reference or illegal triple.
+2. Requalify elided outbound addresses on cross-intent moves wherever new scope would change their targets.
+3. Update every affected Children index.
+4. Restore agreement of directory, filename, aim and parent.
+5. Carry inline bindings with nodes; relocate/update legacy sidecars. Preserve realization locators because the realization has not moved.
+6. Have Architect confirmation before merging purported duplicates; remove the duplicate, choose one canonical node and repoint both sets of references.
 
-Additive in the same wave, no migration required: labeled requirement targets (`#Requirements[NET14]`, §8.2); event-anchored and calendar-recurring Trigger schedules with `deadline` kind (§7.7); the open binding locator scheme set (§10.2); realized graphs recovered from configuration and execution logs, not only code (§10.1); `invokes` from a Persona and `satisfies` from a Trigger (§8.2); re-encoding generalized to any existing system, including elicitation with testimony provenance (§17); purpose-rooted organization models (§18); the verb-set extension policy (§8.6); governance frontmatter keys and the open frontmatter set (§3.2); proxy verification (§15.10).
+Transforms yield graph-diffs of nodes, addresses, edges and bindings, with computable impact sets. A change record MAY preserve this delta under `/aim/work/` for realization handoff. It is non-authoritative, point-in-time, archived after application; on disagreement `.aim` wins and review falls back to full graph-diff. Its format is not specified. A valid transform introduces no attributable hard error or orphan, shadow, duplicate or monolith smell.
 
-Relabel `AGENTS.md` to `aim_version: 5`, apply the three renames, refresh the local spec cache (§3.4) — nothing else changes on disk.
+EXTEND that rewrites a requirement changes a commitment. Revisit every item containing a satisfies edge to it: revise the item or explicitly confirm and report that it still holds. Stale satisfier compares both sides of a change: requirement text changed at the same label, or same position if unlabeled, while the satisfying list item/step/paragraph did not. It also flags harmless rewording for confirmation. Removing satisfies is never repair. New requirements have no existing satisfiers to revisit; removed requirements produce dangling references; reordered labeled items do not change identity.
 
-### 13.4 From v5.0 To v5.1
+## 13. Re-encoding existing realization
 
-v5.1 is an **additive amendment wave** — no migration required; every v5.0 model stays valid, with old forms accepted as deprecated aliases. Three related changes separate a *thing* from its *shape* and put realization on the node:
+Reverse encoding infers intent from artifacts or testimony, acting as Architect and Realizer and emitting bindings in the same pass. Cite artifact sources. Record who supplied testimony and when; testimony defaults to needs-human-check until its source or principal confirms. Retain asserted but unevidenced rules with confirming questions. Capture exceptions in On Error or separate operations and ask about them explicitly.
 
-1. **`## Schema:` facet → `## Record:` facet + the `schema` property.** A passive data-thing — stored, read, processed, does not act — is now a **Record**; its fields live in a **`### Schema`** sub-block whose fence is renamed **`aim-attrs` → `schema`** (§7.1, §3.7). `reads`/`mutates` target a Record, `refs` a record field (§8.2). Deprecated-but-accepted: the `## Schema:` facet (read as a Record) and the `aim-attrs` fence.
-2. **Bindings → inline `### Bindings` property.** Realization bindings attach to the node they realize (intent or facet), each carrying its own `provenance` (§10.2). Deprecated-but-accepted: the `kind: binding` sidecar with `## Bind:` headings.
-3. **Per-node provenance promoted** from optional refinement to the norm for inline bindings (§17.2): a `confirmed` node may hold an `inferred` binding.
+Re-encoded files MUST carry `provenance: inferred`; remove it or set confirmed on human acceptance. Absence means confirmed. Overall file provenance and per-node binding provenance compose independently. Inferred intent is provisionally authoritative for resolution and diagnostics but MUST be visually/reportably distinguished wherever presented. Confirmation coverage is informational.
 
-Relabel `AGENTS.md` to `aim_version: 5.1` when adopting the new forms; nothing on disk is forced.
-
-### 13.5 From v5.1 To v5.2
-
-Additive; no migration. v5.2 completes the entity story — a promoted entity gets its intent-level form:
-
-1. **`nature:`** — optional, projection-only frontmatter badge for an intent that is itself a thing (§3.2). Derivable from content when absent; a mismatch is informational. Never affects resolution or edge legality.
-2. **Intent-level acting sections** — top-level `## Role` / `## Access` (§7.4), with `accesses`/`invokes` declared from an intent node (§8.2): the promoted-Persona mirror of v5.1's intent-level `## Schema`. Unlike intent-level `subscribes`, these are permanent forms, not early-stage placeholders.
-3. **Entity promotion** documented as a transform (§16.5): facet sub-blocks become intent-level sections, addresses re-point from `<parent>#<FacetType>:<Name>` to the new intent node.
-4. **`list(<type>)`** schema modifier (§3.7); a Record-typed list derives a `refs` edge.
-5. **Wrapper-intent guidance and diagnostic** — a sub-intent must earn its level (§15.2); a child holding one facet with no requirements and no children is flagged informationally (§12.2).
-
-Relabel `AGENTS.md` to `aim_version: 5.2` when adopting; nothing on disk is forced.
-
-### 13.6 From v5.2 To v5.5
-
-Additive; no migration. Three waves make steps and decisions first-class — each construct carries its wave marker inline:
-
-1. **Step grammar (5.3)** — a Flow's `### Steps` is structured and parsed (§7.3): one numbered item is one step, inline edge tokens are the step's operations (each edge carries its step index into the graph), a prose-only item is a first-class human step. A process with substance promotes to a flow-natured intent carrying a top-level `## Steps` (§7.3).
-2. **Decisions (5.4)** — a deciding Contract or Flow declares `### Decides` (§7.2): one bullet per outcome — bolded label, normative criteria after the dash, the outcome's edge tokens inline. The block asserts its outcomes mutually exclusive and exhaustive, deriving one exclusivity group per deciding node. `invokes`/`triggers` accept an intent target so a promoted process stays callable (§8.2), and **phases** name the decomposition of a grown process (§7.3). New informational diagnostics: unhandled outcome, single-outcome decision, criteria-free outcome, undeclared branch (§12.2).
-3. **Step semantics (5.5)** — operations sharing one step are joint and unordered; the following step is the join (§7.3). Co-stepped operations are exclusive only when they are a deciding Contract's outcomes (§7.2). The **continuation convention**: the outcome the procedure proceeds on continues as the next step and declares no continuation of its own; every other outcome's consequence rides its bullet — a correction loop is a legal `invokes` cycle among contracts, bounded by a deadline Trigger, never a count (§15.7). The scope principle is named (§1.4): AIM models commitments, never the mechanics of meeting them. New informational diagnostics: redundant continuation, ambiguous continuation (§12.2).
-
-Relabel `AGENTS.md` to `aim_version: 5.5` when adopting; nothing on disk is forced.
-
-### 13.7 From v5.5 To v5.6
-
-Additive; no migration. One wave makes **external information** a commitment — the source-kind an operation consults, never the vendor or the mechanics:
-
-1. **Capability is the information-source surface (§9.2)** — a `## Capability:` declares any required external surface: an invocable service *or* an information source ("an official weather source: conditions and warnings, per city"). The kind is the commitment; provider and transport are not (§1.4).
-2. **`invokes` accepts a Capability target (§8.2)** — `[invokes](aim:#Capability:X)` is the declared basis: the acting unit consults that source-kind. No inverse derives (§8.4); document-shaped information is acquired as a step (collect Contract → Record → downstream `reads`, §15.7).
-3. **Either-form resolution (§9.3)** — a `Requires` alias resolves by a mapping (the provider is a modeled intent) *or* by a `### Bindings` on the Capability surface itself (an external system; per-operation form `` - binds: `table:erp.customers#credit_limit` — as: CreditLimit ``). Unresolved by either stays a hard error; a previously-invalid external-source model becomes valid, so the change only admits.
-4. **New informational diagnostics (§12.2):** ungrounded decision (a `### Decides` with no declared informational inputs), unused capability.
-
-Relabel `AGENTS.md` to `aim_version: 5.6` when adopting; nothing on disk is forced.
-
-### 13.8 From v5.6 To v5.7
-
-Additive; **no migration, and no new syntax at all** — the smallest wave in the language. Two ideas: the concrete content a realization displays is **supplied material**, owed by the graph and never authored into it; and grain follows purpose — the promote boundary gains the §1.4 test.
-
-1. **Supplied material is named (§9.4)** — screen copy, seed entries for Records read but never mutated in-model, and media are realization the owner supplies beside the model. Two normative rules for a handoff's consumer: use the material verbatim and never write it back into `.aim`; treat an absent value as a question for the owner, never a licence to invent one.
-2. **`### Display` says what a surface shows, not what it says (§7.5)** — clarifying, not restricting: a Display bullet already committed that (say) an empty state exists, and the words were always outside. `### Actions` labels stay in intent, because a label names a commitment.
-3. **New informational diagnostic (§12.2):** unsupplied material — reported against the handoff, never affecting validity or specification level.
-4. **The promote boundary gains the purpose test (§15.9, §15.2)** — a piece whose purpose is an outcome of its own that someone could be held accountable to (§1.4) is a child intent from the moment that purpose is understood, before it owns data or operations, and the sections that page is composed of become its `## View:` facets — never one page-View restating the intent, which is a wrapper (§12.2). `### Display` keeps its job one level down: what a section shows, and what a display-only widget inside a screen is. The seeded `## Requirements` is the proof of work, and what keeps the wrapper smell sharp. Clarifying where grain comes from, not moving what exists: §4.3's behavior test still promotes, and nothing already written becomes invalid.
-
-Nothing already written becomes invalid, and no file changes. Relabel `AGENTS.md` to `aim_version: 5.7` when adopting.
-
-### 13.9 From v5.7 To v5.8
-
-This amendment names document values and extends supplied-material guidance. It introduces no new headings, edges, or schema-line grammar.
-
-1. **Document values use `file` (§3.7).** A caller-supplied document is a `file` Input on the consuming operation; a retained document may be a `file` field on a Record. The Capability reads the document, while the business Contract owns validation and domain outcomes. Storage and parsing mechanics remain realization. A remote document acquired by a service does not require a caller upload merely because its contents are document-shaped.
-2. **Optional starting data and recovered material (§9.4).** Mutable Records may receive supplied starting entries without creating an owed-data obligation. Re-encoding recovers existing material beside intent as extracted drafts for owner confirmation.
-3. **Visual identity (§9.4).** A model with a View owes a coarse identity token summary. Supplied tokens are used verbatim; missing identity permits a recorded neutral choice. Layout and stylesheets remain realization, and missing identity is informational.
-
-When adopting, relabel `AGENTS.md` to `aim_version: 5.8` and refresh the specification cache. Review document-import operations: if the caller supplies a document, declare it as `file` rather than plain text. Text that is already parsed, remote-source addresses, and operations with no caller-supplied document need no conversion. No general tree or edge migration is required.
-
-### 13.10 From v5.8 To v5.9
-
-Additive; no new headings, edges or schema-line grammar. Two reading rules that readers of one model already needed to agree on, and one diagnostic over change.
-
-1. **Who does the work (§7.3, §7.4).** A piece of work is performed by the Persona that `invokes` it (several invokers are alternatives: any one of them), else the Persona its step opens with (retired in 5.10, §13.11); a step whose only operations are `reads`, `mutates` or `emits` is the flow's own and inherits nothing; all other work inherits the enclosing Flow's performer. `### Authz` is permission and never names the performer; reach and Triggers are not evidence. New informational diagnostics: no declared performer, performer conflict, role without work (§12.2).
-2. **Continuation through an announcement (§7.3).** Only `invokes` and `emits` lead anywhere out of a step; an `emits` continues at a subscriber without steps of its own and starts a separate run at a subscriber with steps; an Event nothing hears ends only that branch — the emitting Flow's next step still follows by position.
-3. **A changed rule revisits what satisfies it (§16.7).** An EXTEND that rewrites a requirement is unfinished until each item that `satisfies` it has been revised or deliberately kept. The stale satisfier is the one diagnostic Intent Evolution adds (§16.6, §12.2) — computed over a change, never over a model at rest.
-
-When adopting, relabel `AGENTS.md` to `aim_version: 5.9` and refresh the specification cache. Nothing already written becomes invalid, and no file changes. The stale satisfier is computed at diff time and asks nothing of existing files. The performer rules change what existing models *report*, not what they mean: a model that used `### Authz` to assign work now reads as permitted but unperformed and reports *no declared performer* — add an `invokes` from the performing Persona, or open the step with it; a model whose Authz roles and `invokes` already agree reads exactly as before. The same note surfaces prose-only steps inside automated Flows, which §7.3 reads as human steps: either the step is one and owes a doer, or it is the flow's own work and wants its `reads`/`mutates`/`emits` declared. Record lifecycle legality is not admitted in this wave; its demonstrated need and the prototype under way are recorded in §8.6.
-
-### 13.11 From v5.9 To v5.10
-
-Two reading rules retired; no new headings, edges or schema-line grammar. Who does a piece of work and who may are declared, never read out of the words a model is written in — a model has to read the same in every language and to every tool.
-
-1. **A step's words never declare its performer (§7.3, §7.4).** 5.9 read the Persona a step opens with as its performer. That reading depends on the words a model is written in — which article, which word order — and a model has to read the same in every language and to every tool. Who performs work is now declared by edges alone: the Persona that `invokes` an operation, else the Flow's performer. A step may still open with who does it; the words are for the reader.
-2. **`### Authz` names roles by address (§7.4).** 5.9 read a role out of Authz's words: a name anywhere in them permitted that role — "never the Intern" permitted the Intern — and whether several roles were alternatives turned on the English word "or". Now Authz names each role by its address in backticks (`` `#Persona:Approver` ``), several named roles are always alternatives, and the words are for the reader.
-
-When adopting, relabel `AGENTS.md` to `aim_version: 5.10` and refresh the specification cache. Nothing becomes invalid. A model whose steps said their doer only in words now reports *no declared performer* (§12.2) for those steps: add an `invokes` from the performing Persona to the operation the step invokes, and give a human step done by someone other than the Flow's performer an operation of its own. A model whose performers are declared by `invokes` reads exactly as before. The performer conflict "a step opens with a Persona that is not among its operation's performers" no longer exists. A Persona only a step's words mention — the Client an invoice is sent to — now reads as a *role without work* (§12.2): give it its part (it invokes work, reaches a View, or an Authz names it), or let the words say it without a Persona. A model whose `### Authz` names roles only in words now permits nobody by name: its work is permitted to whoever performs it, which is what most such models meant. Where a role that does not perform the work may still do it, name that role by address. The performer conflict "Authz names several roles without saying whether any one of them suffices" no longer exists: several named roles are alternatives, and work all of them must do is one step per actor (§7.3).
-
-### 13.12 From v5.10 To v5.11
-
-Additive: one new facet heading, no new edges, no new schema-line grammar. The visual identity moves from beside the model into it.
-
-1. **Style is a facet (§7.8).** `## Style: <Name>` states how what people see should look, at identity grain: a `### Summary` for the look in one breath, and optional `### Palette`, `### Type`, `### Shape` and `### Mark` lists of `<token>: <value>` lines, in the owner's words or exact values. One per intent; scope follows the tree and the nearest Style wins; it declares no edges and is never an orphan. New hard error: *several styles* (§12.1); new informational diagnostic: *no style declared* (§12.2).
-2. **The identity leaves supplied material (§9.4).** A 5.8 handoff carried the identity under `content/style/`; that channel is retired. A mark's picture stays material under `content/assets/`.
-3. **`wears` is recorded pressure (§8.6)**, not admitted.
-
-When adopting, relabel `AGENTS.md` to `aim_version: 5.11` and refresh the specification cache. Nothing becomes invalid. A model whose identity rode the handoff as tokens the owner supplied in the tool MAY be migrated by the tool: a `## Style:` written from those tokens onto the intent whose look they were, in the owner's words where the tokens had them, recorded in the file's history as a migration, the tokens kept as backup (§7.8). Material recovered from a re-encoded system (§17) still waits for the owner's confirmation. A model that never had an identity reads exactly as before, with the same note it had under 5.8.
-
-### 13.13 From v5.11 To v5.12
-
-Additive: one optional sub-block, no new headings, edges or schema-line grammar. Stated layout becomes intent.
-
-1. **`### Layout` on a View (§7.5).** Where things sit on the surface, only what the owner stated, in their words, at arrangement grain — never pixels or a stylesheet. Everything unstated stays the Realizer's freedom (§15.9).
-2. **`### Layout` in a Style (§7.8).** Arrangement conventions for every screen that wears the Style; a View's own bullet wins for that screen.
-3. **A drafted arrangement is not a layout (§7.5).** A tool's sketch or generated draft arranges what the model leaves open; it is never written into `### Layout` unasked, and the owner's reaction to it is an ordinary change.
-
-When adopting, relabel `AGENTS.md` to `aim_version: 5.12` and refresh the specification cache. Nothing becomes invalid and no model needs to change: a View without `### Layout` reads exactly as before. A placement the owner stated somewhere the parser does not read — in `### Display` prose ("a hero band with the image on the right") — may stay there; tools SHOULD offer to move it into `### Layout` when the View is next edited.
-
-### 13.14 From v5.12 To v5.13
-
-Additive: one new facet heading, no new edge verb, no new schema-line grammar. A record's lifecycle becomes intent.
-
-1. **State is a facet (§7.9).** `## State: <Name>` is the machine of one required enum field: `### Of` names the field, `### States` one state per value with one `— initial` and any `— final`, `### Moves` each move with the operations that make it, `deleted` as the reserved target for deletion. Moves are structured references, not edges; the graph derives `governs` and `moved-by`. One State per field; never an orphan; outside the traceability chain. New hard errors and informational diagnostics (§12.1, §12.2).
-2. **Lifecycle legality leaves recorded pressure (§8.6)** — admitted as the State. Per-state rules ("editable in draft only") are recorded in its place.
-
-When adopting, relabel `AGENTS.md` to `aim_version: 5.13` and refresh the specification cache. Nothing becomes invalid and no model needs to change: an enum without a State reads exactly as before, and a 5.12 reader meets `## State:` as an unknown facet type and reports it rather than dropping it. Lifecycle rules already written as `### Expects` prose stay valid; tools SHOULD offer a State when the record is next edited — the moves the guards describe, for the owner to confirm — and never write one unasked.
-
----
-
-## 14. Conformance Examples
-
-### 14.1 Minimal Valid Intent
-
-```markdown
----
-aim: demo.snake
-kind: intent
----
-
-# Snake
-
-## Summary
-
-A single-player snake game.
-
-## Requirements
-
-- The snake grows when it eats food.
-- Wall and self-collision end the run.
-```
-
-### 14.2 Intent With Children
-
-```
-/aim/game.snake/
-  game.snake.aim              # parent: shared schemas, index
-  game.snake.record.aim       # shared SnakeState, FoodPellet
-  tick/
-    game.snake.tick.aim
-  collision/
-    game.snake.collision.aim
-  score/
-    game.snake.score.aim
-```
-
-### 14.3 Invalid
-
-- Frontmatter missing `aim:` or `kind:` field.
-- `## Data: Foo` heading (invalid facet type).
-- Child intent file with `parent: juice.tasks` but no parent intent file exists.
-- Two `## Record: Task` blocks in the same effective source.
-- Project missing `AGENTS.md` with declared `aim_version`.
-- A directory named `aim/specs/` used as an intent namespace.
-- A `kind: binding` or `kind: mapping` file placed in a separate `aim/bindings/` or `aim/mappings/` tree instead of co-located with its intent.
-- An edge token `[invokes](aim:#Record:Task)` (invalid: `invokes` cannot target a `schema`).
-- An edge token `[satisfies](aim:#Capability:AssigneeUsers)` (invalid: `satisfies` targets a `## Requirements` list item, never a `## Capability:` surface, §8.2, §9.2).
-- An edge token whose target address resolves to no node (dangling reference).
-
----
-
-## 15. Practical Guidance
-
-### 15.1 Default Authoring Rule
-
-**Architect the graph, then serialize it.** From the requirements, identify the nodes — who acts (Personas), what they reach (Views), what they do (Contracts), how it runs (Flows), what it changes (Records), what it announces (Events, Triggers) — and the typed relations among them: who `accesses` what, what `exposes`/`invokes` what, what `mutates`/`reads` what, what `emits` and who `subscribes`, what `satisfies` which requirement. That graph **is** the design; the files merely record it.
-
-Then write it down. Start by splitting: create the parent intent with the cross-cutting requirements and shared schemas, and each feature as a child intent. Keep each child focused on a single observable behavior. Declare the edges inline at the acting nodes as you serialize each facet. Collapse into a single file only when the whole intent is trivially small.
-
-The test of a finished intent is graph-shaped, not prose-shaped: every requirement reachable via `satisfied-by`, every contract reachable from a persona or trigger, every event with an emitter — a connected graph, not a stack of well-written facets (§11.3, §12.2).
-
-### 15.2 What Goes In The Parent
-
-The parent intent file is a **lean index**, not a container:
-
-- Cross-cutting requirements that apply system-wide.
-- The `## Children` index.
-- Dependencies.
-
-Shared **facets** — Records, personas, views referenced by multiple intents — live at the **lowest common ancestor** of the intents that use them, so those intents resolve them upward (§11.1). Not higher: an ancestor holding what only one subtree consumes has taken on a facet that is not its own, and has started down the road to the monolith this section warns about below. And what moves upward is the **entity**, never the role that reads it (§7.4) — sharing `Employee` is canonicalization; sharing `Traveler` is erasure. **A handful live directly in the parent intent file**; a sibling facet file (`<intent>.record.aim`, `<intent>.persona.aim`, `<intent>.view.aim`) earns itself only **at scale**, when the shared set has grown enough to crowd the parent — the same earn-your-level judgment as sub-intents. Do not mint a "Shared Xs" sidecar for two personas: sharing is about *ownership and resolution* (which ancestor owns the node), not about a separate file. For entities shared *across* top-level intents, use a `<app>.core` intent (§15.8). Embedding **many** facets into one intent file produces a **monolith** (§12.2) — the dual of the duplication problem; the failure is the extreme at either end, not co-location itself.
-
-**A sub-intent must earn its level (5.2).** The inverse failure of the monolith is the **wrapper**: a child intent holding a single facet and nothing else — no requirements of its own, no children — adds a level of navigation without adding a level of meaning ("Wallet Balances" containing only `ManageBalances`). A lone operation is a **facet on its parent** (or on its entity-intent, §7.4/§16.5); it becomes a child intent when it *grows* — several facets, its own entry points, its own requirements ("Wallet Funding" holding two payment webhooks plus two contracts has earned the level). Growth is not the only way to earn it (5.7): a piece whose purpose is an outcome of its own — one someone could be held accountable to (§1.4): a landing page, a checkout — has earned its level before its first facet arrives, because the purpose becomes its `## Summary` and seeds its `## Requirements`, which is exactly what a wrapper lacks (§15.9). Tools flag surviving wrappers informationally (§12.2). The tellability test decides the edge cases: a level the reader must click through without learning anything is a level too many.
-
-### 15.3 What Goes In A Child Intent
-
-- The intent, requirements, and tests for a single feature.
-- Contracts and flows specific to that feature, with their edges.
-- Child-specific events.
-
-### 15.4 When To Split A Child Further
-
-When a child itself has multiple distinct behaviors with their own contracts. Example: a `payments` intent might split into `charge`, `refund`, `dispute` children, and `dispute` itself might split into `open_dispute`, `respond_to_dispute`, `resolve_dispute` if each has its own contract. Split as long as each new level re-earns the shape rules (§5.5) — and no further.
-
-The signal is often a **noun-cluster** (§12.2) rather than a planned decision: one noun quietly claims a schema plus several like-named contracts inside a mixed intent. Promote the whole cluster — existing facets included — the next time a change touches it (§16.5).
-
-### 15.5 When To Add Bindings
-
-Add bindings once code exists and you want enforceable drift detection. Bind the stable nodes first (Contracts to handlers/routes, Records to models/tables, Events to topics). A binding facet turns the Reviewer's drift report from prose comparison into a graph-diff (§12). Skip bindings while an intent is still exploratory — Level 1/2 is valid.
-
-### 15.6 Closed-Loop Workflow
-
-1. Requirements → **graph**: nodes (facets) and typed edges, serialized as intents (children first, parent as index), edges declared inline at the acting nodes.
-2. Intent → realization, reading the resolved graph; the Realizer emits bindings for what it realizes.
-3. Implementation → graph-diff validation against the declared graph through the bindings.
-4. Validation failures → code repair or intent revision, routed by the finding's owner.
-5. New requirements → new child intent or revised parent; new edges declared at the acting nodes.
-
-The intent is the contract. Code follows intent. When they diverge, one of them is wrong and the divergence is resolved explicitly.
-
-### 15.7 Triggers, Schedules, And Orchestration
-
-- **Non-actor entry points** — cron jobs, schedules, polling loops, webhooks, external systems — are modeled with a `## Trigger:` facet (§7.7) and a `triggers` edge into the Flow or Contract they start. This is what gives a nightly job or an inbound webhook a place in the graph; without it, the flow it starts would look like an orphan.
-- **External events** need no new machinery: model the origin as a Trigger that `triggers` an ingest Flow, and let that Flow `emits` the internal Event. The event then has a real emitter and subscribers attach as usual.
-- **Sagas and long-running orchestration** are expressible with existing verbs: the orchestrator Flow `invokes` each step, `mutates` a saga-state Record to track progress, and `emits`/`subscribes` compensation Events. AIM captures the *intent* of the orchestration, not the durable-timer/signal semantics of a workflow engine — those remain an implementation detail bound to code.
-- **Correction loops and their bounds (5.5)** — a losing `### Decides` outcome that (directly or through corrective work) re-invokes its deciding Contract is a legal cycle among contracts, while `### Steps` stay the linear procedure (§7.2, §7.3). The commitment-shaped bound on such a loop is a **deadline Trigger** (§7.7) anchored on the phase's start and disarmed by the confirming Event — `5 business-days after [Event:StatementsDrafted] — unless [Event:FinancialStatementsConfirmed]`, firing an escalation. A *count* bound ("at most two failed reviews") is not expressible and stays recorded pressure (§8.6): a count is usually a proxy for a time budget, and the time form is the stronger commitment — it also bounds a single pass that drags.
-- **External information (5.6)** — an operation that acquires information from outside the system declares the **Capability** it consults — `[invokes](aim:#Capability:WeatherSource)` — never an implicit source in a fetch-contract's prose. The surface carries the kind (§9.2); its mapping or binding carries the provider (§9.3). Document-shaped information is acquired as a step: a collect Contract consults the capability and `mutates` a Record, downstream operations `read` it, and every judgment's basis stays a graph derivation. A model whose fetch operation names no source leaves the performer to invent one — the exact divergence §7.3's step semantics exist to prevent.
-
-### 15.8 Shared Entities And Canonicalization
-
-The fastest way a large project rots is duplication: the same `User` (as a `Record` and as a `Persona`), the same `Money`, the same `Status` reborn in file after file as each intent is authored in isolation — and then the copies drift and contradict. Two rules keep the graph single-sourced:
-
-- **Resolve-or-reference, never regenerate.** Before defining a `Record`, `Persona`, or any entity, the Architect **searches the project graph** for an existing node of that kind and name. If one exists, reference it (a `## Dependencies → Imports` alias plus the edge) instead of defining a new one. The derived graph is a queryable index precisely so this lookup is cheap — use it. Agents default to *generating*; the discipline is to *look first*.
-- **Give cross-cutting entities one canonical home.** A parent holds what's shared within its subtree (§15.2). For entities shared *across* sibling top-level intents (`auth`, `tasks`, `billing` all needing `User`), designate one shared intent — by convention `<app>.core` — as the single definition site, and have the others import from it. One `User`, many references.
-
-Tooling supports this from both ends: the **probable-duplicate diagnostic** (§12.2) surfaces same-type-same-name nodes that are not reference-linked, and the derived graph lets you list every definition of an entity to spot drift. Detection plus discipline is what keeps identity from fragmenting as the system grows — and it is only possible *because* the graph turns "every entity in the project" into something you can query.
-
-Beware the **opposite trap**: do not dodge duplication by embedding every entity in one file. That just trades duplication for a monolith — equally damaging, and a real failure mode in practice (an agent told to avoid duplicate `User`s will happily cram all 20 schemas into one parent). The rule is *both*: don't duplicate **and** don't monolith. Shared facets live in their own files and the parent stays a lean index (§15.2); a canonical entity that consumers cannot reach by upward resolution must be importable (put it in an ancestor or `<app>.core`, not a sibling).
-
-### 15.9 UI Composition And Fluid Granularity
-
-A UI piece — a tab, a panel, a widget — has **fluid granularity**, exactly like any other capability. It is not a fixed kind of node in the model; what it *is* depends on **the purpose and behavior** it carries, and it moves between forms by the **promote** transform (§16):
-
-- **Carries its own purpose (5.7)** — a piece whose purpose is an outcome of its own, one someone could be held accountable to (§1.4) — a landing page exists to move its visitor, a checkout to complete a purchase — is a **child intent** from the moment that purpose is understood, before it owns any data or operations. The purpose becomes its `## Summary` and seeds its `## Requirements`, which is exactly what a wrapper lacks (§12.2); a Persona reaches it intent-level (`accesses` the intent, §8.2), which covers every View inside it. The requirement is the proof of work: a piece you cannot write a testable commitment for did not have a purpose of its own, it had a name. **Its sections are then what the page is made of, and each becomes a `## View:` facet on that intent** — `## View: Hero`, `## View: OurServices`, `## View: ContactBlock` — with the operations and data any of them owns as co-located sibling facets. A purpose-earned page does **not** also declare a `## View:` restating itself: the intent *is* the page, so a lone same-named View means the sections were never distributed and the level was taken without being used (§12.2). Within a section, `### Display` keeps its job: it says what that section shows.
-- **Trivial / behavior-less** — a static or host-fed panel with no contract, schema, or action of its own is **not a node**. It is a bullet in the host `## View:`'s `### Display`. This is the piece *inside* a screen — a widget on a dashboard — never the composition of a purpose-earned page, whose sections are Views by the bullet above. Modeling it as its own facet adds a node the graph cannot check — nothing to dangle, nothing to impact — and earns it a false orphan diagnostic (§12.2).
-- **Carries its own behavior** — once the piece acquires its own data, operations, or surface (the §4.3 test — a fetch contract, a schema, an action), it is **promoted** into its own child intent (§5, §16.2) that owns those facets. It rejoins the hierarchy through `extends` (the `parent:` relation) and connects to its host through the view edges that already exist: the host `## View:` `reads` the piece's schema, `exposes` or `invokes` its contract, or `navigates` to it when it is a separate destination rather than an inline part.
-
-**Composition itself is not an intent relation.** That a host screen *lays out* a constituent view inline — as opposed to navigating to it or invoking its behavior — is realization: it lives in code and, where it matters, bindings (§1.3, §8.2). The intent graph models the piece's *behavior* and *reachability*; placement is never an edge. Where the owner has stated it, placement is a commitment all the same — written in the View's `### Layout` (§7.5), in their words, never inferred from code. This is the line §15.7 draws for orchestration: AIM captures intent, not rendering mechanics.
-
-**The look and the stated layout are commitments (5.11, 5.12).** How the surfaces look — palette, type, shape, mark — lives in the `## Style:` facet (§7.8) of the intent whose look it is, and a page-intent that departs from the product's look declares its own. Where things sit is a commitment exactly where the owner stated it: a View's `### Layout` for one screen, a Style's `### Layout` for a convention every screen keeps (§7.5, §7.8). Everything else about placement, and how a stylesheet achieves the look, remains realization as above.
-
-**Worked example — the promote boundary.**
-
-*Simple.* An `AdminDashboard` shows a current-conditions panel. The reading is host-supplied; the panel has no behavior of its own. It is one line in the dashboard's `### Display`:
-
-```markdown
-## View: AdminDashboard
-
-### Summary
-
-The operator's control surface.
-
-### Display
-
-- System counters and a current-conditions panel.
-```
-
-*Grown.* The panel now fetches live weather and persists a reading — it has acquired a contract and a schema, crossing the §4.3 line. It is **promoted** to its own child intent, which owns the behavior:
-
-````markdown
----
-aim: app.admin.weather
-kind: intent
-parent: app.admin
----
-
-# Weather
-
-## Summary
-
-Current-conditions data for the operator console.
-
-## Requirements
-
-- The console can fetch and display the latest weather reading.
-
-## Contract: FetchWeather
-
-### Summary
-
-Fetch the latest reading for the operator's locale.
-
-### Ensures
-
-- Returns the latest reading — [reads](aim:#Record:WeatherReading).
-
-## Record: WeatherReading
-
-### Summary
-
-A single current-conditions reading.
-
-### Schema
-
-```schema
-tempC: number required
-condition: string required
-observedAt: datetime required
-```
-````
-
-The dashboard surfaces that behavior with edges it already has — no composition verb required:
-
-```markdown
-## View: AdminDashboard
-
-### Display
-
-- System counters and a current-conditions panel from the latest [reads](aim:app.admin.weather#Record:WeatherReading), refreshed via [exposes](aim:app.admin.weather#Contract:FetchWeather).
-```
-
-The promote boundary is the §1.4 test first, then the §4.3 test (5.7): a purpose that is its own accountable outcome ⇒ a child intent, before any facet exists, and its sections are that intent's Views; owns data or operations ⇒ nodes of its own — a child intent when they cohere into a capability, or a `## View:` with sibling facets on the intent they serve; display-only piece inside a screen ⇒ prose in the host. A promoted piece that is *only* ever embedded usually should **not** declare its own `## View:` — its surface is the host's — so it owns `Contract`/`Record` and raises no orphan. If it genuinely needs its own reusable surface, the informational orphan diagnostic (§12.2) is the correct nudge: either a Persona `accesses` it, or its surface really belongs to the host.
-
-### 15.10 Proxy Verification — When The Outcome Cannot Be Checked
-
-Every guarantee is verified in one of two modes, and the choice is the Architect's:
-
-- **Output-verified — the default.** The guarantee is checked against its result: the realized code, the persisted record, the emitted event. When a postcondition is cheaply and completely checkable, declare it in `### Ensures` and let the Reviewer verify the outcome (§10.1, §12.3). Do **not** also prescribe the procedure: a procedure spec for an outcome-checkable guarantee adds no verification power, goes stale, and needlessly constrains the realization.
-- **Procedure-verified — the proxy.** When a guarantee cannot be cheaply and completely verified from its output — judgment steps, qualitative claims, generated content whose correctness no automated check can settle — declare the *procedure* as a `## Flow:` and let its `### Steps` stand in as the verifier: since the outcome cannot be checked, conformance to the procedure trusted to produce good outcomes is checked instead. The Contract `invokes` the Flow; no new syntax is involved. The Flow's Steps are then **normative**: realization must follow them, and the Reviewer checks that they are followed, not (only) what came out.
-
-Most real guarantees are partially checkable — the record exists, the deadline was met, the required sections are present, but is the content *right*? The modes therefore compose per guarantee, not per facet: verify what the output exposes through `### Ensures`, and let a Flow cover only the unverifiable remainder.
-
-**Confidence attribution (normative).** A proxy check yields confidence about the *procedure*, never the *outcome*. A finding that the Steps are realized and followed is procedure-conformance and MUST NOT be reported as outcome-verification; a proxy-verified guarantee never earns outcome confidence `high` (§12.3). The misclassification risk runs in one direction only: treating an outcome-checkable guarantee as proxy-verified merely wastes specification effort, but treating an unverifiable outcome as output-checkable produces green reports over silent failures — false assurance. When in doubt, verify the output; write the procedure only where the output cannot answer.
-
----
-
-## 16. Intent Evolution
-
-The static rules (§2–§12) define what a *well-formed* model looks like at rest. This section defines how a model *changes* while staying well-formed — the dynamics those rules imply but do not state.
-
-### 16.1 One Root Unit, Two Authoring Operations
-
-The root unit of authoring is the **intent** — root or nested (a **child intent**), each with its own envelope file (§1, §5). Facets and typed edges are how an intent is *expressed*; they are never the unit an author works in. Everything an author does to a model is one of exactly two operations:
-
-- **EXTEND** an existing intent — add or refine its facets and the edges among them.
-- **ADD** a new intent — a new child intent or capability (§5).
-
-These two operations are the surface a requirements author — often a non-developer, working through the Architect role (§1.2) — designs at; the facet, edge, and binding detail they expand into is where the Realizer and Reviewer work. An author does not "move a node" or "rename a schema" as a primitive act; those are *transforms* (§16.2) the system performs to keep the model well-formed as the two operations push against the decomposition rules (§4.3).
-
-### 16.2 Validity-Preserving Transforms
-
-When an EXTEND or ADD would leave the model ill-formed — an intent grown past "one clear behavior" (§4.3), a node living in the wrong namespace, two nodes that are the same concept — the system reshapes the graph with a **transform**. A transform is not new syntax and not an author primitive: it is an operation **defined by the pre/post invariants of §16.3**, producing a spec-valid state from a spec-valid state. Tools and the Architect agent apply transforms; authors express intent.
-
-| Transform | What it does | Typically triggered by |
-|---|---|---|
-| **promote** | a capability grown inside an intent splits out into its own child intent (§5) | an EXTEND that crosses the §4.3 "one clear behavior" line |
-| **split** | one intent doing two things becomes two siblings under an index parent | an intent with multiple distinct behaviors (§15.4) |
-| **re-home / move** | a node moves to the intent whose namespace it belongs to | a node whose address namespace does not match where it is used |
-| **merge** | two nodes that are the same concept collapse into one canonical node | a probable-duplicate diagnostic (§12.2) confirmed as a true duplicate |
-| **rename** | a node's name — and therefore its address — changes | a clearer name, or a collision |
-
-Each transform changes one or more node **addresses** `<intent>#<FacetType>:<Name>` (§2.2). `promote` is the bridge between the two operations: an EXTEND that trips §4.3 *resolves structurally into an ADD* — the new capability becomes its own child intent rather than more facets piled on the parent (§15.2).
-
-### 16.3 Transform Invariants (Normative)
-
-A transform reshapes **addresses, never commitments**: after re-pointing (and, for `merge`, de-duplication) the model states the same requirements, the same behavior, the same relations — only structure and naming have moved. Because a transform changes addresses, it MUST re-establish every part of the model that addresses anchor. A transform that violates any of the following yields an ill-formed model and MUST NOT be applied as-is:
-
-1. **No dangling edges; legal triples preserved.** Every typed edge whose `to` address targets a moved or renamed node MUST be re-pointed to the node's new address. After the transform the graph MUST contain zero dangling references (§12.1) introduced by the change, and every re-pointed edge MUST still satisfy its `(verb, from, to)` schema (§8.2). Edges are declared at the acting end (§8.3), so inbound edges live in *other* nodes' blocks and MUST be found across the whole project graph (§12), not just the moved file.
-
-2. **Elided outbound addresses MUST be re-qualified on a cross-intent move.** A node's own outbound edges travel with it, but any written in the elided unqualified form `#<FacetType>:<Name>` (§2.2) resolve against the *new* intent after a move. Where that would change the target, the transform MUST re-qualify the address to its original fully-qualified target so the edge's meaning is preserved.
-
-3. **The parent index MUST be updated.** `promote`, `split`, and a cross-parent `move` change the set of children; each affected parent's `## Children` index (§5.2) MUST be updated to match what is on disk, or auto-discovery (§5.3) diverges from the explicit list — a hard error.
-
-4. **Path/header identity MUST be re-established.** A node that becomes, or moves into, its own intent MUST have its directory, filename, and `aim:`/`parent:` frontmatter brought back into agreement (§4.4); a path/header mismatch is a hard error.
-
-5. **Bindings follow the node.** A node's inline `### Bindings` property (§10.2) travels with it automatically — the binding is part of the node. On a rename the node's address updates; the **locator is unchanged** — the realization did not move, only the intent address did. (A legacy `kind: binding` sidecar entry must be relocated by hand and its `## Bind:` heading updated.) An intent transform reshapes addresses without touching code.
-
-6. **`merge` is author-confirmed and collapses, never silently unifies.** Because same-name is not proof of same-entity (§12.2), `merge` MUST be confirmed by the Architect. On merge the duplicate node is removed, one node is designated canonical (§15.8), and every edge that targeted either node is re-pointed at the canonical node under invariant 1.
-
-### 16.4 A Transform Is a Graph-Diff
-
-A transform yields a **structured graph-diff** — nodes added / removed / moved, edges re-routed, bindings relocated — of exactly the kind the Reviewer already computes (§2.4, §12.3). This is the payoff of the derived graph: reshaping intent is a *traceable diff*, not an opaque rewrite. The Reviewer reports the diff; the Realizer applies the corresponding realization moves (a `rename` that changes a Contract's address tells the Realizer, through the bindings, precisely which handlers, routes, or automations are implicated). The **impact set** (§12.3) of a transform is computable before it is applied.
-
-Because the transform knows *exactly* what changed at the intent level, this diff MAY be **persisted as a change record** under `/aim/work/` — the forward companion to the Reviewer's drift report. A drift report is *reverse*: it discovers unknown drift by re-deriving the realized graph and diffing it against intent. A change record is *forward*: the `.aim` files have already been reshaped, and the record simply *describes* that known delta — renames, moves, re-pointed edges, relocated bindings — so the Realizer can propagate it to the realization as a targeted update (rename this symbol, move that module, re-point this binding to the same locator, §16.3) instead of reconstructing and diffing the whole realized graph. It also carries the handoff across sessions. A change record is a **non-authoritative** work artifact (§1.3): it never *defines* intent — the post-transform `.aim` files already did, and remain the sole authority — it only records what changed, and on any disagreement the files win and the Realizer falls back to a full graph-diff. It is point-in-time and archived after it is applied, exactly like a drift report; its on-disk format is a tooling concern this spec does not define (as with the drift report and the realized-graph manifest, §10.1).
-
-### 16.5 Choosing the Transform (SHOULD)
-
-- **When EXTENDING, watch the §4.3 line.** If an addition is a distinct capability with its own data, operations, and surfaces, **promote** it into a child intent rather than piling facets onto the parent (§15.2 — the parent stays a lean index). Adding facets to an already-multi-behavior intent is how monoliths form (§12.2).
-- **Entity promotion (5.2).** The same transform applies to an *entity*: when a Persona or Record facet accretes substance **and its own operations** — an entity-specific Contract is the cue — promote it to an **entity-intent** (§7.1, §7.4). The facet's sub-blocks become the intent's top-level form (`### Role`/`### Access` → `## Role`/`## Access`; `### Schema` → `## Schema`), `nature:` records the kind, the entity's operations move under it, and every `<parent>#Persona:X` / `<parent>#Record:X` address re-points to the new intent node. §16.3 invariants apply unchanged; inline `### Bindings` travel with their nodes automatically. The moved operations arrive as **facets of the entity-intent**, not as one-facet child intents each — a sub-intent must earn its level (§15.2); wrap an operation only once it has grown its own facets, entry points, or requirements.
-- **Clusters accrete; promote them whole.** The §4.3 line is usually crossed *gradually*: no single EXTEND introduces "a distinct capability," but change by change one noun accumulates a Record, several Contracts, a View — until a cohesive capability lies flat inside a mixed intent (the noun-cluster smell, §12.2). The next EXTEND that touches the cluster is the moment to **promote** it, and the promotion takes the *existing* facets along with the new ones. Preservation discipline is never a reason to leave a cluster flat: a transform changes addresses, never commitments (§16.3) — moving a node removes nothing.
-- **Re-home when the namespace doesn't fit.** If a node's address namespace does not match where it is used, **move** it to the intent it belongs to rather than referencing it across an unnatural boundary.
-- **Merge duplicates into a canonical home.** When the probable-duplicate diagnostic (§12.2) flags a true duplicate, **merge** to one canonical node (§15.8) — do not let the copies drift.
-- **A UI piece that earns behavior promotes.** A view fragment (tab, panel, widget) that acquires its own data or operations crosses the §4.3 line and is **promoted** into a child intent (§15.9) rather than remaining inline `### Display` prose.
-
-**Worked example — an EXTEND that promotes.** A CRM has `crm.customer_management`, one intent covering customer CRUD. New requirement: "add customer notes, with edit history." Notes are a distinct capability — their own `Note` Record, their own create/edit/list contracts, their own surface. Piling a `## Record: Note`, three contracts, and a notes view onto the parent would push it past §4.3, so the EXTEND **promotes** into a new child intent:
-
-```
-/aim/crm.customer_management/
-  crm.customer_management.aim                    # parent index — ## Children now lists customer_notes
-  customer_notes/
-    crm.customer_management.customer_notes.aim   # new child intent: Note schema, contracts, view
-```
-
-The customer-detail view's reference to the notes surface is declared as a cross-reference to the promoted address; the parent's `## Children` index gains a `customer_notes` line (invariant 3).
-
-**Worked example — a split.** A flat `crm.customers` intent has accreted both per-customer CRUD *and* customer-group management — two distinct behaviors. **split** turns it into two siblings under an index parent:
-
-```
-/aim/crm.customers/
-  crm.customers.aim              # was the flat file; now a lean index (§15.2)
-  records/
-    crm.customers.records.aim    # per-customer CRUD
-  groups/
-    crm.customers.groups.aim     # customer-group management
-```
-
-Every edge that pointed into the old flat file is re-pointed to whichever child now owns the target (invariant 1); shared schemas stay in the parent or move to a sibling facet file (§15.2); bindings for the moved contracts relocate to the new intents' binding files with locators unchanged (invariant 5).
-
-### 16.6 Diagnostics
-
-Intent Evolution adds **no new diagnostics** for transforms. A transform is correct exactly when the resulting graph raises no new hard error (§12.1) and no new orphan / shadow / duplicate / monolith smell (§12.2) attributable to the change. The invariants of §16.3 are the conditions under which that holds — which is the point: the static checks the spec already defines are the acceptance test for every transform. An EXTEND that changes a commitment has one diagnostic of its own, the stale satisfier (§16.7, 5.9).
-
-### 16.7 Changing A Commitment (5.9)
-
-A transform changes addresses, never commitments (§16.3). An EXTEND that rewrites a requirement changes a commitment, and it is unfinished until what realizes that commitment has been revisited. A `satisfies` edge claims that its unit is how the rule is kept, so the rule and each item carrying a `satisfies` edge to it — the list item, step or paragraph the token sits in — are one commitment: when the rule's text changes, each such item is either revised to keep the new rule, or kept deliberately because it still does.
-
-**Stale satisfier (5.9)** — computed over a change, never over a model at rest: a requirement whose text changed (the same label, or for an unlabeled item the same position) while an item carrying a `satisfies` edge to it did not change. The edge survived the edit, so the requirement still reads as realized and *Unrealized requirement* (§12.2) stays quiet. Rewording that leaves the commitment intact raises the same finding; the Architect confirms such an item rather than editing it for the sake of the check. Remediation: revise the item to keep the new rule. **Removing the `satisfies` edge is never the repair** — the behavior stays and only the claim disappears, so a visible contradiction becomes an unrealized requirement at best and a hidden contradiction at worst. Not reported: a newly added requirement (nothing points at it yet), a removed one (its edges dangle, §12.1), and reordered labeled items (a label is identity, §8.2).
-
-Any tool that holds both sides of a change — a proposal, a commit, a change record (§16.4) — can compute it; the spec requires nothing of the version-control environment (§1.3).
-
----
-
-## 17. Re-Encoding Existing Systems (Reality → Intent)
-
-§13 defines migration *within* the model (v3.1 → v4 → v5). This section defines the other direction: producing `.aim` intent from a **system that already exists** and was never authored in AIM — a codebase, a running process, an organization's way of working. Re-encoding is a primary workflow, and it is the Reviewer's machinery (§10.1, §12.3) run in reverse — instead of diffing a declared graph against reality, the agent *reads reality and infers the declared graph*. Without spec support the inferred intent has no provenance, and the authority model (§1.3) silently degrades from "authored truth" to "a guess a tool made." This section keeps that boundary explicit.
-
-### 17.1 Definition And Sources
-
-Re-encoding produces `.aim` files from evidence of how a system actually is. The producing agent acts as **Architect and Realizer simultaneously** (§1.2): it authors the intent (facets, typed edges) and, because it has just examined the realization, emits the bindings for it in the same pass. Evidence comes in two kinds, and they carry different weight:
-
-- **Artifacts** — code, system configurations, automations, templates, execution logs. Readable, re-checkable; an inference from an artifact cites its source the way a binding cites a locator.
-- **Elicitation** — human testimony: interviews, walkthroughs, the narration of the person who runs the process. Testimony is how intent that lives only in heads enters the model — and it is *testimony*, not evidence: the encoding report records **who said so and when**, an elicited claim defaults to `needs-human-check` until its source (or their principal) confirms, and an asserted-but-unevidenced rule ("we always get sign-off first") is kept **and** flagged with the confirming question, never silently trusted or dropped.
-
-Expect elicited descriptions to generalize; the exceptions ("except when sales expedites") are not noise but the substance — captured in `### On Error` or as their own operations, and asked about explicitly.
-
-### 17.2 Provenance
-
-Every re-encoded facet node carries a provenance state:
-
-- **`inferred`** — agent-derived from artifacts or testimony, not yet human-accepted.
-- **`confirmed`** — a human has reviewed and accepted it.
-
-The mechanism is the `provenance:` frontmatter field (§3.2): a re-encoded file is written `provenance: inferred` and the field is removed (or set to `confirmed`) on acceptance. **An absent field means `confirmed`** — authored intent is trusted by default, so hand-written files need no annotation. **Per-node provenance** is the norm for inline bindings (§10.2), which carry their own `provenance`; per-file provenance remains the requirement for a file's overall authority, and the two compose — a `confirmed` file may still hold an `inferred` binding.
-
-### 17.3 Authority Of Inferred Intent
-
-`inferred` intent is **provisionally authoritative** for tooling: graph derivation, resolution, and diagnostics all treat it as real intent, so the graph is usable the moment it is encoded. But it MUST be visually and reportably distinguished from confirmed intent wherever intent is presented, and a project's **confirmation coverage** (fraction of nodes confirmed) is an informational metric (§12.2), never a hard error. Inferred intent is a strong draft, not yet ratified truth.
-
-### 17.4 Confidence
-
-Inferred nodes and edges carry the same confidence vocabulary as graph-diff findings (§12.3): `high` (an artifact clearly evidences it) or `needs-human-check` (ambiguous artifacts, or elicited testimony awaiting its source's confirmation). Where recorded, confidence lives in the **encoding report** — a point-in-time work artifact under `/aim/work/`, the forward companion to the drift report and change record (§16.4) — **not** in the `.aim` file. The `.aim` file carries provenance; the work artifact carries confidence.
-
-### 17.5 Bindings Come Free
-
-The encoding agent examined the realization to infer each node, so it already knows the realization site. It therefore **MUST emit a binding** (§10.2) for every inferred node **that has one** — a Contract, Record, Event, Trigger, or View realized at an identifiable site (a symbol, a route, a SaaS workflow, an agent skill). Nodes with no realization site are exempt: a **Persona** is a role, not a location, and a step known only from testimony is a **manual step** — legitimately unbound. Modulo those exemptions, a re-encoded intent lands at **Level 3** immediately (§11.2). This is the payoff of the direction — re-encoding is the one workflow where bindings are a byproduct rather than extra work, so drift-checking is available from the first pass.
-
-### 17.6 Scope Discipline
-
-Encoding is **bounded per intent**, mirroring §10.1's bounded construction of the realized graph — the agent examines one intent's realization, not the whole system, per pass. An agent MAY draft an entire intent tree in one sweep, but **confirmation is granted per intent**: a human ratifies one coherent unit at a time.
-
-### 17.7 Duplicates
-
-Re-encoding at scale surfaces §15.8 cases — the same entity (`User`, `Money`, `Status`) independently inferred in several intents. The **probable-duplicate diagnostic** (§12.2) applies unchanged, and the remediation is `merge` (§16.2) with Architect confirmation (§16.3 invariant 6). Encoding agents SHOULD **resolve-or-reference** (§15.8) against already-encoded intents before defining a new entity, so duplication is avoided during encoding rather than cleaned up after.
-
----
-
-## 18. Purpose-Rooted Models: Mapping An Organization
-
-Nothing in this language is specific to software. A facet is a unit of commitment and the graph is normative (§2) — and organizations run on commitments as much as programs do. The same model that holds an application can hold a complete business process, a department's obligations, or an entire company. This section is the guideline for mapping something that large.
-
-**An organization is a system of realized intent.** Its realization is not a single artifact: it is the combined behavior of people, software, automations, policies, vendors, records, and recurring work. AIM models that whole without forcing every part to become software. A manual approval can remain a human-performed Flow step; a SaaS workflow can be a bound realization; an internal application can own a subtree of intents; and an external deadline can enter through a Trigger. They remain connected because each is described in terms of the commitment it fulfills rather than the medium that performs it.
-
-**Model the process end to end.** A process boundary follows the commitment, not the boundary of a team or application. For example, "convert an accepted proposal into collected revenue" may begin with a salesperson, cross an e-signature provider, create work in a delivery system, require human time approval, generate an invoice through accounting software, and end when a payment Event satisfies the original commercial requirement. Modeling only one application would preserve local behavior while losing the organizational outcome. Modeling the complete intent exposes the handoffs, dependencies, deadlines, evidence, and failure paths across the whole chain.
-
-**Organizational drift is observable.** Once the end-to-end intent is bound to its realization sites, review can detect more than implementation defects: a required approval with no evidence, a policy contradicted by the operational Flow, a handoff that depends on undocumented human knowledge, a deadline with no Trigger, an application behavior no longer serving a business commitment, or a root requirement with no satisfying capability. These findings are routed to the owner of the relevant intent; they are repaired either by changing reality or by explicitly revising what the organization intends.
-
-**The root is a purpose.** Model an organization as one project whose root intent states *why it exists* — its Summary is the mission in plain words, and its `## Requirements` are the existential commitments ("every delivered hour is attributable to an engagement and billed", "no work begins before countersignature"). The root also serves as the canonical home (§15.8) for the organization's shared entities: the personas everyone references, the artifacts every process touches.
-
-**The tree is a why/how ladder.** Each child intent exists to fulfill commitments of its parent; each level down answers *how*, each level up answers *why*. Wire that justification with `satisfies`: a child's contracts and flows carry `[satisfies](aim:<root-or-ancestor>#Requirements[<Label>])` edges into the commitments that justify their existence — and at organizational scale, **label the requirements** (§8.2): an org model lives for years, its requirement lists get edited by many hands, and labeled references are the form that survives it. Tree completeness then stops being rhetorical and becomes checkable — an unrealized requirement at the root (§12.2) means *a stated purpose that nothing in the organization actually does*.
-
-**Siblings may be different kinds of thing.** A company tree legitimately mixes a software application, a billing process, and a compliance obligation as siblings — the language does not distinguish; only the reading differs. The cross-kind edges are where the value concentrates: a process step that `reads` an application's View, an application Event a process `subscribes` to. Those edges are the organization's integration map, and a process step with no edge into any system and no binding is, precisely, the digitalization backlog.
-
-**Content leads; structure follows.** Two authoring motions are valid, and they are the same rule seen from both ends: bottom-up, enumerate commitments and actors flat and let the clusters name the children (§15.1 — the graph is the design); or top-down, narrate the purpose and grow children by asking "how do we fulfill this?". The failure mode is deciding *structure before content* — organizing children before the commitments they would own exist. Structure decisions are deliberately cheap (§16 transforms reshape the tree while the graph survives unchanged); missing commitments are the only expensive omission.
-
-**Do not mirror the org chart.** Reporting lines are not commitment ownership. Divisions and departments make wrapper levels that own nothing — the hierarchy belongs in the model as **Personas, their `### Authz`, and who performs what** — "the Accountant may post…" is permission, in Authz; "The CFO approves the budget" is performance, written as a step's opening Persona or an `invokes` (§7.4, 5.9) — never as namespace segments. Decompose by *capability* (what is promised), not by *hierarchy* (who reports to whom); capability trees run wider and flatter than the org chart they replace — they still nest as deep as the capabilities themselves demand (§5.5).
-
-**Humans keep the tree; machines keep the graph.** Reviewing an organization model means reading its tree and prose — the front pages, the ladder of why and how. The graph underneath is consumed as answers (§2): what breaks if this parameter changes, which policies nothing enforces, what the whole company owes this month. No one is ever asked to see the organization as a graph — and everyone benefits that the machine does.
+Record `high` or `needs-human-check` confidence in a non-authoritative encoding report under `/aim/work/`, never in `.aim`; the model carries provenance. Emit a binding for every inferred node with an identifiable realization site. Personas as roles and manual steps known only from testimony are exempt; otherwise reverse encoding provides Level-3 binding coverage immediately. Bound each examination by intent; an entire tree MAY be drafted together but humans confirm each intent separately. Resolve-or-reference existing entities before defining new ones; duplicates use the ordinary diagnostic and Architect-confirmed merge.

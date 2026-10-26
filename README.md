@@ -1,6 +1,6 @@
-# Agentic Intent Model (AIM) v5.13
+# Agentic Intent Model (AIM) v6.0
 
-This revision makes a record's lifecycle intent: the machine one enum field moves through is a facet — `## State:` — its states, the initial and final ones, and every move with the operation that makes it, so what no move lists cannot happen, a chart draws the record's life exactly, and a realization can refuse an illegal move before it commits (§7.9). One new heading, no new edge verb. See [the 5.13 migration notes](./specification.md#1314-from-v512-to-v513); the previous wave is [5.12](./specification.md#1313-from-v511-to-v512) — stated layout as intent.
+This revision says the language once: the specification is rewritten into thirteen sections, a quarter of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
 
 *Formerly "Application Intent Model" — renamed when the language generalized beyond software.*
 
@@ -23,7 +23,7 @@ AIM pays off when reading the model is meaningfully easier than inspecting the r
 
 ## The graph foundation (the v4 break)
 
-v4 was the breaking change from v3.1 that founded the language on a graph; v5 generalizes it beyond software and finishes the naming (spec §13.3). The three shifts:
+v4 was the breaking change from v3.1 that founded the language on a graph; v5 generalizes it beyond software and finishes the naming (spec §2). The three shifts:
 
 1. **Graph-founded model.** The `.aim` Markdown file is a *projection* of an underlying node-and-edge graph. Every heading is an addressable node.
 2. **Typed edge taxonomy.** One CommonMark-native token — `[verb](aim:<address>)` — replaces v3.1's inconsistent prose cross-references. Dangling references, orphan nodes, and impact sets fall out for free, and the traceability chain becomes *computable* rather than aspirational.
@@ -93,7 +93,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v5.13 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v6.0 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -125,6 +125,6 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v5.13**
+Current spec: **AIM v6.0**
 
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License

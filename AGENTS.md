@@ -1,12 +1,12 @@
 ---
-aim_version: 5.13
+aim_version: 6.0
 aim_root: ./aim/
 spec: https://intentmodel.dev/spec.md
 ---
 
 # Agents
 
-This project uses the **Agentic Intent Model (AIM) v5.13** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
+This project uses the **Agentic Intent Model (AIM) v6.0** to specify its intent. Read this file before doing any work — it is the cold-start entry point for every AI agent that enters the project.
 
 ## How to read this project
 
@@ -36,9 +36,9 @@ Reserved directory name under `/aim/`: `specs/`. Everything else is an intent na
 
 ## Operating modes
 
-AIM is operated through **capabilities**, not a menu of agents a human picks. You are one assistant: read the request and enter the right mode yourself — never ask which role to use. The modes differ only in what each may write (spec §1.2):
+AIM is operated through **capabilities**, not a menu of agents a human picks. You are one assistant: read the request and enter the right mode yourself — never ask which role to use. The modes differ only in what each may write (spec §1):
 
-- **Architect** (writes intent) — designs the graph of facets + typed edges and serializes it as `.aim` files. Runs *forward* from requirements, or *reverse* to recover intent from a system that already exists (the **Encoder**, §17, whose output is marked `provenance: inferred` and awaits human confirmation). Owns the specification; revises intent when drift is caused by changed requirements.
+- **Architect** (writes intent) — designs the graph of facets + typed edges and serializes it as `.aim` files. Runs *forward* from requirements, or *reverse* to recover intent from a system that already exists (the **Encoder**, §13, whose output is marked `provenance: inferred` and awaits human confirmation). Owns the specification; revises intent when drift is caused by changed requirements.
 - **Realizer / Developer** (writes code) — makes reality match the model: generates code and tests, wires automations, performs the process. Fixes the realization when drift is its fault.
 - **Reviewer** (writes nothing) — compares reality against intent and reports drift, routing each finding to the Realizer or the Architect. **Runs cold and read-only** — an agent that could also fix what it judges rubber-stamps its own work; review and repair never share a turn.
 
