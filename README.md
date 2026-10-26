@@ -1,6 +1,6 @@
 # Agentic Intent Model (AIM) v6.0
 
-This revision says the language once: the specification is rewritten into thirteen sections, a quarter of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
+This revision says the language once: the specification is rewritten into thirteen sections, a third of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
 
 *Formerly "Application Intent Model" — renamed when the language generalized beyond software.*
 
@@ -12,7 +12,7 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 
 ## What's new in 6.0 — and why it matters
 
-**The whole language, said once.** An agent reads the specification before it writes or checks a model — in practice, on every turn. 5.13 had grown to 221 KB and 34,000 words: the history of every release, tutorials, before/after demonstrations, and the same rule stated in several places. 6.0 says the same language once, in thirteen sections, about 9,900 words and 67 KB. In Amy, the prompt an agent reads per decision shrank to about a third. Less to read is less to contradict, and every rule now has one home.
+**The whole language, said once.** An agent reads the specification before it writes or checks a model — in practice, on every turn. 5.13 had grown to 221 KB and 34,000 words: the history of every release, tutorials, before/after demonstrations, and the same rule stated in several places. 6.0 says the same language once, in thirteen sections, about 11,400 words and 74 KB. In Amy, the prompt an agent reads per decision shrank to well under half. Less to read is less to contradict, and every rule now has one home.
 
 **Nothing to migrate.** A model valid under 5.13 is valid 6.0, read as it is (§2). The 5.13 edge shorthand and binding sidecars are still read; they are simply no longer written.
 
@@ -48,6 +48,8 @@ AIM is a specification language for humans and AI agents. It captures the **inte
    `EditClaim` may change the claim only while it is a draft.
 
 4. **Every write is held to the model.** However an operation is performed — code, an automation, an AI interpreter — each change it makes must satisfy the schema, the immutable fields, ownership and every State of its record before it commits (§6). The model is no longer advice the realization may skip; it is the check every write passes.
+
+**Every facet reads as an extension.** Each of the ten facets — Record, Contract, Flow, Persona, View, Event, Trigger, Capability, Style, State — is one self-contained block with the same parts: Purpose, Form, Example, Edges, Rules, Diagnostics and Since (§6). A new facet arrives the same way, with its example and its diagnostics, so the language can grow without anyone rereading the rest.
 
 **Tools can trust each other's output.** A tool that reads a model and writes it back must keep every node, rule, edge, modifier, dependency, binding and authority field, and must not rewrite a file when anything would be lost (§3, *Preservation of meaning*). Models move between editors, agents and repositories without silently losing meaning.
 

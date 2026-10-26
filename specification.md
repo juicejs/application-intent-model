@@ -224,206 +224,516 @@ Levels govern expected realization precision and traceability/review strictness.
 
 Traceability begins at individual Requirements satisfied by behavior. Behavioral entry points are a Persona accessing a View/screen intent or a Trigger starting a Flow/Contract. Views expose Contracts; Contracts may invoke Flows; Contracts/Flows read or mutate Records and emit Events. Following derived `satisfied-by` reaches a requirement's realizers; no inbound `satisfies` is a coverage gap. Style and State do not join this behavioral chain: Style has no edges; State's structural edges are derived. A complete Level-3 trace has no orphan behavioral nodes or dangling edges.
 
-## 6. Precision facets
+## 6. Facets
 
-The facets are Record, Contract, Flow, Persona, View, Event, Trigger, Style and State. Capability is the external surface defined under Dependencies. Properties belong to their node; a schema is a property, not a node.
+A facet is a node of the graph declared by a heading, `## <FacetType>: <Name>`, with its properties in H3 sub-blocks. AIM 6.0 has ten facets: Record, Contract, Flow, Persona, View, Event, Trigger, Capability, Style and State. Each is specified in its own block below, and every block has the same parts, so a facet can be read, implemented and reviewed on its own.
 
-### Record
+### 6.0 How a facet is specified
 
-A Record is passive data that operations store, read or process. It declares its fields in `### Schema` using the schema grammar. `### Constraints` declares data constraints as bullets; `### Immutable` lists fields that must not change after row creation. Other nodes use the same schema grammar in their data properties: Contract `### Input`, Event `### Payload`, or an entity-intent's top-level `## Schema`.
+Every facet block has these parts, in this order:
 
-A Record may become an intent when its data and lifecycle warrant a file. Its schema becomes top-level `## Schema`, it carries `nature: record`, and its operations co-locate as facets. The intent is the entity; it MUST NOT contain a redundant same-named Record facet.
+| Part | Says |
+|---|---|
+| **Purpose** | What the facet commits to, in one paragraph, and what it does not. |
+| **Form** | Its heading and every sub-block: required or optional, and the grammar of each. |
+| **Example** | One complete facet as it is written in a `.aim` file. |
+| **Edges** | The verbs it declares and the verbs that reach it (§7). |
+| **Rules** | Its normative rules. |
+| **Diagnostics** | The hard errors and informational conditions it owns (§10 holds the cross-cutting ones). |
+| **Since** | The version that introduced it and its later additions. |
 
-### Contract
+**Rules every facet shares.** A facet name matches `[A-Za-z][A-Za-z0-9_]*`; PascalCase is recommended (§3). The heading is immediately followed by `### Summary`, except a Persona used only for role and access. Its sub-blocks are its properties: they belong to the node and are not nodes themselves; a schema is a property, not a node. A facet may carry an inline `### Bindings` property (§9). A sub-block a facet does not define is ignored by tools that do not know it and reported as informational; a facet that admits only listed sub-blocks (State) makes any other one a hard error. A facet whose substance outgrows its host may become an intent of its own (§11): Record, Persona and Flow have defined promoted forms, given in their blocks.
 
-A Contract specifies externally observable guarantees and obligations:
+**Adding a facet.** A future facet is admitted only when it (1) expresses a commitment no existing facet and property can carry without losing checkability, (2) has demonstrated need in real models, and (3) arrives complete: a block with every part above; its node type; the verbs it declares and receives, added to the closed taxonomy in §7 with their endpoints; any derived structure; its place in traceability (§5) and whether it can be an orphan; its diagnostics; and a statement that existing models stay valid. It arrives with a proposal under `proposals/` that records the evidence. A new sub-block of an existing facet meets the same tests and is added to that facet's block. Renaming or removing a facet is breaking.
 
-- `### Summary`: the operation's purpose.
-- `### Input`: caller-supplied fields, in a `schema` fence.
-- `### Authz`: who may perform it, as bullets.
-- `### Expects`: preconditions, as bullets.
-- `### Ensures`: postconditions and resulting graph actions, as bullets.
-- `### Returns`: externally returned results, as bullets.
+### 6.1 Record
 
-An operation acquiring external information MUST declare the Capability it consults with `invokes`; a source named only in prose is insufficient. For caller-supplied documents, the Input declares a `file`; the reading Capability parses it, and the Contract owns the resulting records. Acquisition may be a collect operation that invokes the Capability and mutates a Record; downstream operations read that Record.
+**Purpose.** A Record is passive data that operations store, read or process: an order, a claim, a team member. It declares what one row holds and the rules on that data. It never acts; an actor is a Persona.
 
-#### Decisions
+**Form.**
 
-A decision is the Contract or Flow that reaches a judgment, with its authority and criteria. It is not a separate node. The deciding node declares `### Decides`:
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | What one row is. |
+| `### Schema` | yes, for a record anything stores | A `schema` fence, one field per line, in the grammar of §3 (types, `required`, `unique`, `min`, `max`, `default`, `enum`, `ref`, `list`, `owner`, `!owner`). |
+| `### Constraints` | no | Data constraints, one bullet each. |
+| `### Immutable` | no | Fields that never change after the row is created, one bullet each. |
 
-```markdown
-### Decides
+**Example.**
 
-- **Approved** — every claim is supported — [emits](aim:#Event:Approved)
-- **Returned** — any claim lacks support — [invokes](aim:#Contract:Correct)
+````markdown
+## Record: Claim
+
+### Summary
+
+One expense claim an employee submits.
+
+### Schema
+
+```schema
+id: string required
+ownerId: string required ref(Member.id) owner
+amount: number required min(0)
+status: enum(Draft, Submitted, Approved) required
+note: string
+items: list(ClaimLine)
 ```
 
-Each bullet is one outcome. Its bold label follows the facet-name grammar and is addressable as `#Contract:<Name> → Decides[<Label>]` for a deciding Contract. Text after the dash states normative judgment criteria. The realization MUST decide on those criteria. Edge tokens belong to their outcome bullet; `emits`, `invokes`, `mutates` and `reads` may describe its effects and data access.
+### Constraints
 
-The block MUST contain at least two outcomes and asserts that they are mutually exclusive and exhaustive. It derives one exclusivity group for the deciding node, containing ordered labels, criteria and their edges. These are alternatives; operations sharing a step without such a decision relationship are joint work.
+- A claim's amount equals the sum of its lines.
 
-#### Every write is held to the model
+### Immutable
 
-However a realization performs a Contract — coded, interpreted or by a runtime engine — every Record mutation it makes MUST satisfy `### Schema`, `### Immutable`, `owner`/`!owner` and every `## State` governing the Record, before the mutation commits. When a realization may perform a Contract without interpretation is realization, not language.
+- `ownerId`
+````
 
-### Flow
+**Edges.** A Record declares no edge verbs. Its schema derives `refs` from each `ref(...)` field and each Record-valued `list(...)` (§3). It receives `reads` and `mutates` from Contracts, Flows and Views, and the derived `governs` from a State.
 
-A Flow declares operational sequencing, branching, retries and error handling. It declares sequencing in an ordered `### Steps` list and may declare error handling under `### On Error`. Its callers are derived from their `invokes` edges; a Flow MUST NOT author an inverse `### Trigger` block.
+**Rules.**
 
-#### Steps
+- The same schema grammar serves every data property: Contract `### Input`, Event `### Payload` and a promoted entity's top-level `## Schema`.
+- Ownership is declared on the schema: `owner` marks the field naming whose row it is, rows referencing an owned row inherit its owner, and `cross-owner(...)` and `!owner` state the exceptions (§3).
+- A Record whose data and lifecycle warrant a file becomes an intent: its schema becomes top-level `## Schema`, the intent carries `nature: record`, and its operations co-locate as facets. The intent is the entity and MUST NOT contain a same-named Record facet.
+- `## Schema: <Name>` is the deprecated spelling of this facet and is read as a Record.
 
-1. One numbered list item is one step. List position determines sequence; authored numbers are display only. Indented continuation lines belong to the preceding step.
-2. Inline edge tokens are that step's operations. Every such edge retains the step index in the derived graph.
-3. Multiple `invokes` in one item are one step, never an internal sequence. They are exclusive alternatives only when they are outcomes of a deciding Contract; otherwise they are unordered joint work.
-4. Joint operations MAY run concurrently, in either order or interleaved. The following step is a join and MUST NOT begin until all joint operations complete. Multi-step parallel branches are separate Flows or process-intents jointly invoked by one step.
-5. An item without edges is a human step and appears in process projections. An item whose only operations are `reads`, `mutates` or `emits` is work performed by the Flow itself.
-6. A step's words describe work but never declare a performer. Performer resolution uses Persona `invokes` edges and Flow inheritance, independently of language or names in prose.
+**Diagnostics.** Hard errors: more than one `owner` field; a `ref(...)` whose Record or field does not resolve (§10). Informational: a Record read but never mutated in the model owes supplied contents (§8).
 
-Joint work does not express a race or cancellation. Where first-completes-wins is a real commitment, state it in step prose and verify its procedure; race and cancellation constructs are not admitted language features.
+**Since.** 3.1 as a facet; named Record in 5.1 (formerly `Schema`); the `owner` modifier by 5.13; inherited ownership, `cross-owner` and `!owner` in 6.0.
 
-#### Decision continuation
+### 6.2 Contract
 
-A step invoking a deciding Contract carries the fork. If one outcome continues the procedure, its continuation is the next step and MUST NOT also be declared on that outcome. Every other outcome declares its own consequence in its Decides bullet. A corrective outcome may invoke corrective work that invokes the deciding Contract again; such Contract cycles are legal while Steps remain the linear procedure.
+**Purpose.** A Contract is one operation: what a caller supplies, who may perform it, what must hold before, what is guaranteed after, and what it returns. A decision is a Contract that reaches a judgment. A Contract states outcomes, not mechanics.
 
-If no single outcome proceeds, the deciding step is last and every outcome declares its continuation. Express a correction loop's bound as a deadline Trigger anchored on the phase's start and disarmed by the confirming Event. A count bound such as a maximum number of failed reviews is not expressible.
+**Form.**
 
-#### Event continuation
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | The operation's purpose. |
+| `### Input` | no | Caller-supplied fields, in a `schema` fence. |
+| `### Authz` | no | Who may perform it: bullets naming roles by backticked address, each optionally followed by `cross-owner(<Record-address>)` and `!owner` (§3). |
+| `### Expects` | no | Preconditions, one bullet each. |
+| `### Ensures` | no | Postconditions and their edges, one bullet each. |
+| `### Returns` | no | Externally returned results, one bullet each. |
+| `### Decides` | no | Outcomes of a judgment, one bullet each (below). |
 
-Sequence always proceeds to its next step by position, regardless of emissions or subscribers. Only `invokes` and `emits` continue work along an edge; `reads`, `mutates` and `satisfies` do not.
+**Example.**
 
-An emitted Event continues a branch through its subscribers. A subscriber without Steps is the next work on that branch. A subscriber with its own Steps starts a separate run; it does not continue the emitting run. An Event without subscribers ends only that event branch. Thus an outcome whose sole consequence emits an unobserved Event ends its leg; the emitting Flow's remaining steps still proceed. A Trigger anchored on an Event arms a timer and does not continue the branch.
+````markdown
+## Contract: ApproveClaim
 
-#### Process-intents and phases
+### Summary
 
-A process with its own operations, records and requirements may become an intent carrying `nature: flow`. Its sequence is top-level `## Steps`, with the same grammar and edges declared from the intent node. Its operations and records co-locate as facets; no same-named Flow restates the process.
+An approver approves or returns another person's submitted claim.
 
-Where an organization has several such processes, each may own a flow-natured child intent. A project consisting of one process uses the root as that process; it MUST NOT introduce a lone flow-natured child merely to wrap it.
+### Input
 
-A large single process decomposes into phases: consecutive steps producing one artifact. A phase with its own Record and operations becomes a flow-natured child. The root keeps shared Personas, the entry Trigger, cross-cutting Requirements, the Children index, and an orchestrating Steps list or Flow invoking the phases in order. Each phase keeps its Steps, Contracts, Events and Record. The parent sequence names phases; a phase sequence names its steps. Each step is declared at its owning level, not repeated at both. References cross phase boundaries normally.
+```schema
+claimId: string required ref(Claim.id) !owner
+```
 
-Long-running orchestration uses existing constructs: a Flow invokes work, mutates a progress Record, and emits or subscribes to compensation Events. Durable timer and signal mechanics belong to realization.
+### Authz
 
-### Persona, permission and performance
+- `#Persona:Approver` cross-owner(#Record:Claim) !owner
 
-A Persona declares an actor's identity or a role played in one intent. `### Role` describes the actor; `### Access` declares the Views or intents it accesses and operations it invokes.
+### Expects
 
-An entity shared across processes has a canonical home; a process-specific role remains with the intent reading that role. Moving shared entities upward MUST NOT merge distinct roles and erase a handoff. Use `[plays](aim:...)` where a local process role is filled by a canonical organizational Persona, or use an Imports alias when the canonical entity is referenced directly without splitting into multiple roles; do not create a second canonical entity for the same organizational group.
+- The claim is submitted.
 
-#### Role-in-context (`plays`)
+### Ensures
 
-When an intent distinguishes local roles that are filled by the same shared organizational Persona (for example, both `Submitter` and `Approver` are employees, or a `Reviewer` is a member of `HR`), each local role is declared as its own `Persona` and links to the underlying organizational Persona in `### Role` with `[plays](aim:<address>)`:
+- The claim records who decided and when — [mutates](aim:#Record:Claim), [satisfies](aim:#Requirements[FAIR])
+
+### Decides
+
+- **Approved** — every line is supported by a receipt — [emits](aim:#Event:ClaimApproved)
+- **Returned** — any line lacks a receipt — [invokes](aim:#Contract:CorrectClaim)
+````
+
+**Edges.** Declares `reads`, `mutates`, `emits`, `invokes` (to a Contract, Flow, promoted process or Capability), `subscribes` and `satisfies`, inside Ensures or Decides bullets. Receives `exposes` and `invokes` from Views, `invokes` from Personas, Flows and Contracts, `triggers` from Triggers, and the derived `moved-by` from a State.
+
+**Rules.**
+
+- An operation acquiring outside information MUST declare the Capability it consults with `invokes`; a source named only in prose is insufficient. For a caller's document, the Input declares a `file`; the reading Capability parses it and the Contract owns the resulting records. Acquisition may be a collect operation that invokes the Capability and mutates a Record; later operations read that Record.
+- **Decisions.** The Contract (or Flow) that reaches a judgment is the decision; there is no separate decision node. Each `### Decides` bullet is one outcome: a bold label in the facet-name grammar, addressable as `#Contract:<Name> → Decides[<Label>]`; the criteria after the dash, which are normative — the realization MUST decide on them; and the outcome's edges (`emits`, `invokes`, `mutates`, `reads`). The block MUST hold at least two outcomes and asserts that they are mutually exclusive and exhaustive. It derives one exclusivity group for the node; operations that share a step without such a decision are joint work.
+- **Every write is held to the model.** However a realization performs a Contract — coded, interpreted or by a runtime engine — every Record mutation it makes MUST satisfy the Record's `### Schema` and `### Immutable`, ownership (`owner`, `!owner`, grants; §3) and every State governing the Record (§6.10), before it commits. When a realization may perform a Contract without interpretation is realization, not language.
+- `### Authz` is permission, never performance; who performs the operation is resolved as in §6.4.
+
+**Diagnostics.** Informational: a Contract nothing exposes, invokes, triggers or subscribes (orphan); a Decides block with fewer than two outcomes; an outcome without criteria; an outcome Event nothing subscribes to or anchors a Trigger on; two or more emitted Events whose consumers diverge without a Decides block (ask whether it is a decision); a decision with no basis — no reads, Capability invokes or Input.
+
+**Since.** 3.1; typed edges 4.0; `### Decides` 5.4; Capability consultation 5.6; every write held to the model 6.0.
+
+### 6.3 Flow
+
+**Purpose.** A Flow is one piece of work done in order: its steps, where it branches, and what happens on error. It sequences operations; it does not replace them. Work that happens at different times for different reasons is separate operations, not one Flow.
+
+**Form.**
+
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | What the work achieves. |
+| `### Steps` | yes | A numbered list, one step per item (below). |
+| `### On Error` | no | Error handling, one bullet each. |
+| `### Input`, `### Authz`, `### Expects`, `### Ensures`, `### Returns`, `### Decides` | no | As on a Contract (§6.2). |
+
+**Example.**
 
 ```markdown
-## Persona: Submitter
+## Flow: ReimburseClaim
 
-### Role
-- Submits expense claims for reimbursement — [plays](aim:org#Persona:Employee)
+### Summary
 
-### Access
-- [invokes](aim:#Contract:SubmitClaim)
+From a submitted claim to the payment.
 
+### Steps
+
+1. The approver reviews the claim — [invokes](aim:#Contract:ApproveClaim)
+2. Finance pays it — [invokes](aim:#Contract:PayClaim)
+3. The employee is told — [emits](aim:#Event:ClaimPaid)
+
+### On Error
+
+- A failed payment leaves the claim approved and is retried the next day.
+```
+
+**Edges.** Declares `invokes`, `reads`, `mutates`, `emits` and `subscribes` in its steps, and `satisfies`. Receives `invokes` and `triggers`; its callers are derived, so a Flow MUST NOT author an inverse `### Trigger` block.
+
+**Rules.**
+
+- **Steps.** One numbered item is one step; position, not the written number, sets the order, and an indented line continues the step above. A step's inline edge tokens are its operations and keep the step's index in the graph. Several `invokes` in one item are one step: exclusive alternatives when they are a deciding Contract's outcomes, otherwise unordered joint work that MAY run concurrently, with the next step as the join that MUST NOT begin until they all complete. A multi-step parallel branch is its own Flow or process, invoked jointly from one step. An item with no edges is a human step and appears in every process projection; an item whose only operations are `reads`, `mutates` or `emits` is work the Flow performs itself. A step's words describe the work and never declare its performer (§6.4). Joint work does not express a race or cancellation: where first-completes-wins is a real commitment, say it in the step's prose and verify the procedure.
+- **Decision continuation.** A step invoking a deciding Contract carries the fork. If one outcome continues the procedure, its continuation is the next step and MUST NOT also be declared on that outcome; every other outcome declares its own consequence in its Decides bullet. A correcting outcome may invoke work that invokes the decision again: that cycle is legal while the Steps stay the linear procedure. If no outcome proceeds, the deciding step is the last and every outcome declares its continuation. A correction loop is bounded by a deadline Trigger anchored on the phase's start and disarmed by the confirming Event; a count bound is not expressible.
+- **Event continuation.** The next step always follows by position, whatever was emitted. Only `invokes` and `emits` lead along an edge; `reads`, `mutates` and `satisfies` lead nowhere. An emitted Event continues the branch at its subscribers: a subscriber without steps is the next work on that branch; one with steps starts a separate run. An Event nobody subscribes to ends only that branch. A Trigger anchored on an Event arms a timer and continues nothing.
+- **Promoted process.** A process with its own operations, records and requirements may become an intent with `nature: flow`: its sequence is a top-level `## Steps` in the same grammar, declared from the intent node, and no same-named Flow restates it. An organization with several processes gives each its own flow-natured intent; a project that is one process uses its root and MUST NOT wrap it in a lone child.
+- **Phases.** A large process splits into phases, each a run of consecutive steps producing one artifact; a phase with its own Record and operations becomes a flow-natured child. The root keeps the shared roles, the entry Trigger, cross-cutting requirements, the Children index and an orchestrating sequence that invokes the phases; each phase keeps its steps, operations, Events and Record. A step is declared at its owning level only. References cross phases freely.
+- Long-running orchestration uses these constructs: a Flow invokes work, mutates a progress Record, and emits or subscribes to compensation Events. Durable timers and signals are realization.
+
+**Diagnostics.** Informational: an outcome that repeats the next step's operation (redundant continuation); a deciding step followed by further steps with no single proceeding outcome (ambiguous continuation); a sequence with no entry point, a step no entry reaches, a step that cannot reach an end, or a cycle with no decision outcome or deadline Trigger leading out of it.
+
+**Since.** 3.1; structured Steps 5.3; joint work, decision continuation and phases 5.4–5.5; event continuation 5.9.
+
+### 6.4 Persona
+
+**Purpose.** A Persona is an actor: an entity that exists (an employee, a client) or a role played in one intent (the approver of a claim). It declares what the actor reaches and what work it performs. Permission (Authz), reach (access) and performance are three separate facts, and only edges declare them.
+
+**Form.**
+
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | no | Who the actor is. |
+| `### Role` | no | One bullet describing the actor; may carry `[plays](aim:<address>)`. |
+| `### Access` | no | Bullets with the Views or intents it `accesses` (each optionally followed by `cross-owner(<Record-address>)`) and the operations it `invokes`. |
+
+**Example.**
+
+```markdown
 ## Persona: Approver
 
 ### Role
-- Reviews and approves submitted expense claims — [plays](aim:org#Persona:Employee)
+
+- Reviews other people's expense claims — [plays](aim:org#Persona:Employee)
 
 ### Access
+
+- Review submitted claims — [accesses](aim:#View:Claims) cross-owner(#Record:Claim)
 - [invokes](aim:#Contract:ApproveClaim)
 ```
 
-`Submitter` and `Approver` remain distinct performers in process projections and handoffs, while inheriting candidate identity records from the played organizational Persona. `plays` grants no permission or cross-owner scope; each local role's Authz and View-access declarations apply separately.
+**Edges.** Declares `accesses`, `invokes` and `plays`. Receives `plays` from roles that are filled by it; Authz entries name it without an edge.
 
-#### Performer resolution
+**Rules.**
 
-Resolve the performer of work in this order:
+- **Who performs the work.** Work is performed by, in order: (1) the Persona that `invokes` it — several invokers are alternatives, any one may act; where a particular actor must act in a particular step, that step invokes an operation only that actor invokes, and joint performance is one step per actor; (2) the Flow itself, for a step whose only operations are `reads`, `mutates` or `emits` — it inherits no Persona; (3) the performer of the nearest enclosing Flow or promoted process, for a human step or an operation with no performer of its own — direct or inherited in turn, the first declaration stops inheritance.
+- **These facts stay distinct.** Authz declares permission, never performance: it names roles by backticked address (`#Persona:Approver`, `org#Persona:Employee`), several named roles are alternatives, a name in its prose names nobody, the performer MUST be among the roles it names, and with no named role whoever performs the operation is permitted. Accessing a View that exposes an operation reaches it and commits the Persona to nothing. A Trigger starts work and never performs it. Role prose and step prose assign no work.
+- Work owes a performer when it is a step of a Flow or process, is invoked by a step, or is started by a Trigger or a subscription; owed work without one is incomplete. An operation only offered through a View owes none: whoever reaches it may act within its Authz.
+- **Roles and shared entities.** An entity shared across processes has one canonical home; a role a process reads stays with that process. Moving shared entities upward MUST NOT merge distinct roles and erase a handoff. Where a local role is filled by a shared Persona, the local role is its own Persona whose `### Role` carries `[plays](aim:<address>)`: it stays a distinct performer in every projection and handoff, takes the shared Persona's identity, and gains no permission or ownership scope by it — its own Authz and access apply. An `## Dependencies → Imports` alias may name the shared entity directly where there is no distinct role; never declare a second canonical entity for the same group.
+- A grant after an `accesses` edge widens that View's reads for the named Record only (§3, §6.5).
+- **Promoted persona.** A Persona that acquires its own data and operations may become a `nature: persona` intent: its acting face becomes top-level `## Role` and `## Access`, its data a top-level `## Schema`, its operations co-located facets. The intent is the actor and MUST NOT contain a same-named Persona.
 
-1. A Persona directly invoking the operation is its performer. Several Personas invoking the same operation are alternative performers; any one may act. To require a particular actor in a particular step, that step invokes an operation only that actor invokes. Joint performance requires a step per actor, not several invokers of one operation.
-2. A step containing only `reads`, `mutates` or `emits` is performed by the Flow itself and inherits no Persona.
-3. A human step or invoked operation without its own performer inherits the nearest enclosing Flow's or promoted process's performer. That Flow's performer is direct or inherited in turn; the first declaration stops inheritance.
+**Diagnostics.** Informational: owed work with no performer — distinguishing no performer at all, permission only (Authz without an invoking Persona) and a Trigger only, and asked once per Flow where one declaration answers several steps; a performer outside the roles Authz names; a Persona that performs, reaches, plays and is permitted nothing (give it its part or remove it). The owner answers these; the Architect never assigns a performer to clear one.
 
-These facts MUST remain distinct:
+**Since.** 3.1; performers from edges 5.9–5.10; `plays` and View grants 6.0.
 
-- `Authz` declares permission, never performance. It names roles by backticked addresses, for example `#Persona:Approver` or `org#Persona:Employee`, resolved like link addresses. An entry may carry `cross-owner(<Record-address>)` and `!owner` under the scope rules in §3. Several named roles are alternatives. A role mentioned only in Authz prose names nobody. Where Authz names roles, the performer MUST be among them; with no named role, whoever performs the operation is permitted.
-- A Persona accessing a View that exposes an operation can reach it; that does not commit the Persona to performing it.
-- A Trigger starts work and never performs it.
-- Role prose and step prose do not assign work.
+### 6.5 View
 
-Work owes a performer when it is a Flow or process step, is invoked by a step, or is started by a Trigger or subscription. Such work is incomplete without a performer under these rules. An operation merely offered through a View owes no performer; whoever reaches it may act within its Authz.
+**Purpose.** A View is a surface people use: what it shows, which records it reads, and the actions it offers. It commits to the existence of copy and the names of actions, not to the words of the copy or the pixels of the layout.
 
-A Persona that acquires its own data and operations may become a `nature: persona` intent. Its acting face becomes top-level `## Role` and `## Access`, its data top-level `## Schema`, and its operations co-located facets. The intent is the actor and MUST NOT contain a same-named Persona. An entity-specific operation belongs under the entity, not scattered on its parent.
+**Form.**
 
-### View
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | What the surface is for. |
+| `### Display` | no | What it shows, one bullet each, with the `reads` of each. |
+| `### Actions` | no | Each action's label and the operation it `exposes` or `invokes`, or the View it `navigates` to. |
+| `### Layout` | no | Arrangements the owner stated, one bullet each, in their words. |
 
-A View declares a shared interface surface. `### Display` states what it shows and which Records it reads. `### Actions` names user-visible commitments and exposes or invokes their operations. Display declares that copy exists, not the words of that copy: the words are supplied material. Action labels remain intent because they name commitments.
+**Example.**
 
-When a View reads directly or indirectly owned rows, ownership scope applies by default regardless of the caller's Persona or `plays` links. Only `cross-owner(<Record-address>)` on that Persona's access edge to that View widens its reads for the named Record. Authz on an exposed operation does not widen the View's reads, and View access does not widen any operation's scope.
+```markdown
+## View: Claims
 
-Optional `### Layout` states only arrangements the owner has specified: one bullet per commitment, in the owner's words, describing relative position, order, grouping or prominence. A bullet identifies its subject through the View's Display terms, Action labels or read Records. It declares no edges; parser validation MUST NOT compare its prose with other blocks. Review judges it. Pixels, grid systems and stylesheet mechanics are realization.
+### Summary
 
-Unstated arrangement remains realization freedom. A tool-generated arrangement MUST NOT become Layout unasked; a tool SHOULD distinguish owner commitments from its choices. Owner feedback on a draft may become an ordinary Layout change.
+The claims waiting for a decision.
 
-#### Surface ownership
+### Display
 
-A page or UI piece with its own accountable outcome is a child intent once that purpose is understood, before it owns data or operations. Its Summary and testable Requirements express that purpose; its constituent sections are View facets. The page-intent MUST NOT add a same-named View restating itself. A Persona may access the intent, covering every View inside it.
+- Each submitted claim with its lines and receipts — [reads](aim:#Record:Claim)
 
-A static or host-fed piece within a screen, with no behavior of its own, is a Display bullet, not a node. A piece acquiring its own data, operations or surface owns corresponding facets: a child intent when they form a coherent capability, or a View with sibling facets on the intent served. A promoted piece used only inline usually SHOULD NOT declare its own View; its host owns the surface. A reusable surface must be reachable by a Persona or belong to its host.
+### Actions
 
-Behavior and reachability use existing `reads`, `exposes`, `invokes` or `navigates` edges. Inline visual composition itself has no edge and is realization, except owner-stated arrangement committed in Layout.
+- Approve or return — [exposes](aim:#Contract:ApproveClaim)
 
-### Event
+### Layout
 
-An Event declares an asynchronous announcement and its data. `### Payload` uses a schema fence. `### Routing` may state routing properties as bullets, such as `Channel: tasks.created` and `Durable: true`. Emitters are derived from emitting nodes' `emits` edges; an Event MUST NOT author `### Emitted By`.
+- The oldest claim comes first.
+```
 
-### Trigger
+**Edges.** Declares `reads`, `exposes` (a user action), `invokes` (a programmatic call), `navigates` and `satisfies`. Receives `accesses` from Personas.
 
-A Trigger declares a non-actor entry point and uses `### Fires` with `triggers` edges to the Flow, Contract or promoted process-intent it starts. Its `### Kind` names `schedule`, `deadline`, `webhook` or `external`. Event-anchored timing uses `deadline`; calendar recurrence uses `schedule`. Webhook and external origins describe their source in prose rather than a Schedule. External announcements enter through a Trigger that `triggers` an ingest Flow which emits the internal Event, so that Event has an emitter.
+**Rules.**
 
-Schedules, polling loops, external systems, SLAs, escalation windows, expiries and recurring obligations use this construct. `### Schedule` admits:
+- Display declares that copy exists, not its words: the words are supplied material (§8). Action labels are intent, because they name commitments.
+- **Ownership.** A View reading owned rows shows only the caller's own by default, whatever the caller's Persona or `plays` link. Only a `cross-owner(...)` grant on that Persona's access edge to this View widens its reads, and only for the named Record. Authz on an exposed operation does not widen the View, and access to the View widens no operation.
+- **Layout** states only what the owner specified — relative position, order, grouping, prominence — and names its subject through the View's Display terms, Action labels or read Records. It declares no edges; a parser MUST NOT compare its prose with other blocks; review judges it. Pixels, grids and stylesheets are realization. Unstated arrangement is the realization's freedom, and a tool's arrangement MUST NOT become Layout unasked.
+- **Surface ownership.** A page with an accountable outcome of its own is a child intent once that purpose is understood, before it owns data or operations: its Summary and requirements state the purpose, its sections are View facets, and it MUST NOT add a same-named View restating itself; a Persona may access the intent, covering every View in it. A static piece of a screen is a Display bullet, not a node. A piece that acquires its own data, operations or surface owns those facets — a child intent when they form a capability, or a View beside its siblings. Inline visual composition has no edge.
 
-- Machine-precise `cron: <expression>`.
-- Event-anchored `<n> <unit> after [Event:<Name>]`, with `minutes`, `hours`, `days`, `business-days` or `weeks`.
-- Calendar-recurring `monthly on the <n>th`, `weekly on <weekday>` or `yearly on <date>`.
+**Diagnostics.** Informational: a View no Persona reaches, directly or through its intent or an ancestor (orphan); a View with no Style in reach (§6.9); missing supplied copy (§8).
 
-The latter forms may include informal disarming prose, such as `— unless [Event:Confirmed]` or `— unless [Event:ReportReceived] for the period`. This clause is not executable or conformance-checkable. Where disarming verification matters, its condition SHOULD be an Event emitted by the fulfilling operation, and the clause SHOULD name it; the graph can then check the Event and its emitter, not evaluate the words. The calendar used for business-days is realization; duration and anchor are intent. Escalation ladders chain deadline Triggers; expiry triggers revocation.
+**Since.** 3.1; Layout 5.12; ownership grants 6.0.
 
-### Style
+### 6.6 Event
 
-A Style declares owner-stated visual identity at identity grain, not stylesheet mechanics. It is authored in its intent file, never a separate sidecar kind. Each intent declares at most one Style. It applies to every View in that intent and its descendants; a nearer Style wins. No edge selects it. Style declares no edges, receives none, is not an orphan and is outside behavioral traceability.
+**Purpose.** An Event is an announcement that something happened, with its data. It is a fact, never work: the work lives in what subscribes to it.
 
-Besides Summary, optional sub-blocks are `### Palette`, `### Type`, `### Shape`, `### Mark` and `### Layout`. Each uses bullets of `<token>: <value>`. A token is one lowercase word; the token vocabulary is open and tooling MUST accept any token. Values are owner words, exact values or both. A realization MUST use exact values verbatim and elaborate descriptive words consistently, recording its choice. A Summary-only Style is valid; a parser does not judge the grain of its values.
+**Form.**
 
-Style Layout declares conventions for every screen wearing it. A View's Layout wins over a Style convention for that screen. Unstated arrangement and implementation remain realization.
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | What happened. |
+| `### Payload` | no | Its data, in a `schema` fence. |
+| `### Routing` | no | Routing properties as bullets, such as `Channel: claims.approved`, `Durable: true`. |
 
-A Mark's description is intent. Its image file is supplied material under `content/assets/`, never inside an AIM file; a supplied file is used verbatim. A View without a reachable Style is complete: realization chooses and records a clean neutral style, and tooling reports only an informational absence.
+**Example.**
 
-A recovered identity is proposed with provenance and requires the owner's signature before entering the model. Owner-entered legacy `content/style/` tokens MAY be moved into a Style without inventing values: preserve words and exact values, record the migration in file history, and keep the tokens readable as backup.
+````markdown
+## Event: ClaimApproved
 
-### State
+### Summary
 
-A State exhaustively specifies permitted changes and state-gated mutations of one Record enum field. It has only Summary and these sub-blocks:
+An approver approved a claim.
 
-- `### Of`: exactly one bullet containing a backticked `Record:<Name>.<field>` or `<ns>#Record:<Name>.<field>`. It resolves upward; the target MUST be a required enum field.
-- `### States`: one bullet per enum value, corresponding one to one. Names compare case-insensitively, with spaces treated as underscores; `In review` denotes `in_review`. An explicit different value follows in parentheses: `Waiting (on_hold)`. Exactly one state is marked `— initial`; any number may be marked `— final`.
-- `### Moves`: one bullet per move or in-state guard, `<From> → <To> — <operations>`. `->` is accepted for `→`. Operations are one or more comma-separated bracketed Contract or Flow references, local or qualified: `[Contract:Approve]`, `[Flow:Close]`, `[org.close#Contract:Approve]`. Each named operation MUST mutate the governed Record. Reserved target `deleted` declares deletion; reserved target `unchanged` declares an **in-state guard** (`<From> → unchanged — [Contract:EditDraft]`), permitting the named operations to mutate other fields of the Record only while the governed field is in `<From>` without changing the state value. An explicit self-move `<From> → <From>` remains a hard error.
+### Payload
 
-Moves are structured references, not edge tokens. A State declares no edge tokens; states are names within its node, not separately addressable nodes.
+```schema
+claimId: string required ref(Claim.id)
+approvedAt: datetime required
+```
+````
 
-The following rules apply to every operation writing the Record:
+**Edges.** Declares none. Receives `emits` from Contracts and Flows and `subscribes` from Contracts, Flows and intents; Triggers name it as an anchor.
 
-- A changed state value MUST match a declared before/after `<From> → <To>` move and the writing operation MUST be named on that move. Realization MUST reject any other change before committing it.
-- Creation starts in the initial state, by any creating operation; creation is not a move.
-- If deletion moves (`<From> → deleted`) exist, deletion is permitted only from their named states and by their named operations. A declared deletion may leave a final state. With no deletion moves, State imposes no deletion rule.
-- No other move leaves a final state. Other fields and related records are not frozen unless gated by an in-state guard (`<From> → unchanged`).
-- Writing the same state value is not a transition; if the operation is named on one or more `<From> → unchanged` guards, the row MUST be in one of those `<From>` states, otherwise the operation's own rules govern it.
-- A legal move grants no permission and changes no operation Input, Authz, Expects or Ensures.
+**Rules.**
 
-Failure to enforce this check is realization drift; such a realization MUST NOT be described as enforcing the State.
+- Emitters are derived from `emits` edges; an Event MUST NOT author `### Emitted By`.
+- An outside announcement enters through a Trigger that `triggers` an ingest Flow, which emits the internal Event, so every Event has an emitter in the model.
+- Where an Event leads is §6.3, *Event continuation*.
 
-A State lives with its Record or in a descendant intent. Exactly one State may govern a field across the whole model. Separate fields have independent States, not combined states. References are rewritten when their Record or operations move.
+**Diagnostics.** Informational: an Event nothing emits (orphan); a decision outcome's Event nothing consumes (§6.2).
 
-The derived graph contains a `state` node, a `governs` structural edge to the Record, and `moved-by` structural edges to named operations. These are derived structure, not authored verbs. Moves retain resolved operations and the roles admitted by those operations' Authz. A State is not an orphan and is outside the traceability chain. Its impact includes its Record, named operations and every other operation mutating that Record.
+**Since.** 3.1; derived emitters 4.0.
 
-An enum without State declares only its values. A machine MUST NOT be inferred from an enum or guard prose. A recovered machine is proposed with provenance and requires the owner's signature before entering the model.
+### 6.7 Trigger
+
+**Purpose.** A Trigger is an entry point that is not an actor: a schedule, a deadline, a webhook or another outside origin. It starts work and never performs it.
+
+**Form.**
+
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | When and why it fires. |
+| `### Kind` | yes | One of `schedule`, `deadline`, `webhook`, `external`. |
+| `### Schedule` | for `schedule` and `deadline` | One line: `cron: <expression>`; `<n> <unit> after [Event:<Name>]` with `minutes`, `hours`, `days`, `business-days` or `weeks`; or `monthly on the <n>th`, `weekly on <weekday>`, `yearly on <date>` — the latter forms optionally followed by `— unless [Event:<Name>]`. |
+| `### Fires` | yes | `triggers` edges to what it starts. |
+
+Webhook and external origins describe their source in prose instead of a Schedule.
+
+**Example.**
+
+```markdown
+## Trigger: ApprovalDeadline
+
+### Summary
+
+A claim waiting five business days for a decision is escalated.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 5 business-days after [Event:ClaimSubmitted] — unless [Event:ClaimApproved]
+
+### Fires
+
+- [triggers](aim:#Contract:EscalateClaim)
+```
+
+**Edges.** Declares `triggers` (to a Contract, Flow or promoted process) and `satisfies` (a deadline enforcing a time policy).
+
+**Rules.**
+
+- Schedules, polling, SLAs, escalation windows, expiries and recurring obligations all use this facet: an escalation ladder is chained deadlines, an expiry is a deadline triggering a revocation. Event-anchored timing is `deadline`; calendar recurrence is `schedule`.
+- The `unless` clause is prose: nothing evaluates it. Where disarming must be verifiable, it SHOULD name an Event the fulfilling operation emits, so the graph can check that Event and its emitter.
+- The calendar behind `business-days` is realization; the duration and its anchor are intent.
+- Work a Trigger starts still owes a performer (§6.4).
+
+**Diagnostics.** Informational: a Trigger that fires nothing (orphan); an anchor or `unless` Event that does not resolve (unanchored deadline: declare the Event and its emitter).
+
+**Since.** 4.0; deadline and calendar schedules 5.0.
+
+### 6.8 Capability
+
+**Purpose.** A Capability is the kind of outside service or information source the model relies on — a weather source, an identity provider, an ERP — named by what it offers, never by provider, transport or credentials.
+
+**Form.**
+
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | The kind of source or service. |
+| `### Operations` | no | What it offers, one bullet each, as signatures such as `` `FetchRates(currency) -> rates` ``. |
+| `### Bindings` | no | The realization that answers it (§9). |
+
+**Example.**
+
+```markdown
+## Capability: ExchangeRates
+
+### Summary
+
+An official source of daily currency exchange rates.
+
+### Operations
+
+- `FetchRates(currency, date) -> rates`
+```
+
+**Edges.** Declares none. Receives `invokes` from the operations that consult it; that edge derives no inverse.
+
+**Rules.**
+
+- A consuming operation MUST `invoke` the Capability it consults (§6.2). Document-shaped information is acquired by a collect Contract that invokes the Capability and mutates a Record; later work reads the Record.
+- The Capability is required in `## Dependencies → ### Requires` (`- ExchangeRates as Rates`) and resolves through a mapping or its Bindings (§8).
+- Unresolved capabilities, with Records read but never mutated in the model and schedules to arm, are what a performed intent needs supplied.
+
+**Diagnostics.** Hard error: a Requires alias that resolves through neither a mapping nor Bindings (§8). Informational: a Capability nothing invokes and no Requires names (unused).
+
+**Since.** 4.0 as a requirement surface; a graph node named Capability since 5.6.
+
+### 6.9 Style
+
+**Purpose.** A Style is how what people see should look, at the grain the owner states it: identity, never stylesheet mechanics.
+
+**Form.**
+
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | The look in a sentence. |
+| `### Palette`, `### Type`, `### Shape`, `### Mark`, `### Layout` | no | Bullets of `<token>: <value>`; a token is one lowercase word from an open vocabulary; a value is the owner's words, an exact value, or both. |
+
+**Example.**
+
+```markdown
+## Style: Warm
+
+### Summary
+
+Calm and warm, close to paper.
+
+### Palette
+
+- surface: bone `#fbf9f6`
+- ink: charcoal `#26221f`
+- accent: orange, the only hue
+
+### Layout
+
+- actions: left-aligned under the content
+```
+
+**Edges.** None, in either direction. A Style is never an orphan and is outside behavioral traceability.
+
+**Rules.**
+
+- Authored in its intent's file, never a separate kind. At most one per intent. It applies to every View of that intent and its descendants; the nearest Style wins; no edge selects it.
+- Tooling MUST accept any token. A realization MUST use exact values verbatim and elaborate descriptive words consistently, recording its choice. A Summary-only Style is valid; a parser does not judge the grain of values.
+- Style Layout sets conventions for every screen wearing it; a View's own Layout wins for that screen.
+- A Mark's description is intent; its image is supplied material under `content/assets/`, used verbatim, never inside an `.aim` file.
+- A View with no Style in reach is complete: the realization chooses a clean neutral look and records it.
+- A recovered look is proposed with provenance and needs the owner's signature. Owner-entered legacy `content/style/` tokens MAY move into a Style without inventing values, keeping words and exact values, recording the move, and leaving the tokens readable as a backup.
+
+**Diagnostics.** Hard error: more than one Style on an intent. Informational: a View with no Style in reach.
+
+**Since.** 5.11; Layout family 5.12.
+
+### 6.10 State
+
+**Purpose.** A State is the complete list of how one enum field of a Record may change: where it starts, where it ends, every move with the operation that makes it, where deletion is allowed, and which operations may change the rest of the record only in certain states.
+
+**Form.** A State has only these sub-blocks:
+
+| Sub-block | Required | Holds |
+|---|---|---|
+| `### Summary` | yes | How the record moves. |
+| `### Of` | yes | One bullet: a backticked `Record:<Name>.<field>` or `<ns>#Record:<Name>.<field>`, resolved upward; the field MUST be a required enum. |
+| `### States` | yes | One bullet per enum value, one to one. Names compare case-insensitively with spaces as underscores (`In review` is `in_review`); a different value follows in parentheses (`Waiting (on_hold)`). Exactly one is marked `— initial`; any number `— final`. |
+| `### Moves` | yes | One bullet per move or guard: `<From> → <To> — <operations>` (`->` accepted), the operations bracketed Contract or Flow references, local or qualified, comma-separated. The reserved target `deleted` declares deletion; the reserved target `unchanged` declares an in-state guard. |
+
+**Example.**
+
+```markdown
+## State: ClaimStatus
+
+### Summary
+
+A claim moves from draft to approved; only a draft may be edited or withdrawn.
+
+### Of
+
+- `Record:Claim.status`
+
+### States
+
+- Draft — initial
+- Submitted
+- Approved — final
+
+### Moves
+
+- Draft → Submitted — [Contract:SubmitClaim]
+- Submitted → Approved — [Contract:ApproveClaim]
+- Submitted → Draft — [Contract:CorrectClaim]
+- Draft → unchanged — [Contract:EditClaim]
+- Draft → deleted — [Contract:WithdrawClaim]
+```
+
+**Edges.** A State declares no edge tokens; its moves are structured references. The graph derives `governs` to its Record and `moved-by` to each named operation; these are structure, not verbs. A State is never an orphan and is outside traceability.
+
+**Rules.** For every operation writing the Record:
+
+- A changed value MUST be a declared `<From> → <To>` move, made by an operation the move names; the realization MUST refuse any other change before it commits.
+- Creation starts in the initial state, by any creating operation; creation is no move.
+- Where `→ deleted` moves exist, deletion is allowed only from their states and by their operations, a final state included; with none, the State says nothing about deletion.
+- No move leaves a final state except a declared deletion.
+- An in-state guard, `<From> → unchanged — [Contract:X]`, lets X change other fields of the record only while it is in `<From>`. Writing the same state value is no move; an operation named on guards MUST find the record in one of their states, and any other operation follows its own rules. Other fields and related records are otherwise not frozen.
+- A legal move grants no permission and changes nothing about the operation's Input, Authz, Expects or Ensures.
+- A realization that does not enforce these rules is drift and MUST NOT be described as enforcing the State.
+- One State per field across the whole model; separate fields have separate States, never combined ones. A State lives with its Record or in a descendant intent. Moves keep their resolved operations and the roles those operations' Authz admits; a State's impact includes its Record, its operations and every other operation that mutates the Record. References are rewritten when the Record or operations move.
+- An enum without a State is only a set of values. A machine MUST NOT be inferred from an enum or from guard prose; a recovered machine is proposed with provenance and needs the owner's signature.
+
+**Diagnostics.** Hard errors: `### Of` missing or not a required Record enum field; states and values differing or repeated; not exactly one initial state; a move endpoint that is no state (`deleted` and `unchanged` only as targets); a move out of a final state other than to `deleted`; a self-move `<From> → <From>`; a move naming no operation, an unresolved one, one that is no Contract or Flow, or one that does not mutate the Record; the same move by the same operation twice; two States over one field; any sub-block other than Summary, Of, States and Moves. Informational: a state no move reaches; a non-final state with no way out; an operation that mutates the Record and is named in no move or guard (often right — it may leave the status alone); a State with no moves.
+
+**Since.** 5.13; in-state guards and several machines per record enforced at run time 6.0.
 
 ## 7. Edges
 
@@ -467,9 +777,9 @@ A future verb is admitted only if it (1) expresses a relational commitment betwe
 
 ## 8. Dependencies and supplied material
 
-`## Dependencies` contains `### Imports` for concrete provider surfaces and `### Requires` for capability aliases. Requires entries use `- <capability-kind> as <Alias>`, for example `- Identity as AssigneeUsers`. Imports declare file-local aliases, such as ``- `org.Employee` as Traveler``; aliases have no separate identity. Use-site edges name the canonical node. Tools MAY display an alias beside the canonical name, consulting the importing file. Where a process has multiple distinct roles played by the same shared organizational Persona, model each local role as a `Persona` with `[plays](aim:...)` (§6) rather than collapsing them through `Imports`.
+`## Dependencies` contains `### Imports` for concrete provider surfaces and `### Requires` for capability aliases. Requires entries use `- <capability-kind> as <Alias>`, for example `- Identity as AssigneeUsers`. Imports declare file-local aliases, such as ``- `org.Employee` as Traveler``; aliases have no separate identity. Use-site edges name the canonical node. Tools MAY display an alias beside the canonical name, consulting the importing file. Where a process has multiple distinct roles played by the same shared organizational Persona, model each local role as a `Persona` with `[plays](aim:...)` (§6.4) rather than collapsing them through `Imports`.
 
-A required external service or information source may have a `## Capability: <Alias>` surface with Summary and Operations. These declare the required kind; provider, transport, query mechanics and credentials are realization. A consuming operation invokes the Capability. Acquire document-shaped information in a collect Contract that invokes the Capability and mutates a Record; downstream operations read that Record. Unresolved capabilities, Records read but never mutated in-model, and schedules to arm derive what a performed intent needs supplied.
+A required external service or information source is a Capability facet (§6.8), required here by its alias.
 
 Each Requires alias resolves either through a co-located `kind: mapping` file or inline Bindings on its Capability. A mapping has `## Map: <Alias>`, `### Target` with a backticked provider intent bullet, and `### Operation Map` bullets in the form ``- `<Alias>.<Operation>` → `<provider>.<Operation>` ``. It is intent-to-intent. Bindings resolve an external provider with no intent model and remain intent-to-realization. A Capability binding MAY name the Capability operation it realizes after `— as:`. An alias unresolved by either form is a hard validation error.
 
@@ -504,36 +814,26 @@ For cheaply and completely checkable outcomes, state Ensures and verify the resu
 
 ## 10. Diagnostics
 
-Evaluate conformance over the complete resolved project graph, never a file alone. Tools MAY further partition informational conditions into readiness tiers (such as structural `gap`, owner `question`, and advisory `note`) to gate build or process execution, provided every hard error and informational condition below is preserved.
+Evaluate conformance over the complete resolved project graph, never a file alone. Each facet's own hard errors and informational conditions are listed in its block (§6); the ones below cross facets. A conforming tool reports both. Tools MAY further partition informational conditions into readiness tiers (such as structural `gap`, owner `question`, and advisory `note`) to gate build or process execution, provided every hard error and informational condition is preserved.
 
 ### Hard errors
 
 - Missing/malformed frontmatter or required `aim`/`kind`; path/header mismatch; declared parent without an intent file; missing H1; missing/empty Requirements; invalid facet heading type/name; duplicate effective facet definitions; child collision with an authoritative parent facet; generic filenames; auto-discovered child omitted from an explicit Children list.
-- Unresolved Requires alias; dangling edge or unresolved `ref()` Record; `ref()` field absent from a resolved Record; multiple `owner` fields on one Record; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
+- Unresolved Requires alias; dangling edge or unresolved `ref()` Record; `ref()` field absent from a resolved Record; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
 - `cross-owner(...)` outside a backticked Authz role entry or Persona View-access edge; unresolved or non-Record grant target; grant target absent from the operation's declared reads/mutations or the accessed View's declared reads.
-- More than one Style on an intent.
-- State Of absent or not a required Record enum field; State values and enum values differing or repeated; zero or multiple initial states; unknown move endpoint (`deleted` and `unchanged` allowed only as target); move out of final state except to `deleted`; explicit self-move (`<From> → <From>`); missing/unresolved move operation, operation not Contract/Flow or not mutating the Record; duplicate same move/operation; multiple States governing one field anywhere; State sub-block other than Summary, Of, States or Moves.
 
 ### Informational conditions
 
 - Missing Tests; intent without facets; shadowed lower-precedence source; unresolved Import alias; inferred/unconfirmed provenance; confirmation coverage; unrecognized frontmatter keys (permitted and ignored).
 - Inferred provenance combined with approved status or approved_by: acceptance changes provenance and records approval together.
 - Breadth outside 3–9 or single-child chains; wrapper child with exactly one facet, no own requirements and no children; nature contradicting content.
-- Orphan: Contract with no exposes/invokes/triggers entry; Event with no emitter; View with no Persona access to it, its intent or an ancestor; Trigger with no outbound triggers. A Flow/Contract entered by triggers or subscribes is not orphaned. Style and State are never orphaned.
+- Orphan: a facet nothing reaches as its block defines (Contract, View, Event, Trigger). A Flow or Contract entered by `triggers` or `subscribes` is not an orphan; Style, State and Capability are never orphans.
 - Intent-level subscription retained at Level 3; Requirements item with no inbound satisfies (tools MAY promote this to a Level-3 finding); positional satisfies reference; authored inverse differing from derivation.
 - Probable duplicate: same type/name in intents not linked by import/reference/`plays`. Confirm distinction or canonicalize; name equality alone proves nothing.
 - Monolith: excessive embedded facets. Extract genuinely shared facets to sibling files/core; promote distinct behavioral clusters, or process phases. Detection is heuristic/tunable and should distinguish these remedies; facet count matters principally without children.
 - Over-hoisted facet: all consumers lie in one descendant subtree. Move it to its consumer, unless retaining a canonical entity awaiting further consumers; count reference subtrees where edges exist. Preserve local roles separately from canonical entities.
 - Noun-cluster: inside a mixed intent, a Record plus several like-named operations, often a View, form an unpromoted capability. Promote the existing cluster together. Detection is heuristic/tunable; a reasonable default is a Record named in at least three sibling operations with at least two unrelated content facets remaining. MUST NOT flag an intent containing only that focused cluster.
-- Unanchored deadline: after/unless Events do not resolve. Declare the Event and its actual emitter.
-- Decision outcome Event with no subscriber or Trigger anchor/disarmer; fewer than two outcomes; outcome lacking criteria; two or more emitted Events with divergent consumers but no Decides (ask whether it is a decision; concurrent announcements need no change).
-- Redundant continuation: an outcome repeats the next step's operation. Keep continuation on the next step only. Ambiguous continuation: a deciding step precedes further Steps but zero or several outcomes are proceeding (lack their own continuation). Specify non-proceeding continuations or end the sequence at the decision.
-- Flow step reachability and termination: a process sequence with no entry point, a step unreachable from any entry point, a non-terminal step that cannot reach any terminal outcome, or a cycle (such as a correction loop) with no decision outcome or deadline Trigger that exits the loop.
-- Ungrounded decision: no reads, capability invokes or Input; declare the basis or confirm self-contained criteria. Unused Capability: no inbound invokes and no Requires alias.
-- State unreachable from any move except initial; nonfinal state with no outgoing move; mutator of a governed Record named in no move or in-state guard; State with no moves. A mutator outside moves may legitimately leave status unchanged when not constrained by an in-state guard.
-- View without an in-scope Style: Realizer chooses and records a clean neutral look; accept it or declare Style.
 - Unsupplied material: missing View copy or entries for a read-but-never-mutated Record. This is a handoff finding, never a model defect, hard error or level change; supply material beside the model.
-- Owed work without a declared performer: no performer, permission only (`Authz` without Persona `invokes`), or Trigger only. Tools SHOULD distinguish these and ask once per Flow where inherited performance answers several steps. The owner supplies the commitment; the Architect never invents it. Performer outside Authz: align the declarations, or separate work when all roles must act. Multiple Authz roles are alternatives. Persona with no performance, reachability, `plays` link or Authz role: give it its part or remove it; step prose does not declare performance.
 - Stale satisfier: a requirement changed but an item carrying satisfies did not. Apply the commitment-change rule below; never remove the edge as repair.
 
 ## 11. Decomposition and verification rules
