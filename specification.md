@@ -117,6 +117,11 @@ Schemas use a fenced `schema` block, with one attribute per line:
 ```schema
 title: string required min(1) max(200)
 code: string required unique
+seats: integer required min(1)
+price: decimal required min(0)
+contactEmail: email required
+website: url
+phone: phone
 ownerId: string required ref(Member.id) owner
 reviewerId: string ref(Member.id) !owner
 items: list(ExpenseItem)
@@ -126,9 +131,29 @@ Grammar: `<name>: <type> <modifier>*`.
 
 | Position | Allowed forms |
 |---|---|
-| Scalar type | `string`, `number`, `boolean`, `date`, `datetime`, `file` |
-| Other type | `enum(a, b, c)`, `list(<type>)` |
+| Scalar type | `string`, `number`, `integer`, `decimal`, `boolean`, `date`, `datetime`, `email`, `url`, `phone`, `file` |
+| Other type | `enum(a, b, c)`, `list(<type>)`, `ref(<Type>.<field>)` |
 | Modifier | `required`, `optional`, `unique`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`, `owner`, `!owner` |
+
+**Scalar types.** Each says which values are valid; a realization MUST refuse any other before it stores it.
+
+| Type | Valid values |
+|---|---|
+| `string` | Any text. |
+| `number` | Any number. |
+| `integer` | A whole number, positive, negative or zero. |
+| `decimal` | A number with or without a fractional part, kept exactly as given — never rounded through binary floating point. |
+| `boolean` | `true` or `false`. |
+| `date` | A calendar date, ISO 8601 (`2026-10-26`). |
+| `datetime` | A moment, ISO 8601 with a time zone or offset. |
+| `email` | One e-mail address, `local@domain`, with a dot in the domain and no spaces; the domain compares case-insensitively. |
+| `url` | One absolute web address beginning `http://` or `https://`. |
+| `phone` | One telephone number in international form: `+`, then 7 to 15 digits. Spaces, dashes, dots and parentheses MAY be written; the stored value has none. |
+| `file` | A document (below). |
+
+**References.** A field that points at a row of another Record is a reference. `ref(<Type>.<field>)` may stand as the type itself — `owner: ref(Member.id)` — or follow a scalar as a modifier — `ownerId: string ref(Member.id)`; both mean the same: the field holds a value of the target field, and that row MUST exist. `list(<Record>)` holds several references to that Record's rows. A reference resolves like any address (§5) and derives a `refs` edge (§4); a row other rows still refer to cannot be deleted while they do, unless the same change deletes or re-points them.
+
+`min(n)` and `max(n)` bound a number's value and a text's length. A type outside this table is not an error: tools MUST read `int` as `integer`, `float` as `decimal`, `bool` as `boolean`, and `text` and `uuid` as `string`, and any other word as `string`, reporting it as an unknown type with the nearest defined one (§10). A new scalar type is admitted only with its row in this table — what is valid, and how it is stored where that is not obvious — and its check in every conforming realization.
 
 `file` is a document value, not a storage or parsing mechanism. An operation invoking a document-reading Capability for a caller's document declares a `file` Input; the Capability reads it and the Contract owns the resulting commitments. A document acquired by an external service does not imply a caller upload. Parsed text and source addresses remain ordinary values.
 
@@ -825,6 +850,7 @@ Evaluate conformance over the complete resolved project graph, never a file alon
 ### Informational conditions
 
 - Missing Tests; intent without facets; shadowed lower-precedence source; unresolved Import alias; inferred/unconfirmed provenance; confirmation coverage; unrecognized frontmatter keys (permitted and ignored).
+- Unknown field type: a schema type outside §3's table, read as `string`; name the nearest defined type (`email` for `mail`, `integer` for `count`) or confirm that text is meant.
 - Inferred provenance combined with approved status or approved_by: acceptance changes provenance and records approval together.
 - Breadth outside 3–9 or single-child chains; wrapper child with exactly one facet, no own requirements and no children; nature contradicting content.
 - Orphan: a facet nothing reaches as its block defines (Contract, View, Event, Trigger). A Flow or Contract entered by `triggers` or `subscribes` is not an orphan; Style, State and Capability are never orphans.

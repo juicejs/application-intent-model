@@ -49,6 +49,8 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 
 4. **Every write is held to the model.** However an operation is performed — code, an automation, an AI interpreter — each change it makes must satisfy the schema, the immutable fields, ownership and every State of its record before it commits (§6). The model is no longer advice the realization may skip; it is the check every write passes.
 
+**Types that mean what they say.** `integer`, `decimal`, `email`, `url` and `phone` join the scalar types, each with the values it admits, and every realization checks them before storing. A field that names another record is a reference — `owner: ref(Member.id)` — and that row must exist (§3).
+
 **Every facet reads as an extension.** Each of the ten facets — Record, Contract, Flow, Persona, View, Event, Trigger, Capability, Style, State — is one self-contained block with the same parts: Purpose, Form, Example, Edges, Rules, Diagnostics and Since (§6). A new facet arrives the same way, with its example and its diagnostics, so the language can grow without anyone rereading the rest.
 
 **Tools can trust each other's output.** A tool that reads a model and writes it back must keep every node, rule, edge, modifier, dependency, binding and authority field, and must not rewrite a file when anything would be lost (§3, *Preservation of meaning*). Models move between editors, agents and repositories without silently losing meaning.
