@@ -242,7 +242,7 @@ Every facet block has these parts, in this order:
 | **Diagnostics** | The hard errors and informational conditions it owns (§10 holds the cross-cutting ones). |
 | **Since** | The version that introduced it and its later additions. |
 
-**Rules every facet shares.** A facet name matches `[A-Za-z][A-Za-z0-9_]*`; PascalCase is recommended (§3). The heading is immediately followed by `### Summary`, except a Persona used only for role and access. Its sub-blocks are its properties: they belong to the node and are not nodes themselves; a schema is a property, not a node. A facet may carry an inline `### Bindings` property (§9). A sub-block a facet does not define is ignored by tools that do not know it and reported as informational; a facet that admits only listed sub-blocks (State) makes any other one a hard error. A facet whose substance outgrows its host may become an intent of its own (§11): Record, Persona and Flow have defined promoted forms, given in their blocks.
+**Rules every facet shares.** A facet name matches `[A-Za-z][A-Za-z0-9_]*`; PascalCase is recommended (§3). The heading is immediately followed by `### Summary`, except a Persona used only for role and access. Its sub-blocks are its properties: they belong to the node and are not nodes themselves; a schema is a property, not a node. A facet may carry an inline `### Bindings` property (§9). Only State restricts its sub-blocks to the listed ones (§6.10). A facet whose substance outgrows its host may become an intent of its own (§11): Record, Persona and Flow have defined promoted forms, given in their blocks.
 
 **Adding a facet.** A future facet is admitted only when it (1) expresses a commitment no existing facet and property can carry without losing checkability, (2) has demonstrated need in real models, and (3) arrives complete: a block with every part above; its node type; the verbs it declares and receives, added to the closed taxonomy in §7 with their endpoints; any derived structure; its place in traceability (§5) and whether it can be an orphan; its diagnostics; and a statement that existing models stay valid. It arrives with a proposal under `proposals/` that records the evidence. A new sub-block of an existing facet meets the same tests and is added to that facet's block. Renaming or removing a facet is breaking.
 
@@ -255,7 +255,7 @@ Every facet block has these parts, in this order:
 | Sub-block | Required | Holds |
 |---|---|---|
 | `### Summary` | yes | What one row is. |
-| `### Schema` | yes, for a record anything stores | A `schema` fence, one field per line, in the grammar of §3 (types, `required`, `unique`, `min`, `max`, `default`, `enum`, `ref`, `list`, `owner`, `!owner`). |
+| `### Schema` | expected | A `schema` fence, one field per line, in the grammar of §3 (types, `required`, `unique`, `min`, `max`, `default`, `enum`, `ref`, `list`, `owner`, `!owner`). |
 | `### Constraints` | no | Data constraints, one bullet each. |
 | `### Immutable` | no | Fields that never change after the row is created, one bullet each. |
 
@@ -297,7 +297,7 @@ items: list(ClaimLine)
 - A Record whose data and lifecycle warrant a file becomes an intent: its schema becomes top-level `## Schema`, the intent carries `nature: record`, and its operations co-locate as facets. The intent is the entity and MUST NOT contain a same-named Record facet.
 - `## Schema: <Name>` is the deprecated spelling of this facet and is read as a Record.
 
-**Diagnostics.** Hard errors: more than one `owner` field; a `ref(...)` whose Record or field does not resolve (§10). Informational: a Record read but never mutated in the model owes supplied contents (§8).
+**Diagnostics.** Hard errors: more than one `owner` field; a `ref(...)` whose Record or field does not resolve (§10). Informational: a Record read but never mutated in the model owes supplied contents (§8); a Record with no fields leaves its rows unstated for whoever realizes it.
 
 **Since.** 3.1 as a facet; named Record in 5.1 (formerly `Schema`); the `owner` modifier by 5.13; inherited ownership, `cross-owner` and `!owner` in 6.0.
 
@@ -372,7 +372,7 @@ claimId: string required ref(Claim.id) !owner
 | Sub-block | Required | Holds |
 |---|---|---|
 | `### Summary` | yes | What the work achieves. |
-| `### Steps` | yes | A numbered list, one step per item (below). |
+| `### Steps` | expected | A numbered list, one step per item (below). |
 | `### On Error` | no | Error handling, one bullet each. |
 | `### Input`, `### Authz`, `### Expects`, `### Ensures`, `### Returns`, `### Decides` | no | As on a Contract (§6.2). |
 
@@ -551,9 +551,9 @@ approvedAt: datetime required
 | Sub-block | Required | Holds |
 |---|---|---|
 | `### Summary` | yes | When and why it fires. |
-| `### Kind` | yes | One of `schedule`, `deadline`, `webhook`, `external`. |
+| `### Kind` | expected | One of `schedule`, `deadline`, `webhook`, `external`. |
 | `### Schedule` | for `schedule` and `deadline` | One line: `cron: <expression>`; `<n> <unit> after [Event:<Name>]` with `minutes`, `hours`, `days`, `business-days` or `weeks`; or `monthly on the <n>th`, `weekly on <weekday>`, `yearly on <date>` — the latter forms optionally followed by `— unless [Event:<Name>]`. |
-| `### Fires` | yes | `triggers` edges to what it starts. |
+| `### Fires` | expected — without it the Trigger is an orphan | `triggers` edges to what it starts. |
 
 Webhook and external origins describe their source in prose instead of a Schedule.
 
