@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v6.0
+# Agentic Intent Model (AIM) v6.1
 
 This revision says the language once: the specification is rewritten into thirteen sections, a third of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
 
@@ -9,6 +9,10 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 **This repository is the specification itself** — the language, its reference examples, and the role prompts. Tooling, the package catalog, and publishing live in separate repositories.
 
 ---
+
+## What's new in 6.1
+
+**Parts.** A field can hold one structured value inside its holder — a build's result, a project's GitHub link — as `part(<Record>)`, and several as `list(part(<Record>))`. Before, AIM could only point at a row elsewhere (`ref(...)`), so such fields were written `object` and read as text. A part is checked against its Record's fields, refuses keys the Record does not name, and derives a `holds` edge. Values keyed by run-time text — a sha per file path, a price per currency — are `map(<type>)`; values keyed by rows — a quantity per product — are `map(ref(Product.id), integer)`, with each key a checked reference. Nothing existing changes meaning. See [the 6.1 proposal](./proposals/6.1-parts.md).
 
 ## What's new in 6.0 — and why it matters
 

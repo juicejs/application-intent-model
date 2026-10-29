@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v6.0
+# Agentic Intent Model (AIM) v6.1
 
 ## 1. Core and authority
 
@@ -64,7 +64,7 @@ Only `provenance` qualifies authority. `owner`, `status`, and approval fields ne
 
 `nature` MUST NOT affect resolution, edge legality, or synthesis. Tools MAY infer a projection when it is absent: a top-level Schema without acting edges reads as record; intent-level Role/Access or acting edges reads as persona; top-level Steps reads as flow. Contradiction between declared nature and content is informational; content remains authoritative.
 
-Frontmatter is open: conforming tools MUST ignore unrecognized keys, with at most an informational diagnostic. Project keys MUST NOT redefine spec-defined keys. Source files have no per-file `version` or `spec`; a project declares one language version. **Compatibility:** source valid under AIM v5.13 is valid v6.0 source and is read as it is, without migration. v6.0 adds constructs (`plays`, `cross-owner(...)`, in-state guards, explicit modifier properties) and changes no existing meaning; the 5.13 edge shorthand is read as a deprecated spelling (§7). Tools MAY canonicalize older spellings only under the preservation rules of §3.
+Frontmatter is open: conforming tools MUST ignore unrecognized keys, with at most an informational diagnostic. Project keys MUST NOT redefine spec-defined keys. Source files have no per-file `version` or `spec`; a project declares one language version. **Compatibility:** source valid under AIM v5.13 is valid v6.0 source and is read as it is, without migration. v6.0 adds constructs (`plays`, `cross-owner(...)`, in-state guards, explicit modifier properties) and changes no existing meaning; the 5.13 edge shorthand is read as a deprecated spelling (§7). Source valid under v6.0 is valid v6.1 source; v6.1 adds `part(<Record>)`, `map(<type>)`, `map(ref(<Type>.<field>), <type>)` and the `holds` edge (§3) and changes no existing meaning. Tools MAY canonicalize older spellings only under the preservation rules of §3.
 
 ### Bootstrap and spec cache
 
@@ -72,7 +72,7 @@ Each project MUST have root `AGENTS.md` with frontmatter:
 
 ```yaml
 ---
-aim_version: 6.0
+aim_version: 6.1
 aim_root: ./aim/
 spec: <canonical specification URL>
 ---
@@ -106,7 +106,7 @@ Tools that parse `.aim` files into an intermediate representation and re-seriali
 
 ### Markdown restrictions
 
-Structured blocks use the specified bullet, `schema` fence, and edge-token forms. Requirements, Tests, Steps, Schema, Payload, Input, Authz, Expects, Ensures, Returns, Decides, Display, Actions, Access, Of, States, Moves, and Bindings are structured blocks. Tables, blockquotes, task lists, and footnotes are forbidden there. Bold, italic, links, and inline code are permitted within list items. Fences in Schema/payload blocks use `schema`; arbitrary fences are permitted elsewhere where the block's defined syntax allows them.
+Structured blocks use the specified bullet, `schema` fence, and edge-token forms. Requirements, Tests, Steps, Schema, Payload, Input, Authz, Expects, Ensures, Returns, Decides, Display, Actions, Access, Of, States, Moves, and Bindings are structured blocks. Tables, blockquotes, task lists, and footnotes are forbidden there. Bold, italic, links, and inline code are permitted within list items. Fences in Schema, Input, Payload and Returns blocks use `schema`; arbitrary fences are permitted elsewhere where the block's defined syntax allows them.
 
 Free prose, including Summary and descriptive paragraphs, permits ordinary CommonMark. Raw HTML is forbidden everywhere. Task lists MUST NOT express implementation or verification status in structured intent; that status belongs in work reports. Frontmatter `status` concerns specification lifecycle only.
 
@@ -132,7 +132,7 @@ Grammar: `<name>: <type> <modifier>*`.
 | Position | Allowed forms |
 |---|---|
 | Scalar type | `string`, `number`, `integer`, `decimal`, `boolean`, `date`, `datetime`, `email`, `url`, `phone`, `file` |
-| Other type | `enum(a, b, c)`, `list(<type>)`, `ref(<Type>.<field>)` |
+| Other type | `enum(a, b, c)`, `list(<type>)`, `ref(<Type>.<field>)`, `part(<Record>)`, `map(<type>)`, `map(ref(<Type>.<field>), <type>)` |
 | Modifier | `required`, `optional`, `unique`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`, `owner`, `!owner` |
 
 **Scalar types.** Each says which values are valid; a realization MUST refuse any other before it stores it.
@@ -153,7 +153,11 @@ Grammar: `<name>: <type> <modifier>*`.
 
 **References.** A field that points at a row of another Record is a reference. `ref(<Type>.<field>)` may stand as the type itself — `owner: ref(Member.id)` — or follow a scalar as a modifier — `ownerId: string ref(Member.id)`; both mean the same: the field holds a value of the target field, and that row MUST exist. `list(<Record>)` holds several references to that Record's rows. A reference resolves like any address (§5) and derives a `refs` edge (§4); a row other rows still refer to cannot be deleted while they do, unless the same change deletes or re-points them.
 
-`min(n)` and `max(n)` bound a number's value and a text's length. A type outside this table is not an error: tools MUST read `int` as `integer`, `float` as `decimal`, `bool` as `boolean`, and `text` and `uuid` as `string`, and any other word as `string`, reporting it as an unknown type with the nearest defined one (§10). A new scalar type is admitted only with its row in this table — what is valid, and how it is stored where that is not obvious — and its check in every conforming realization.
+**Parts.** `part(<Record>)` holds one value whose fields are that Record's schema — `result: part(BuildResult)` — and `list(part(<Record>))` holds several, in order. A part is a value of that shape kept inside its holder — a row, an Input, a Returns or a Payload — and need not come from any row: it is not a row of the Record, has no identity of its own, and is created, changed and deleted with its holder. A part follows its Record's value rules: the field rules (types, `required`, `enum`, `min`/`max`, nested parts, lists and maps) and the Record's `### Constraints`. It holds only the fields its Record names, and a realization MUST refuse any other key, like any invalid value, before it stores or sends it. The rules of stored rows stay with stored rows: identity, `unique`, `owner`, `!owner`, `### Immutable` and the Record's States (§6.10) do nothing inside a part. Every `ref(...)` inside a part MUST resolve. In a stored row, a part's references are the row's own, at any depth of nesting: the row is the referrer, so the referenced row cannot be deleted while the part names it (above), and the row inherits the referenced row's ownership restriction as through a field of its own (below). A part in an Input, Returns or Payload is checked when it is accepted or sent and carries no lasting obligation; a row that stores it takes the obligations on. A Record used only as a part — never referenced, read or mutated as a store — has no rows and does not count as a facet toward a monolith (§10); a Record that is also stored keeps its rows, and its parts are values of the same shape, independent of them.
+
+**Maps.** `map(<type>)` holds values of one type under keys — `shas: map(string)`, `marks: map(part(CaseMark))`; a key is non-empty text. `map(ref(<Type>.<field>), <type>)` keys the values by rows of a Record instead — `quantities: map(ref(Product.id), integer)`, where `Product` declares `id: string required unique`. The target field MUST be a scalar field declared `unique`; no uniqueness is inferred from a field's name, so an `id` without `unique` cannot key a map. Each key MUST be present, non-empty and resolve to exactly one existing row, and a realization MUST refuse a key that does not; otherwise it is checked like any `ref(...)`, with the same deletion and ownership consequences. Keys are unique within a map: reference keys compare by the target field's stored value, so two spellings of one e-mail address or phone number are one key, and a realization MUST refuse a duplicate. A map has no order. Each value MUST satisfy its type, as a list's items do. A `list(part(...))` whose part carries a `ref(...)` field is a different value — ordered, and allowing repeats unless a Constraint forbids them — not another spelling of a keyed map.
+
+`min(n)` and `max(n)` bound a number's value and a text's length. A type outside this table is not an error: tools MUST read `int` as `integer`, `float` as `decimal`, `bool` as `boolean`, and `text` and `uuid` as `string`, and any other word as `string`, reporting it as an unknown type with the nearest defined one (§10); for `object`, `array`, `json` and `dict` that is `part(...)`, `list(part(...))` or `map(...)`. A bare Record name is no exception: it is read as `string`, and the notice names `ref(<Record>.id)` and `part(<Record>)` — a reference or a part is written out, never inferred from a name. A new scalar type is admitted only with its row in this table — what is valid, and how it is stored where that is not obvious — and its check in every conforming realization.
 
 `file` is a document value, not a storage or parsing mechanism. An operation invoking a document-reading Capability for a caller's document declares a `file` Input; the Capability reads it and the Contract owns the resulting commitments. A document acquired by an external service does not imply a caller upload. Parsed text and source addresses remain ordinary values.
 
@@ -161,7 +165,7 @@ Grammar: `<name>: <type> <modifier>*`.
 
 `owner` and `!owner` govern row-level ownership and separation of duties:
 
-- **`owner`** marks the referenced actor (`ref(...)`) to whom the row belongs. On creation, the field is bound to the acting caller's identity. At most one field on a Record may carry `owner`; a plain reference to a person does not imply ownership. A row referencing an owned row through one or more `ref(...)` links inherits that row's ownership restriction. All applicable ownership restrictions MUST hold: by default, a caller may see or mutate a directly or indirectly owned row only when every applicable owner matches the caller's identity. Records with no ownership path are not owner-scoped. A different local Persona, including one linked through `plays`, does not widen scope.
+- **`owner`** marks the referenced actor (`ref(...)`) to whom the row belongs. On creation, the field is bound to the acting caller's identity. At most one field on a Record may carry `owner`; a plain reference to a person does not imply ownership. A row referencing an owned row through one or more `ref(...)` links — its own fields, the parts it holds, its map keys — inherits that row's ownership restriction. All applicable ownership restrictions MUST hold: by default, a caller may see or mutate a directly or indirectly owned row only when every applicable owner matches the caller's identity. Records with no ownership path are not owner-scoped. A different local Persona, including one linked through `plays`, does not widen scope.
 - **`!owner`** restricts an otherwise authorized action: the acting caller MUST differ from every applicable owner of the target row. It may follow a backticked role in `### Authz`, qualify a Contract's `### Input` field identifying the target row, or qualify a Record's reviewer `ref(...)` field. A field-level restriction applies when that Input is supplied or that Record field is written; an Authz restriction applies when acting under that entry. It never grants visibility or mutation rights. To permit action on others' rows while forbidding self-action, declare both an explicit cross-owner grant and `!owner`.
 
 **Explicit cross-owner scope.** `cross-owner(<Record-address>)` is a modifier, not a graph verb. `<Record-address>` is `#Record:<Name>` or `<namespace>#Record:<Name>` without `aim:`, resolved by canonical address resolution from the containing intent. It MUST resolve to a Record. Repeat the modifier to name several Records. It is permitted only:
@@ -181,7 +185,9 @@ A grant applies only to rows of its named Record, including that Record's inheri
 
 The first entry permits the Approver to act on others' claims under that operation's rules. The second permits that Persona to see claims across owners in Claims; it does not authorize approval.
 
-`list(<type>)` holds repeated scalars or owned Record parts. A Record-typed list derives a `refs` edge to the Record. `ref(Type.field)` derives a `refs` edge between schema attributes. Resolve the Type as a Record using canonical resolution; its field MUST exist. A non-Record target or missing field is a hard error. The qualified form `ref(<intent>#<Type>.<field>)` selects the namespace from which canonical resolution begins, allowing unrelated Records with the same name (such as `billing#Record:Account` and `identity#Record:Account`) to coexist without collision. Resolution shadows are informational.
+`list(<type>)` holds repeated scalars, references (`list(<Record>)`, a `refs` edge to the Record) or parts (`list(part(<Record>))`). `ref(Type.field)` derives a `refs` edge between schema attributes. Resolve the Type as a Record using canonical resolution; its field MUST exist. A non-Record target or missing field is a hard error. The qualified form `ref(<intent>#<Type>.<field>)` selects the namespace from which canonical resolution begins, allowing unrelated Records with the same name (such as `billing#Record:Account` and `identity#Record:Account`) to coexist without collision. Resolution shadows are informational.
+
+`part(<Record>)` derives a `holds` edge from the schema field that names it to the Record. The field is identified by its facet, its block (`### Schema`, top-level `## Schema`, `### Input`, `### Returns` or `### Payload`) and its name, so an Input field and a Returns field of one name stay distinct. Edges are derived through containers at any depth: `stock: map(ref(Product.id), list(part(Batch)))` derives `refs` to `Product.id` from its keys and `holds` to `Batch` from its values. A `holds` edge has cardinality 1 for a `required` field whose part stands alone, 0..1 for an optional one, and 0..* inside any list or map.
 
 ## 4. Graph identity and derivation
 
@@ -194,7 +200,7 @@ The graph is normative. Relations are declared once at the acting end; inverse r
 | Section | Bare top-level section | `section` |
 | Sub-block/item | H3 and its list items | Addressable `block`, not an independent facet type |
 
-Sections are valid report anchors but are edge-inert. Typed edges connect intents/facets, with only two sub-block exceptions: schema attributes participate in `refs`; individual top-level Requirements items are targets of `satisfies`. No other sub-block is an edge endpoint.
+Sections are valid report anchors but are edge-inert. Typed edges connect intents/facets, with only two sub-block exceptions: schema attributes participate in `refs` and `holds`; individual top-level Requirements items are targets of `satisfies`. No other sub-block is an edge endpoint.
 
 An intent address is its namespace. A facet address is:
 
@@ -313,7 +319,7 @@ items: list(ClaimLine)
 - `ownerId`
 ````
 
-**Edges.** A Record declares no edge verbs. Its schema derives `refs` from each `ref(...)` field and each Record-valued `list(...)` (§3). It receives `reads` and `mutates` from Contracts, Flows and Views, and the derived `governs` from a State.
+**Edges.** A Record declares no edge verbs. Its schema derives `refs` from each `ref(...)` — a field, a modifier or a map key — and each Record-valued `list(...)`, and `holds` from each `part(...)` at any depth of lists and maps (§3). It receives `reads` and `mutates` from Contracts, Flows and Views, and the derived `governs` from a State.
 
 **Rules.**
 
@@ -322,9 +328,9 @@ items: list(ClaimLine)
 - A Record whose data and lifecycle warrant a file becomes an intent: its schema becomes top-level `## Schema`, the intent carries `nature: record`, and its operations co-locate as facets. The intent is the entity and MUST NOT contain a same-named Record facet.
 - `## Schema: <Name>` is the deprecated spelling of this facet and is read as a Record.
 
-**Diagnostics.** Hard errors: more than one `owner` field; a `ref(...)` whose Record or field does not resolve (§10). Informational: a Record read but never mutated in the model owes supplied contents (§8); a Record with no fields leaves its rows unstated for whoever realizes it.
+**Diagnostics.** Hard errors: more than one `owner` field; a `ref(...)` or `part(...)` whose Record or field does not resolve (§10); a Record that holds itself through `required` single parts alone, directly or through other parts, since no finite value satisfies it (an optional part, a list or a map ends the cycle with an absent or empty value); a map key whose target is not a scalar field declared `unique`. Informational: a Record read but never mutated in the model owes supplied contents (§8), unless it is used only as a part; `unique`, `owner`, `!owner` or `### Immutable` on a Record used only as a part, where they do nothing; a Record with no fields leaves its rows unstated for whoever realizes it.
 
-**Since.** 3.1 as a facet; named Record in 5.1 (formerly `Schema`); the `owner` modifier by 5.13; inherited ownership, `cross-owner` and `!owner` in 6.0.
+**Since.** 3.1 as a facet; named Record in 5.1 (formerly `Schema`); the `owner` modifier by 5.13; inherited ownership, `cross-owner` and `!owner` in 6.0; parts, maps and reference-keyed maps in 6.1.
 
 ### 6.2 Contract
 
@@ -339,7 +345,7 @@ items: list(ClaimLine)
 | `### Authz` | no | Who may perform it: bullets naming roles by backticked address, each optionally followed by `cross-owner(<Record-address>)` and `!owner` (§3). |
 | `### Expects` | no | Preconditions, one bullet each. |
 | `### Ensures` | no | Postconditions and their edges, one bullet each. |
-| `### Returns` | no | Externally returned results, one bullet each. |
+| `### Returns` | no | Externally returned results, one bullet each; the returned fields MAY come first, in a `schema` fence. |
 | `### Decides` | no | Outcomes of a judgment, one bullet each (below). |
 
 **Example.**
@@ -780,7 +786,8 @@ Only these verbs and endpoint types are allowed. A disallowed `(verb, from, to)`
 | `plays` | persona | persona | Binds a local role Persona to a shared organizational Persona while preserving distinct performer lanes. | declared |
 | `navigates` | view | view | UI navigation between surfaces. | declared |
 | `triggers` | trigger | contract, flow, intent | A schedule, webhook or external origin initiates a behavioral unit. | declared |
-| `refs` | record field | record field | Data foreign reference declared by `ref()`. | declared |
+| `refs` | record field | record field | Data foreign reference declared by `ref()`, as a field, a modifier or a map key. | declared |
+| `holds` | schema field — facet, block and field: a Record's Schema, or the Input, Returns or Payload of a contract, flow or event | record | A part: the field carries one or many values shaped by the Record, declared by `part(...)` at any depth of lists and maps. | declared |
 | `satisfies` | contract, flow, view, trigger | requirement item | Realizes a `## Requirements` item; a deadline Trigger may enforce a time policy. | declared |
 | `triggered-by` | flow, contract, intent | flow / contract / view / trigger / persona / intent | Inverse of `invokes` / `exposes` / `triggers`. | derived |
 | `emitted-by` | event | flow / contract | Inverse of `emits`. | derived |
@@ -844,13 +851,13 @@ Evaluate conformance over the complete resolved project graph, never a file alon
 ### Hard errors
 
 - Missing/malformed frontmatter or required `aim`/`kind`; path/header mismatch; declared parent without an intent file; missing H1; missing/empty Requirements; invalid facet heading type/name; duplicate effective facet definitions; child collision with an authoritative parent facet; generic filenames; auto-discovered child omitted from an explicit Children list.
-- Unresolved Requires alias; dangling edge or unresolved `ref()` Record; `ref()` field absent from a resolved Record; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
+- Unresolved Requires alias; dangling edge or unresolved `ref()` or `part()` Record; a Record holding itself through `required` single parts alone; a map key whose target is not a scalar field declared `unique`; `ref()` field absent from a resolved Record; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
 - `cross-owner(...)` outside a backticked Authz role entry or Persona View-access edge; unresolved or non-Record grant target; grant target absent from the operation's declared reads/mutations or the accessed View's declared reads.
 
 ### Informational conditions
 
 - Missing Tests; intent without facets; shadowed lower-precedence source; unresolved Import alias; inferred/unconfirmed provenance; confirmation coverage; unrecognized frontmatter keys (permitted and ignored).
-- Unknown field type: a schema type outside §3's table, read as `string`; name the nearest defined type (`email` for `mail`, `integer` for `count`) or confirm that text is meant.
+- Unknown field type: a schema type outside §3's table, read as `string`; name the nearest defined type (`email` for `mail`, `integer` for `count`, `part(...)` for `object`, `ref(<Record>.id)` or `part(<Record>)` for a bare Record name) or confirm that text is meant.
 - Inferred provenance combined with approved status or approved_by: acceptance changes provenance and records approval together.
 - Breadth outside 3–9 or single-child chains; wrapper child with exactly one facet, no own requirements and no children; nature contradicting content.
 - Orphan: a facet nothing reaches as its block defines (Contract, View, Event, Trigger). A Flow or Contract entered by `triggers` or `subscribes` is not an orphan; Style, State and Capability are never orphans.
