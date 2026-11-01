@@ -135,6 +135,8 @@ Grammar: `<name>: <type> <modifier>*`.
 | Other type | `enum(a, b, c)`, `list(<type>)`, `ref(<Type>.<field>)`, `part(<Record>)`, `map(<type>)`, `map(ref(<Type>.<field>), <type>)` |
 | Modifier | `required`, `optional`, `unique`, `min(n)`, `max(n)`, `ref(<Type>.<field>)`, `ref(<intent>#<Type>.<field>)`, `enum(a, b, c)`, `default(<value>)`, `list(<type>)`, `owner`, `!owner` |
 
+**Presence and defaults.** A field is absent when no value is given; null is absent. `required` means a stored row and an accepted Input MUST hold a value; `optional` says so explicitly and is the default. A `default(<value>)` fills an absent field when the row is created or the Input accepted, before `required` is checked, so `required default(A)` never fails for absence; it fills nothing on an update that leaves the field out. The default is a literal of the field's type, valid like any value of it: `default(false)` is a boolean, `default(0)` a number, `default(open)` one of the enum's values. An empty text or an empty list is a value, not an absence; refusing it is a constraint (`min(1)`), never implied. `required` together with `optional`, a default its type does not admit, and two conflicting types are hard errors.
+
 **Scalar types.** Each says which values are valid; a realization MUST refuse any other before it stores it.
 
 | Type | Valid values |
@@ -151,7 +153,7 @@ Grammar: `<name>: <type> <modifier>*`.
 | `phone` | One telephone number in international form: `+`, then 7 to 15 digits. Spaces, dashes, dots and parentheses MAY be written; the stored value has none. |
 | `file` | A document (below). |
 
-**References.** A field that points at a row of another Record is a reference. `ref(<Type>.<field>)` may stand as the type itself — `owner: ref(Member.id)` — or follow a scalar as a modifier — `ownerId: string ref(Member.id)`; both mean the same: the field holds a value of the target field, and that row MUST exist. `list(<Record>)` holds several references to that Record's rows. A reference resolves like any address (§5) and derives a `refs` edge (§4); a row other rows still refer to cannot be deleted while they do, unless the same change deletes or re-points them.
+**References.** A field that points at a row of another Record is a reference. `ref(<Type>.<field>)` may stand as the type itself — `owner: ref(Member.id)` — or follow a scalar as a modifier — `ownerId: string ref(Member.id)`; both mean the same: the field holds a value of the target field, and that row MUST exist. A scalar written before `ref(...)` MUST be the target field's type: `quantity: string ref(Product.quantity)` where `quantity` is an integer is a hard error. Values compare as the target field's type. `list(<Record>)` holds several references to that Record's rows. A reference resolves like any address (§5) and derives a `refs` edge (§4); a row other rows still refer to cannot be deleted while they do, unless the same change deletes or re-points them.
 
 **Parts.** `part(<Record>)` holds one value whose fields are that Record's schema — `result: part(BuildResult)` — and `list(part(<Record>))` holds several, in order. A part is a value of that shape kept inside its holder — a row, an Input, a Returns or a Payload — and need not come from any row: it is not a row of the Record, has no identity of its own, and is created, changed and deleted with its holder. A part follows its Record's value rules: the field rules (types, `required`, `enum`, `min`/`max`, nested parts, lists and maps) and the Record's `### Constraints`. It holds only the fields its Record names, and a realization MUST refuse any other key, like any invalid value, before it stores or sends it. The rules of stored rows stay with stored rows: identity, `unique`, `owner`, `!owner`, `### Immutable` and the Record's States (§6.10) do nothing inside a part. Every `ref(...)` inside a part MUST resolve. In a stored row, a part's references are the row's own, at any depth of nesting: the row is the referrer, so the referenced row cannot be deleted while the part names it (above), and the row inherits the referenced row's ownership restriction as through a field of its own (below). A part in an Input, Returns or Payload is checked when it is accepted or sent and carries no lasting obligation; a row that stores it takes the obligations on. A Record used only as a part — never referenced, read or mutated as a store — has no rows and does not count as a facet toward a monolith (§10); a Record that is also stored keeps its rows, and its parts are values of the same shape, independent of them.
 
@@ -237,8 +239,8 @@ An intent file requires valid `aim`/`kind` frontmatter, exactly one H1, a Summar
 All references MUST use this algorithm; implementations MUST NOT substitute another precedence order:
 
 1. Select the exact namespace if an intent prefix is present; otherwise select the current intent. A named namespace MUST exist.
-2. Resolve the facet name by first match: embedded facet in the intent file; sibling facet file; explicit Imports in the current file; parent, grandparent, and continuing upward; required alias through mapping or Capability binding; absent.
-3. If a facet type is specified, require agreement with the resolved node's type. A mismatch is a hard error.
+2. Resolve the facet by first match: embedded facet in the intent file; sibling facet file; explicit Imports in the current file; parent, grandparent, and continuing upward; required alias through mapping or Capability binding; absent. A reference that names its facet type matches on type and name together at every step, so `#Contract:Review` and `#Record:Review` are distinct and both valid; one name MAY serve two facet types.
+3. A schema `ref(<Type>.<field>)` names a Record and resolves as `#Record:<Type>`. A typed reference whose name exists only under another facet type is a hard error.
 4. Resolve any report sub-block pointer by heading and 1-based item index. Resolve a Requirements key against the chosen intent's top-level Requirements, by numeric position or a bullet label declared as `- **Label** — …`. Missing/out-of-range keys and duplicate labels are hard errors.
 
 A required unresolved name is a hard error. Lower-precedence definitions produce informational shadow diagnostics. Explicit Imports take precedence over inherited parent definitions.
@@ -273,7 +275,7 @@ Every facet block has these parts, in this order:
 | **Diagnostics** | The hard errors and informational conditions it owns (§10 holds the cross-cutting ones). |
 | **Since** | The version that introduced it and its later additions. |
 
-**Rules every facet shares.** A facet name matches `[A-Za-z][A-Za-z0-9_]*`; PascalCase is recommended (§3). The heading is immediately followed by `### Summary`, except a Persona used only for role and access. Its sub-blocks are its properties: they belong to the node and are not nodes themselves; a schema is a property, not a node. A facet may carry an inline `### Bindings` property (§9). Only State restricts its sub-blocks to the listed ones (§6.10). A facet whose substance outgrows its host may become an intent of its own (§11): Record, Persona and Flow have defined promoted forms, given in their blocks.
+**Rules every facet shares.** A facet name matches `[A-Za-z][A-Za-z0-9_]*`; PascalCase is recommended (§3). The heading is immediately followed by `### Summary`, except a Persona used only for role and access. Its sub-blocks are its properties: they belong to the node and are not nodes themselves; a schema is a property, not a node. A facet may carry an inline `### Bindings` property (§9). Only State restricts its sub-blocks to the listed ones (§6.10); its Bindings stay allowed. A facet whose substance outgrows its host may become an intent of its own (§11): Record, Persona and Flow have defined promoted forms, given in their blocks.
 
 **Adding a facet.** A future facet is admitted only when it (1) expresses a commitment no existing facet and property can carry without losing checkability, (2) has demonstrated need in real models, and (3) arrives complete: a block with every part above; its node type; the verbs it declares and receives, added to the closed taxonomy in §7 with their endpoints; any derived structure; its place in traceability (§5) and whether it can be an orphan; its diagnostics; and a statement that existing models stay valid. It arrives with a proposal under `proposals/` that records the evidence. A new sub-block of an existing facet meets the same tests and is added to that facet's block. Renaming or removing a facet is breaking.
 
@@ -432,7 +434,7 @@ From a submitted claim to the payment.
 **Rules.**
 
 - **Steps.** One numbered item is one step; position, not the written number, sets the order, and an indented line continues the step above. A step's inline edge tokens are its operations and keep the step's index in the graph. Several `invokes` in one item are one step: exclusive alternatives when they are a deciding Contract's outcomes, otherwise unordered joint work that MAY run concurrently, with the next step as the join that MUST NOT begin until they all complete. A multi-step parallel branch is its own Flow or process, invoked jointly from one step. An item with no edges is a human step and appears in every process projection; an item whose only operations are `reads`, `mutates` or `emits` is work the Flow performs itself. A step's words describe the work and never declare its performer (§6.4). Joint work does not express a race or cancellation: where first-completes-wins is a real commitment, say it in the step's prose and verify the procedure.
-- **Decision continuation.** A step invoking a deciding Contract carries the fork. If one outcome continues the procedure, its continuation is the next step and MUST NOT also be declared on that outcome; every other outcome declares its own consequence in its Decides bullet. A correcting outcome may invoke work that invokes the decision again: that cycle is legal while the Steps stay the linear procedure. If no outcome proceeds, the deciding step is the last and every outcome declares its continuation. A correction loop is bounded by a deadline Trigger anchored on the phase's start and disarmed by the confirming Event; a count bound is not expressible.
+- **Decision continuation.** A step invoking a deciding Contract carries the fork. If one outcome continues the procedure, its continuation is the next step and MUST NOT also be declared on that outcome; every other outcome declares its own consequence in its Decides bullet. A correcting outcome may invoke work that invokes the decision again: that cycle is legal while the Steps stay the linear procedure. If no outcome proceeds, the deciding step is the last and every outcome declares its continuation. A correction loop is bounded by a deadline Trigger anchored on the phase's start and disarmed by the confirming Event, whose expiry ends the loop: it invokes work that exits it or disables the correction. A deadline that only reminds or escalates does not bound it. There is no dedicated syntax for a count bound; a Record counting attempts and a deciding Contract with Retry and Exhausted outcomes express one.
 - **Event continuation.** The next step always follows by position, whatever was emitted. Only `invokes` and `emits` lead along an edge; `reads`, `mutates` and `satisfies` lead nowhere. An emitted Event continues the branch at its subscribers: a subscriber without steps is the next work on that branch; one with steps starts a separate run. An Event nobody subscribes to ends only that branch. A Trigger anchored on an Event arms a timer and continues nothing.
 - **Promoted process.** A process with its own operations, records and requirements may become an intent with `nature: flow`: its sequence is a top-level `## Steps` in the same grammar, declared from the intent node, and no same-named Flow restates it. An organization with several processes gives each its own flow-natured intent; a project that is one process uses its root and MUST NOT wrap it in a lone child.
 - **Phases.** A large process splits into phases, each a run of consecutive steps producing one artifact; a phase with its own Record and operations becomes a flow-natured child. The root keeps the shared roles, the entry Trigger, cross-cutting requirements, the Children index and an orchestrating sequence that invokes the phases; each phase keeps its steps, operations, Events and Record. A step is declared at its owning level only. References cross phases freely.
@@ -444,7 +446,7 @@ From a submitted claim to the payment.
 
 ### 6.4 Persona
 
-**Purpose.** A Persona is an actor: an entity that exists (an employee, a client) or a role played in one intent (the approver of a claim). It declares what the actor reaches and what work it performs. Permission (Authz), reach (access) and performance are three separate facts, and only edges declare them.
+**Purpose.** A Persona is an actor: an entity that exists (an employee, a client) or a role played in one intent (the approver of a claim). It declares what the actor reaches and what work it performs. Permission, reach (access) and performance are three separate facts: Authz declares who may perform an operation, and edges declare what the actor reaches and which work it performs.
 
 **Form.**
 
@@ -615,7 +617,7 @@ A claim waiting five business days for a decision is escalated.
 **Rules.**
 
 - Schedules, polling, SLAs, escalation windows, expiries and recurring obligations all use this facet: an escalation ladder is chained deadlines, an expiry is a deadline triggering a revocation. Event-anchored timing is `deadline`; calendar recurrence is `schedule`.
-- The `unless` clause is prose: nothing evaluates it. Where disarming must be verifiable, it SHOULD name an Event the fulfilling operation emits, so the graph can check that Event and its emitter.
+- The `unless` clause is prose: no parser evaluates it, and it binds the realization all the same — a deadline whose `unless` holds MUST NOT fire. Where disarming must be verifiable, it SHOULD name an Event the fulfilling operation emits, so the graph can check that Event and its emitter.
 - The calendar behind `business-days` is realization; the duration and its anchor are intent.
 - Work a Trigger starts still owes a performer (§6.4).
 
@@ -655,9 +657,10 @@ An official source of daily currency exchange rates.
 
 - A consuming operation MUST `invoke` the Capability it consults (§6.2). Document-shaped information is acquired by a collect Contract that invokes the Capability and mutates a Record; later work reads the Record.
 - The Capability is required in `## Dependencies → ### Requires` (`- ExchangeRates as Rates`) and resolves through a mapping or its Bindings (§8).
+- **Coverage.** Operations lists what the work relies on, not everything a provider offers (a provider's offer is its own model, reached by mapping). A Binding without `— as:` covers the whole Capability; a Binding naming an operation after `— as:`, or an Operation Map line, covers that operation alone. A Capability resolved operation by operation is resolved only for the operations covered: an uncovered declared operation leaves the work that relies on it unresolved, however resolved the alias looks. A mapping line naming an operation the Capability does not declare, or a provider operation the target intent does not declare, is a hard error.
 - Unresolved capabilities, with Records read but never mutated in the model and schedules to arm, are what a performed intent needs supplied.
 
-**Diagnostics.** Hard error: a Requires alias that resolves through neither a mapping nor Bindings (§8). Informational: a Capability nothing invokes and no Requires names (unused).
+**Diagnostics.** Hard error: a Requires alias that resolves through neither a mapping nor Bindings (§8); a mapping line naming an operation the Capability does not declare or the provider does not declare. Informational: a Capability nothing invokes and no Requires names (unused); a declared operation no binding or mapping covers while others are covered (tools MAY treat it as blocking readiness, §10).
 
 **Since.** 4.0 as a requirement surface; a graph node named Capability since 5.6.
 
@@ -711,7 +714,7 @@ Calm and warm, close to paper.
 
 **Purpose.** A State is the complete list of how one enum field of a Record may change: where it starts, where it ends, every move with the operation that makes it, where deletion is allowed, and which operations may change the rest of the record only in certain states.
 
-**Form.** A State has only these sub-blocks:
+**Form.** A State has only these sub-blocks, besides the inline `### Bindings` every facet may carry (§9):
 
 | Sub-block | Required | Holds |
 |---|---|---|
@@ -762,7 +765,7 @@ A claim moves from draft to approved; only a draft may be edited or withdrawn.
 - One State per field across the whole model; separate fields have separate States, never combined ones. A State lives with its Record or in a descendant intent. Moves keep their resolved operations and the roles those operations' Authz admits; a State's impact includes its Record, its operations and every other operation that mutates the Record. References are rewritten when the Record or operations move.
 - An enum without a State is only a set of values. A machine MUST NOT be inferred from an enum or from guard prose; a recovered machine is proposed with provenance and needs the owner's signature.
 
-**Diagnostics.** Hard errors: `### Of` missing or not a required Record enum field; states and values differing or repeated; not exactly one initial state; a move endpoint that is no state (`deleted` and `unchanged` only as targets); a move out of a final state other than to `deleted`; a self-move `<From> → <From>`; a move naming no operation, an unresolved one, one that is no Contract or Flow, or one that does not mutate the Record; the same move by the same operation twice; two States over one field; any sub-block other than Summary, Of, States and Moves. Informational: a state no move reaches; a non-final state with no way out; an operation that mutates the Record and is named in no move or guard (often right — it may leave the status alone); a State with no moves.
+**Diagnostics.** Hard errors: `### Of` missing or not a required Record enum field; states and values differing or repeated; not exactly one initial state; a move endpoint that is no state (`deleted` and `unchanged` only as targets); a move out of a final state other than to `deleted`; a self-move `<From> → <From>`; a move naming no operation, an unresolved one, one that is no Contract or Flow, or one that does not mutate the Record; the same move by the same operation twice; two States over one field; any sub-block other than Summary, Of, States, Moves and Bindings. Informational: a state no move reaches; a non-final state with no way out; an operation that mutates the Record and is named in no move or guard (often right — it may leave the status alone); a State with no moves.
 
 **Since.** 5.13; in-state guards and several machines per record enforced at run time 6.0.
 
@@ -831,14 +834,14 @@ The declared graph consists of intent nodes and declared relations; the realized
 
 | Finding | Condition | Severity / owner |
 |---|---|---|
-| `UNBOUND_NODE` | Declared node has no binding. | Informational at Level 1/2; MISSING at Level 3. |
+| `UNBOUND_NODE` | A facet has no binding. Requirements, sub-blocks, schema fields and Steps owe none of their own: a requirement is covered through the bound facets that satisfy it, a property through its facet. | Informational at Level 1/2; MISSING at Level 3. |
 | `DANGLING_BINDING` | Site no longer exists. | INCORRECT; Realizer. |
 | `MISSING_EDGE` | Declared edge has no realized counterpart at its bound site. | MISSING; Realizer. |
 | `EDGE_MISMATCH` | Edge exists on both sides with different endpoints. | INCORRECT; Realizer. |
 | `UNDECLARED_EDGE` | Realized behavior has no declared counterpart. | UNDOCUMENTED; Architect. |
-| `AMBIGUOUS_BINDING` | Conflicting sites for one node, or two nodes share one site. | Ambiguous; user input. |
+| `AMBIGUOUS_BINDING` | Conflicting sites for one node, or two nodes share one site that nobody has confirmed. One site realizing several commitments is normal; the finding clears once the owner confirms the sharing. | Ambiguous; user input. |
 
-Every finding carries confidence: `high` when the bound realization clearly matches or clearly does not; `needs-human-check` when dynamic or ambiguous realization prevents a conclusion. A clean report means every declared edge was reviewed as realized and no undeclared behavior was found at inspected bound sites, at stated confidence; it is not global proof. Proxy confidence concerns procedure conformance, never outcome truth. The impact set is every node reachable from a changed node by following inbound edges.
+Every finding carries confidence: `high` when the bound realization clearly matches or clearly does not; `needs-human-check` when dynamic or ambiguous realization prevents a conclusion. A clean report means every declared edge was reviewed as realized and no undeclared behavior was found at inspected bound sites, at stated confidence; it is not global proof. Proxy confidence concerns procedure conformance, never outcome truth. The impact set is every node reachable from a changed node by following inbound edges, together with what depends on it without an edge: every View that wears a changed Style (its intent and descendants, up to a nearer Style), and for a changed State its Record and every operation that mutates that Record.
 
 ### Verification modes
 
@@ -851,7 +854,7 @@ Evaluate conformance over the complete resolved project graph, never a file alon
 ### Hard errors
 
 - Missing/malformed frontmatter or required `aim`/`kind`; path/header mismatch; declared parent without an intent file; missing H1; missing/empty Requirements; invalid facet heading type/name; duplicate effective facet definitions; child collision with an authoritative parent facet; generic filenames; auto-discovered child omitted from an explicit Children list.
-- Unresolved Requires alias; dangling edge or unresolved `ref()` or `part()` Record; a Record holding itself through `required` single parts alone; a map key whose target is not a scalar field declared `unique`; `ref()` field absent from a resolved Record; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
+- Unresolved Requires alias; dangling edge or unresolved `ref()` or `part()` Record; a Record holding itself through `required` single parts alone; a map key whose target is not a scalar field declared `unique`; `ref()` field absent from a resolved Record; a scalar before `ref()` differing from the target field's type; `required` with `optional`; a default its field's type does not admit; `satisfies` index out of range, label absent or duplicated; address type differing from the resolved node; illegal verb/endpoints triple.
 - `cross-owner(...)` outside a backticked Authz role entry or Persona View-access edge; unresolved or non-Record grant target; grant target absent from the operation's declared reads/mutations or the accessed View's declared reads.
 
 ### Informational conditions
@@ -890,7 +893,7 @@ A transform changes addresses, never commitments. It MUST preserve behavior and 
 5. Carry inline bindings with nodes; relocate/update legacy sidecars. Preserve realization locators because the realization has not moved.
 6. Have Architect confirmation before merging purported duplicates; remove the duplicate, choose one canonical node and repoint both sets of references.
 
-Transforms yield graph-diffs of nodes, addresses, edges and bindings, with computable impact sets. A change record MAY preserve this delta under `/aim/work/` for realization handoff. It is non-authoritative, point-in-time, archived after application; on disagreement `.aim` wins and review falls back to full graph-diff. Its format is not specified. A valid transform introduces no attributable hard error or orphan, shadow, duplicate or monolith smell.
+Transforms yield graph-diffs of nodes, addresses, edges and bindings, with computable impact sets. A change record MAY preserve this delta under `/aim/work/` for realization handoff. It is non-authoritative, point-in-time, archived after application; on disagreement `.aim` wins and review falls back to full graph-diff. Its format is not specified. A valid transform preserves the explicit edges and what nodes inherit without one (a View's effective Style), and introduces no attributable hard error or orphan, shadow, duplicate or monolith smell.
 
 EXTEND that rewrites a requirement changes a commitment. Revisit every item containing a satisfies edge to it: revise the item or explicitly confirm and report that it still holds. Stale satisfier compares both sides of a change: requirement text changed at the same label, or same position if unlabeled, while the satisfying list item/step/paragraph did not. It also flags harmless rewording for confirmation. Removing satisfies is never repair. New requirements have no existing satisfiers to revisit; removed requirements produce dangling references; reordered labeled items do not change identity.
 
