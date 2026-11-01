@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v6.1
+# Agentic Intent Model (AIM) v6.2
 
 This revision says the language once: the specification is rewritten into thirteen sections, a third of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
 
@@ -9,6 +9,17 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 **This repository is the specification itself** — the language, its reference examples, and the role prompts. Tooling, the package catalog, and publishing live in separate repositories.
 
 ---
+
+## What's new in 6.2
+
+From a real owner's first session (a packaging manufacturer modelling its company) and a consistency review of 6.1. A model valid under 6.1 is valid 6.2; old spellings are still read and are rewritten in full when a model is opened. See [the 6.2 proposal](./proposals/6.2-labels-knowledge.md).
+
+- **Owners read their own words.** Names stay ASCII identities; a `### Label`, a field's `label("Länge in mm")` and enum value labels (`InPruefung "In Prüfung"`) carry the spelling people read.
+- **Knowledge.** A new facet for what the running work consults to decide — a handbook, a regulation, past correspondence — reached with the new verb `consults`. A Capability is now what the work calls; it may be named by the system the owner chose (`SAP`).
+- **One full address per thing.** Every reference names its intent, inside its own intent too. A promoted Record, Persona or process *is* its intent (`company.kunde`, `ref(company.kunde#id)`); promoting or moving rewrites every reference, and no alias keeps an old address alive. An intent is an edge endpoint by what it holds: a Schema makes it data, a Role an actor, Steps a process. Imports are gone.
+- **Clearer processes.** A State's `### Only in` says which operations run only in which states (replacing `→ unchanged`). A deciding step says which outcomes continue (`— continues: Machbar, Sonderzuschnitt`). A subscription inside Steps waits for that case's Event. A deadline belongs to its case and restarts when its anchor repeats.
+- **Moves never approve.** Moving unconfirmed intent into a confirmed one is a change that says it confirms it.
+- **Calendar and clock.** `timezone` and `calendar` on the root say which time zone and which working days every schedule and deadline counts.
 
 ## What's new in 6.1
 
