@@ -1,0 +1,290 @@
+---
+aim: tsv
+kind: intent
+nature: organisation
+timezone: Europe/Berlin
+calendar: DE-BY
+---
+
+# TSV Seehausen 1921
+
+## Summary
+
+A sports club of about six hundred members in a Bavarian town: a football department with its teams, a gymnastics department, a member app the club built for itself, a tournament it runs every summer, and the two things every club does — take people in and collect their fees. This root holds what the whole club shares: the member, who is both a person who acts and a record the club keeps; the board and the treasurer; the statutes and the fee rules; the bank and the federation it deals with; and the index of its parts.
+
+## Requirements
+
+- **SATZUNG** — The board decides on every application, and nobody becomes a member without its decision — from [tsv#Knowledge:Satzung]
+- **BEITRAG** — Every member pays the annual fee of their fee class, collected by direct debit on the fifteenth of January — from [tsv#Knowledge:Beitragsordnung]
+- **DATEN** — A member's data is kept only as long as they are a member and is deleted on resignation unless the fee rules require it longer — from [tsv#Knowledge:DSGVO]
+- **VERBAND** — Every team that plays is registered with the regional federation before its first match — from: the federation's playing rules
+
+## Children
+
+- [fussball](./fussball/tsv.fussball.aim) — The football department: its teams, its coaches, its training
+- [turnen](./turnen/tsv.turnen.aim) — The gymnastics department
+- [app](./app/tsv.app.aim) — The member app the club built: what members see, and the fees module
+- [turnier2027](./turnier2027/tsv.turnier2027.aim) — The summer tournament 2027: a project with an end
+- [aufnahme](./aufnahme/tsv.aufnahme.aim) — Taking a new member in, from application to membership card
+- [beitrag](./beitrag/tsv.beitrag.aim) — The annual fee run, one direct debit per member, with reminders
+
+## Dependencies
+
+### Requires
+
+- SepaLastschrift as Sepa
+- MitgliedsausweisPdf as Ausweis
+
+## Persona: Mitglied
+
+### Label
+
+Mitglied
+
+### Role
+
+- A person who applied to the club or belongs to it: they see their own data, answer the club's offer, and may resign.
+
+### Access
+
+- Sees their own data — [accesses](aim:tsv.app#View:MeineDaten)
+- Applies — [invokes](aim:tsv.aufnahme#Operation:AntragStellen)
+- Accepts or declines the club's offer — [invokes](aim:tsv.aufnahme#Operation:Annehmen), [invokes](aim:tsv.aufnahme#Operation:Ablehnen)
+- Withdraws an application — [invokes](aim:tsv.aufnahme#Operation:Zurueckziehen)
+- Resigns — [invokes](aim:tsv#Operation:AustrittErklaeren)
+
+## Persona: Vorstand
+
+### Label
+
+Vorstand
+
+### Role
+
+- The elected board: decides on applications, closes stale ones, and hears what the treasurer escalates.
+
+### Access
+
+- Decides on an application — [invokes](aim:tsv.aufnahme#Operation:Entscheiden)
+- Closes an application that went nowhere — [invokes](aim:tsv.aufnahme#Operation:AntragSchliessen)
+- Registers the club's teams for the tournament — [invokes](aim:tsv.turnier2027.anmeldung)
+
+## Persona: Kassenwart
+
+### Label
+
+Kassenwart
+
+### Role
+
+- The treasurer: sets the fee class, runs the fee collection, sends reminders and reports what stays unpaid.
+
+### Access
+
+- Sets a member's fee class — [invokes](aim:tsv.aufnahme#Operation:BeitragsklasseFestlegen)
+- Creates the member — [invokes](aim:tsv.aufnahme#Operation:MitgliedAnlegen)
+- Runs the fees — [invokes](aim:tsv.beitrag)
+- Reminds and reports — [invokes](aim:tsv.beitrag.einzug#Operation:Mahnen), [invokes](aim:tsv.beitrag.einzug#Operation:VorstandMelden)
+- Sees the fees — [accesses](aim:tsv.app.beitraege#View:Beitragsuebersicht)
+
+## Record: Mitglied
+
+### Label
+
+Mitglied
+
+### Summary
+
+The member as the club keeps them: who they are, which fee class, since when, and where they stand between application and resignation.
+
+### Schema
+
+```schema
+id: string required unique
+name: string required label("Name")
+geburtsdatum: date required label("Geburtsdatum")
+email: email required
+iban: string optional label("IBAN")
+beitragsklasse: enum(jugend, erwachsene, familie) optional label("Beitragsklasse")
+status: enum(antragsteller, mitglied, ausgetreten) required default(antragsteller)
+seit: date optional label("Mitglied seit")
+```
+
+## State: Mitgliedsstatus
+
+### Summary
+
+A person applies, becomes a member when the treasurer creates them after the board's decision and their acceptance, and leaves by resigning; an application is deleted when it is withdrawn or closed.
+
+### Of
+
+- `tsv#Record:Mitglied.status`
+
+### States
+
+- Antragsteller — initial
+- Mitglied
+- Ausgetreten — final
+
+### Moves
+
+- Antragsteller → Mitglied — [tsv.aufnahme#Operation:MitgliedAnlegen]
+- Antragsteller → deleted — [tsv.aufnahme#Operation:Zurueckziehen], [tsv.aufnahme#Operation:AntragSchliessen]
+- Mitglied → Ausgetreten — [tsv#Operation:AustrittErklaeren]
+
+### Only in
+
+- Antragsteller — [tsv.aufnahme#Operation:Entscheiden], [tsv.aufnahme#Operation:BeitragsklasseFestlegen]
+- Mitglied — [tsv.beitrag.einzug#Operation:BeitragStellen]
+
+## Operation: AustrittErklaeren
+
+### Label
+
+Austritt erklären
+
+### Summary
+
+A member resigns; open fees of theirs are cancelled and their data is scheduled for deletion.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Mitglied`
+
+### Ensures
+
+- The member is marked resigned — [mutates](aim:tsv#Record:Mitglied), [satisfies](aim:tsv#Requirements[DATEN])
+- Open fees are cancelled — [invokes](aim:tsv.beitrag.einzug#Operation:Stornieren)
+- The club is told — [emits](aim:tsv#Event:MitgliedAusgetreten)
+
+## Event: MitgliedAusgetreten
+
+### Summary
+
+A member resigned.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+zum: date required
+```
+
+## Organisation: Landesverband
+
+### Label
+
+Bayerischer Fußball-Verband
+
+### Summary
+
+The regional football federation: it runs the leagues, confirms every team the club registers, and sets the playing rules. It acts in the tournament registration by confirming it.
+
+### Access
+
+- Confirms a registration — [invokes](aim:tsv.turnier2027.anmeldung#Operation:BestaetigungErfassen)
+
+## Organisation: Stadt
+
+### Label
+
+Stadt Seehausen
+
+### Summary
+
+The town, which owns the sports hall and the pitches the club uses and sets the hall's hours. It does nothing in the club's processes; it is here because the gymnastics department's plans depend on it.
+
+## Service: Volksbank
+
+### Label
+
+Volksbank Seehausen
+
+### Summary
+
+The club's bank, reached through its direct-debit interface: the fees go out as SEPA direct debits and the payments come back as notifications. The bank's own model is `volksbank`, beside this tree.
+
+### Bindings
+
+- binds: `aim:volksbank` — as: provider
+
+## Capability: SepaLastschrift
+
+### Label
+
+SEPA-Lastschrift
+
+### Summary
+
+What the fee collection must be able to do, whoever provides it: submit one direct debit for one fee against a member's mandate, and learn whether it was paid.
+
+### Operations
+
+- `Einreichen(iban, betrag, verwendungszweck) -> lastschrift`
+- `Status(lastschrift) -> bezahlt`
+
+## Capability: MitgliedsausweisPdf
+
+### Label
+
+Mitgliedsausweis als PDF
+
+### Summary
+
+What taking a member in must be able to do: render their membership card as a PDF to send them.
+
+### Operations
+
+- `Rendern(mitglied) -> pdf`
+
+### Bindings
+
+- binds: `amy:pdf` — as: provider
+
+## Knowledge: Satzung
+
+### Label
+
+Satzung
+
+### Summary
+
+The club's statutes: who may become a member and how, the board's duties, the general meeting, resignation and its notice period.
+
+### Source
+
+The statutes as registered with the district court, 2019 version.
+
+## Knowledge: Beitragsordnung
+
+### Label
+
+Beitragsordnung
+
+### Summary
+
+The fee rules the general meeting passed: the three fee classes and their amounts, the direct-debit date, and what happens when a fee stays unpaid.
+
+### Source
+
+The fee rules resolved by the general meeting of 2024.
+
+## Knowledge: DSGVO
+
+### Label
+
+DSGVO
+
+### Summary
+
+What the club may keep about a person, for how long, and what it must delete when they leave.
+
+### Source
+
+The General Data Protection Regulation and the state data protection office's guidance for clubs.

@@ -1,0 +1,164 @@
+---
+aim: nasa.esdmd.artemis3
+kind: intent
+parent: nasa.esdmd
+nature: project
+---
+
+# Artemis III
+
+## Summary
+
+Land two astronauts near the lunar south pole and bring them home, in 2027. The project contains the work: the lifecycle that takes the mission through its gates, the countdown that launches it, and the resolution of whatever goes wrong in flight. It performs nothing itself — the directorate decides, the review board reviews, the launch director launches, the flight director flies, SpaceX reports its lander.
+
+## Requirements
+
+- **LAND** — Two crew members reach the lunar surface and return to Orion; the mission is complete only after splashdown.
+- **GATES** — The mission passes every lifecycle gate of NPR 7120.5 before it launches — from [nasa#Requirements[GATES]]
+- **LANDER** — The countdown does not proceed to the go poll until SpaceX has reported the lander ready in lunar orbit.
+- **ONE-PHASE** — The mission is in exactly one phase at a time, and only the operations named here move it.
+
+## Children
+
+- [lifecycle](./lifecycle/nasa.esdmd.artemis3.lifecycle.aim) — The lifecycle gates, from formulation to flight readiness
+- [countdown](./countdown/nasa.esdmd.artemis3.countdown.aim) — The launch countdown, from call to stations to liftoff
+- [anomaly](./anomaly/nasa.esdmd.artemis3.anomaly.aim) — Anomaly resolution in flight
+
+## Dependencies
+
+### Requires
+
+- LanderStatus as Lander
+
+## Record: Mission
+
+### Summary
+
+The mission as a thing that moves through phases: where it stands, and the launch window it is aiming at.
+
+### Schema
+
+```schema
+id: string required unique
+name: string required
+phase: enum(formulation, development, launch, flight, complete) required default(formulation)
+launchWindowOpens: datetime optional
+launchWindowCloses: datetime optional
+```
+
+## State: MissionPhase
+
+### Summary
+
+A mission moves forward only, one phase at a time: the directorate commits it to development, a passed flight readiness review clears it to launch, liftoff puts it in flight, and the mission manager closes it after splashdown.
+
+### Of
+
+- `nasa.esdmd.artemis3#Record:Mission.phase`
+
+### States
+
+- Formulation — initial
+- Development
+- Launch
+- Flight
+- Complete — final
+
+### Moves
+
+- Formulation → Development — [nasa.esdmd.artemis3.lifecycle#Operation:KeyDecisionPoint]
+- Development → Launch — [nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview]
+- Launch → Flight — [nasa.esdmd.artemis3.countdown#Operation:CommitToLaunch]
+- Flight → Complete — [nasa.esdmd.artemis3#Operation:CloseMission]
+
+### Only in
+
+- Launch — [nasa.esdmd.artemis3.countdown#Operation:CommitToLaunch]
+- Flight — [nasa.esdmd.artemis3.anomaly#Operation:DecideResolution]
+
+## Operation: CloseMission
+
+### Summary
+
+After splashdown and crew recovery, the mission manager closes the mission.
+
+### Input
+
+```schema
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+```
+
+### Authz
+
+- `nasa#Persona:MissionManager`
+
+### Expects
+
+- The crew is recovered and the vehicle is safed.
+
+### Ensures
+
+- The mission is complete — [mutates](aim:nasa.esdmd.artemis3#Record:Mission), [satisfies](aim:nasa.esdmd.artemis3#Requirements[LAND])
+- The agency is told — [emits](aim:nasa.esdmd.artemis3#Event:MissionComplete)
+
+## Event: MissionComplete
+
+### Summary
+
+The mission ended with the crew home.
+
+### Payload
+
+```schema
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+completedAt: datetime required
+```
+
+## Organisation: SpaceX
+
+### Summary
+
+The company that builds and flies the Starship human landing system under contract. It acts in the countdown: it reports when its lander, already in lunar orbit, is ready for the crew.
+
+### Access
+
+- Reports the lander ready — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:ReportLanderReadiness)
+
+## Organisation: StandingReviewBoard
+
+### Summary
+
+The independent board the directorate appoints for this mission: senior engineers from other centers who conduct every lifecycle review and decide whether the mission proceeds.
+
+### Access
+
+- Conducts a gate review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview)
+
+## Service: StarshipHLS
+
+### Label
+
+Starship HLS
+
+### Summary
+
+SpaceX's human landing system as the mission reaches it: a data link through which the lander's readiness and telemetry are read. The lander's own model is SpaceX's, not NASA's.
+
+### Bindings
+
+- binds: `system:spacex-hls-data-link` — as: connection
+
+## Capability: LanderStatus
+
+### Summary
+
+What the mission must be able to learn about the lander, whoever provides it: whether it is ready, and what its telemetry says.
+
+### Operations
+
+- `Readiness() -> status`
+- `Telemetry() -> frames`
+
+### Bindings
+
+- binds: `system:spacex-hls-data-link` — as: provider

@@ -1,0 +1,164 @@
+---
+aim: nasa.jsc.mcc.telemetry
+kind: intent
+parent: nasa.jsc.mcc
+nature: software
+---
+
+# Telemetry
+
+## Summary
+
+The part of mission control that receives the vehicle's frames on every tracking pass, holds the limits for each measurement, flags a frame outside its limits as an anomaly for the flight controllers, and sends a flight director's command up through the same link.
+
+## Requirements
+
+- **EVERY-FRAME** — Every frame of a pass is stored with the pass it came from; none is dropped silently — from [nasa.jsc.mcc#Requirements[LIVE]]
+- **FLAG** — A frame outside its measurement's limits raises an anomaly at once; the software never decides what it means.
+- **ACK** — A command is sent again until the vehicle acknowledges it — from [nasa.jsc.mcc#Requirements[SAFE-COMMAND]]
+
+## Record: TelemetryFrame
+
+### Summary
+
+One measurement of one vehicle system at one moment, as downlinked.
+
+### Schema
+
+```schema
+id: string required unique
+vehicle: string required
+system: string required
+measurement: string required
+value: number required
+receivedAt: datetime required
+passId: string required
+```
+
+## Record: Limit
+
+### Summary
+
+The flight rules' limits for one measurement: below and above which a reading is a violation.
+
+### Schema
+
+```schema
+id: string required unique
+measurement: string required unique
+low: number required
+high: number required
+```
+
+## Operation: IngestFrames
+
+### Summary
+
+At the start of a tracking pass the frames are pulled down through the link, stored, checked against their limits, and the crew's vital signs among them are flagged.
+
+### Input
+
+```schema
+passId: string required
+```
+
+### Ensures
+
+- The pass's frames are received — [invokes](aim:nasa.jsc.mcc#Capability:SpaceLink)
+- Every frame is stored — [mutates](aim:nasa.jsc.mcc.telemetry#Record:TelemetryFrame), [satisfies](aim:nasa.jsc.mcc.telemetry#Requirements[EVERY-FRAME])
+- Every frame is checked — [invokes](aim:nasa.jsc.mcc.telemetry#Operation:DetectLimitViolation)
+- The crew's vital signs are flagged — [invokes](aim:nasa.jsc.mcc.crew#Operation:FlagVitalSign)
+
+### Bindings
+
+- binds: `src/telemetry/ingest.ts#ingestPass` — as: handler
+
+## Operation: DetectLimitViolation
+
+### Summary
+
+A frame is compared with its measurement's limits.
+
+### Input
+
+```schema
+frameId: string required ref(nasa.jsc.mcc.telemetry#TelemetryFrame.id)
+```
+
+### Ensures
+
+- The limit for the measurement is read — [reads](aim:nasa.jsc.mcc.telemetry#Record:TelemetryFrame), [reads](aim:nasa.jsc.mcc.telemetry#Record:Limit)
+
+### Decides
+
+- **Within** — the value lies between the measurement's low and high limits
+- **Violated** — the value lies outside them; an anomaly is raised for the flight controllers — [emits](aim:nasa.jsc.mcc.telemetry#Event:AnomalyDetected), [satisfies](aim:nasa.jsc.mcc.telemetry#Requirements[FLAG])
+
+## Operation: SendCommand
+
+### Summary
+
+A flight director's command goes up through the link on the current pass and is sent again until acknowledged.
+
+### Input
+
+```schema
+vehicle: string required
+command: string required min(1)
+```
+
+### Authz
+
+- `nasa#Persona:FlightDirector`
+
+### Ensures
+
+- The command is uplinked and acknowledged — [invokes](aim:nasa.jsc.mcc#Capability:SpaceLink), [satisfies](aim:nasa.jsc.mcc.telemetry#Requirements[ACK])
+- The team sees it went — [emits](aim:nasa.jsc.mcc.telemetry#Event:CommandSent)
+
+### Bindings
+
+- binds: `src/telemetry/command.ts#sendCommand` — as: handler
+
+## Event: AnomalyDetected
+
+### Summary
+
+A frame violated its limits.
+
+### Payload
+
+```schema
+frameId: string required ref(nasa.jsc.mcc.telemetry#TelemetryFrame.id)
+measurement: string required
+value: number required
+detectedAt: datetime required
+```
+
+## Event: CommandSent
+
+### Summary
+
+A command was uplinked and acknowledged.
+
+### Payload
+
+```schema
+vehicle: string required
+command: string required
+sentAt: datetime required
+```
+
+## Trigger: PassStart
+
+### Summary
+
+The Deep Space Network's pass start: when an antenna acquires the vehicle, the frames of the pass are ingested.
+
+### Kind
+
+- external
+
+### Fires
+
+- [triggers](aim:nasa.jsc.mcc.telemetry#Operation:IngestFrames)

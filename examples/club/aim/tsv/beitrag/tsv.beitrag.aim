@@ -1,0 +1,94 @@
+---
+aim: tsv.beitrag
+kind: intent
+parent: tsv
+nature: process
+---
+
+# The annual fee run
+
+## Summary
+
+Every fifteenth of January the treasurer's run begins: the members due are collected into the run, and for each of them one collection is started as a run of its own — the fee issued, the direct debit submitted, the payment awaited, reminders sent while it stays unpaid. The year's run is complete when every member's collection has ended, paid or reported to the board.
+
+## Requirements
+
+- **JAHR** — One run per year, started on the fifteenth of January, covering every member of that day — from [tsv#Requirements[BEITRAG]]
+- **JEDER** — Every member in the run gets exactly one fee of their fee class; nobody is skipped or charged twice.
+- **ABSCHLUSS** — The run is complete only when every collection it started has ended.
+
+## Steps
+
+1. The members due are collected — [reads](aim:tsv#Record:Mitglied), [mutates](aim:tsv.beitrag#Record:Beitragslauf), [emits](aim:tsv.beitrag#Event:LaufGestartet)
+2. One collection per member — for each [tsv.beitrag#Record:Beitragslauf.mitglieder] as mitgliedId — [invokes](aim:tsv.beitrag.einzug)
+3. The run is closed — [mutates](aim:tsv.beitrag#Record:Beitragslauf), [emits](aim:tsv.beitrag#Event:LaufAbgeschlossen)
+
+## Children
+
+- [einzug](./einzug/tsv.beitrag.einzug.aim) — One member's fee: issued, collected, reminded, paid
+
+## Record: Beitragslauf
+
+### Label
+
+Beitragslauf
+
+### Summary
+
+One year's run: which members it covers and whether it is complete.
+
+### Schema
+
+```schema
+id: string required unique
+jahr: integer required
+mitglieder: list(ref(tsv#Mitglied.id)) required
+status: enum(laeuft, abgeschlossen) required default(laeuft)
+```
+
+## Event: LaufGestartet
+
+### Summary
+
+The year's fee run began.
+
+### Payload
+
+```schema
+laufId: string required ref(tsv.beitrag#Beitragslauf.id)
+jahr: integer required
+```
+
+## Event: LaufAbgeschlossen
+
+### Summary
+
+Every collection of the year's run has ended.
+
+### Payload
+
+```schema
+laufId: string required ref(tsv.beitrag#Beitragslauf.id)
+```
+
+## Trigger: Jahresbeitrag
+
+### Label
+
+Jahresbeitrag
+
+### Summary
+
+On the fifteenth of January the run starts.
+
+### Kind
+
+- schedule
+
+### Schedule
+
+- yearly on 15 January
+
+### Fires
+
+- [triggers](aim:tsv.beitrag), [satisfies](aim:tsv.beitrag#Requirements[JAHR])

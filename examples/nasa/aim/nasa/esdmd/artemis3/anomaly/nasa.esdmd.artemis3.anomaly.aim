@@ -1,0 +1,244 @@
+---
+aim: nasa.esdmd.artemis3.anomaly
+kind: intent
+parent: nasa.esdmd.artemis3
+nature: process
+---
+
+# Anomaly resolution
+
+## Summary
+
+Starts when mission control's telemetry software detects a limit violation — [subscribes](aim:nasa.jsc.mcc.telemetry#Event:AnomalyDetected). A flight controller triages it on the flight rules; a real anomaly convenes the resolution team, which proposes a resolution the flight director accepts, rejects or waives. An accepted resolution is uplinked as a command through mission control. An anomaly not closed within a day is escalated to the mission manager.
+
+## Requirements
+
+- **TRIAGE** — Every detected anomaly is triaged against the flight rules before anyone acts on it — from [nasa#Requirements[RULES]]
+- **DECIDE** — The flight director decides every real anomaly; nobody else accepts, rejects or waives a resolution — from [nasa#Requirements[RULES]]
+- **DAY** — An anomaly open twenty-four hours after detection is escalated to the mission manager.
+- **UPLINK** — An accepted resolution reaches the vehicle only as a command sent through mission control.
+
+## Steps
+
+1. The anomaly is recorded from the detected frame — [mutates](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly)
+2. Triage — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:TriageAnomaly) — continues: Real
+3. The anomaly resolution team convenes.
+4. Propose a resolution — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:ProposeResolution)
+5. The flight director decides — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:DecideResolution) — continues: Accept, Waive
+6. Close — [emits](aim:nasa.esdmd.artemis3.anomaly#Event:AnomalyClosed)
+
+## On Error
+
+- A command whose acknowledgement does not arrive is sent again on the next tracking pass; the anomaly stays open until it does.
+
+## Record: Anomaly
+
+### Summary
+
+One detected anomaly: what tripped, how bad, where it stands, and the resolution proposed for it.
+
+### Schema
+
+```schema
+id: string required unique
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+detectedAt: datetime required
+system: string required
+severity: enum(low, high, critical) required
+status: enum(open, resolved, waived) required default(open)
+resolution: string optional
+```
+
+## Record: Waiver
+
+### Summary
+
+The flight director's written acceptance of an anomaly left unresolved, with the rationale.
+
+### Schema
+
+```schema
+id: string required unique
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+rationale: string required min(1)
+```
+
+## State: AnomalyStatus
+
+### Summary
+
+An anomaly is open until the flight director resolves or waives it; a nuisance is resolved at triage.
+
+### Of
+
+- `nasa.esdmd.artemis3.anomaly#Record:Anomaly.status`
+
+### States
+
+- Open — initial
+- Resolved — final
+- Waived — final
+
+### Moves
+
+- Open → Resolved — [nasa.esdmd.artemis3.anomaly#Operation:TriageAnomaly], [nasa.esdmd.artemis3.anomaly#Operation:DecideResolution]
+- Open → Waived — [nasa.esdmd.artemis3.anomaly#Operation:DecideResolution]
+
+### Only in
+
+- Open — [nasa.esdmd.artemis3.anomaly#Operation:ProposeResolution]
+
+## Operation: TriageAnomaly
+
+### Summary
+
+A flight controller reads the anomaly against the flight rules and says whether it is real.
+
+### Input
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+```
+
+### Authz
+
+- `nasa.jsc#Persona:FlightController`
+
+### Ensures
+
+- The rules for the system are consulted — [reads](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly), [consults](aim:nasa#Knowledge:FlightRules), [satisfies](aim:nasa.esdmd.artemis3.anomaly#Requirements[TRIAGE])
+
+### Decides
+
+- **Real** — the flight rules call the reading a violation — [emits](aim:nasa.esdmd.artemis3.anomaly#Event:AnomalyConfirmed)
+- **Nuisance** — a sensor or data artefact the rules exclude; the anomaly is resolved as such — [mutates](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly)
+
+## Operation: ProposeResolution
+
+### Summary
+
+The resolution team writes what to do: a corrective command, a procedure change, or living with it.
+
+### Input
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+resolution: string required min(1)
+```
+
+### Authz
+
+- `nasa.jsc#Persona:FlightController`
+
+### Expects
+
+- The anomaly is open and confirmed real.
+
+### Ensures
+
+- The proposal is on the anomaly — [mutates](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly), [consults](aim:nasa#Knowledge:FlightRules)
+
+## Operation: DecideResolution
+
+### Summary
+
+The flight director accepts the proposal, sends it back, or waives the anomaly.
+
+### Input
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+```
+
+### Authz
+
+- `nasa#Persona:FlightDirector`
+
+### Expects
+
+- A resolution is proposed.
+
+### Ensures
+
+- The decision is on record — [reads](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly), [satisfies](aim:nasa.esdmd.artemis3.anomaly#Requirements[DECIDE])
+
+### Decides
+
+- **Accept** — the resolution is within the flight rules and the crew's safety margins; the command goes up — [mutates](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly), [invokes](aim:nasa.jsc.mcc.telemetry#Operation:SendCommand), [satisfies](aim:nasa.esdmd.artemis3.anomaly#Requirements[UPLINK])
+- **Reject** — the resolution is incomplete or unsafe; the team proposes again — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:ProposeResolution)
+- **Waive** — the anomaly is accepted as is, with a written rationale — [mutates](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly), [mutates](aim:nasa.esdmd.artemis3.anomaly#Record:Waiver)
+
+## Operation: EscalateAnomaly
+
+### Summary
+
+An anomaly open too long goes to the mission manager.
+
+### Input
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+```
+
+### Authz
+
+- `nasa#Persona:MissionManager`
+
+### Ensures
+
+- The mission manager is told — [reads](aim:nasa.esdmd.artemis3.anomaly#Record:Anomaly), [emits](aim:nasa.esdmd.artemis3.anomaly#Event:AnomalyEscalated), [satisfies](aim:nasa.esdmd.artemis3.anomaly#Requirements[DAY])
+
+## Event: AnomalyConfirmed
+
+### Summary
+
+Triage found the anomaly real.
+
+### Payload
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+```
+
+## Event: AnomalyClosed
+
+### Summary
+
+The anomaly was resolved or waived.
+
+### Payload
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+closedAt: datetime required
+```
+
+## Event: AnomalyEscalated
+
+### Summary
+
+An anomaly open beyond a day was taken to the mission manager.
+
+### Payload
+
+```schema
+anomalyId: string required ref(nasa.esdmd.artemis3.anomaly#Anomaly.id)
+```
+
+## Trigger: ResolutionDeadline
+
+### Summary
+
+Twenty-four hours after detection an open anomaly is escalated; closing it disarms the deadline.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 24 hours after [nasa.jsc.mcc.telemetry#Event:AnomalyDetected] — unless [nasa.esdmd.artemis3.anomaly#Event:AnomalyClosed]
+
+### Fires
+
+- [triggers](aim:nasa.esdmd.artemis3.anomaly#Operation:EscalateAnomaly), [satisfies](aim:nasa.esdmd.artemis3.anomaly#Requirements[DAY])

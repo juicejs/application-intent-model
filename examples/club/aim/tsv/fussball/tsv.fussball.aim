@@ -1,0 +1,151 @@
+---
+aim: tsv.fussball
+kind: intent
+parent: tsv
+nature: organisation
+---
+
+# Football department
+
+## Summary
+
+The club's largest department: eleven teams from the under-nines to the first team, their coaches, two training evenings a week on the town's pitches. It keeps its teams as records of its own and looks members up in the club app, which it reaches as a service. Its training is named here and not yet worked out; its team app is named and not yet built.
+
+## Requirements
+
+- **TRAINER** — Every team has a coach with a valid licence before the season starts — from [tsv#Requirements[VERBAND]]
+- **SPIELBERECHTIGT** — A player is fielded only if they are a member of the club — from [tsv#Knowledge:Satzung]
+
+## Dependencies
+
+### Requires
+
+- Mitgliedersuche as Mitglieder
+
+## Persona: Trainer
+
+### Label
+
+Trainer
+
+### Role
+
+- Coaches one team, takes the training, and looks players up before fielding them.
+
+### Access
+
+- Looks a player up — [invokes](aim:tsv.fussball#Operation:SpielerPruefen)
+
+## Record: Mannschaft
+
+### Label
+
+Mannschaft
+
+### Summary
+
+One team: its name, the birth years it plays in, and its coach.
+
+### Schema
+
+```schema
+id: string required unique
+name: string required
+jahrgang: integer required label("Jüngster Jahrgang")
+trainerId: string required ref(tsv#Mitglied.id)
+```
+
+## Operation: SpielerPruefen
+
+### Label
+
+Spieler prüfen
+
+### Summary
+
+Before a player is fielded, the coach checks in the club's directory that they are a member.
+
+### Input
+
+```schema
+name: string required
+```
+
+### Authz
+
+- `tsv.fussball#Persona:Trainer`
+
+### Ensures
+
+- The directory is asked — [invokes](aim:tsv.fussball#Capability:Mitgliedersuche), [satisfies](aim:tsv.fussball#Requirements[SPIELBERECHTIGT])
+
+### Decides
+
+- **Mitglied** — the directory knows the player as a member
+- **KeinMitglied** — the directory does not; the player is not fielded and the application process is pointed out
+
+## Process: Training
+
+### Label
+
+Training
+
+### Summary
+
+Two evenings a week each team trains on the town's pitches; attendance is taken and the coach notes who is ready to play. Named here; its steps are worked out in its own conversation.
+
+## Trigger: Trainingsabend
+
+### Summary
+
+Every Tuesday and Thursday evening the training is held.
+
+### Kind
+
+- schedule
+
+### Schedule
+
+- weekly on Tuesday
+
+### Fires
+
+- [triggers](aim:tsv.fussball#Process:Training)
+
+## Capability: Mitgliedersuche
+
+### Label
+
+Mitgliedersuche
+
+### Summary
+
+What the department must be able to do, whoever provides it: find a member by name and learn whether they are one.
+
+### Operations
+
+- `Suchen(name) -> mitglied`
+
+## Service: Mitgliederverzeichnis
+
+### Label
+
+Mitgliederverzeichnis
+
+### Summary
+
+The club's own member app, reached by the department through its lookup; the app is described at `tsv.app`, and here it is the system the department uses.
+
+### Bindings
+
+- binds: `aim:tsv.app` — as: provider
+
+## Software: TeamApp
+
+### Label
+
+Team-App
+
+### Summary
+
+The small app the coaches want for line-ups and attendance, to be built on top of the member directory; named, not yet described.

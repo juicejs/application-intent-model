@@ -1,0 +1,91 @@
+---
+aim: tsv.app
+kind: intent
+parent: tsv
+nature: software
+---
+
+# Member app
+
+## Summary
+
+The app the club built for itself: a member sees their own data and can resign, the treasurer sees the fees, and the departments look members up through it. It is described here, as a Software with its screens, its operations and its one module; the football department reaches it as a Service. It wears the club's colours.
+
+## Requirements
+
+- **EIGENE-DATEN** — A member sees only their own data; the board and the treasurer see everyone's — from [tsv#Knowledge:DSGVO]
+- **SUCHE** — A lookup by name answers whether the person is a member and nothing more.
+
+## Children
+
+- [beitraege](./beitraege/tsv.app.beitraege.aim) — The fees module: the treasurer's overview and the reminder
+
+## Style: Vereinsfarben
+
+### Summary
+
+Green and white like the club's shirts, plain and friendly, large enough to read on a phone at the pitch.
+
+### Palette
+
+- surface: white
+- ink: dark green `#0f3d2e`
+- accent: grass green `#2e8b57`, the only hue
+
+### Type
+
+- face: a humanist sans-serif, large on phones
+
+## View: MeineDaten
+
+### Label
+
+Meine Daten
+
+### Summary
+
+The member's own page: their data, their fee class, and the way to resign.
+
+### Display
+
+- The member's own data and fee class — [reads](aim:tsv#Record:Mitglied)
+
+### Actions
+
+- Resign — [exposes](aim:tsv#Operation:AustrittErklaeren)
+
+### Bindings
+
+- binds: `src/pages/MeineDaten.tsx#MeineDaten` — as: component
+
+## Operation: MitgliedSuchen
+
+### Label
+
+Mitglied suchen
+
+### Summary
+
+A lookup by name: whether the person is a member of the club.
+
+### Input
+
+```schema
+name: string required
+```
+
+### Ensures
+
+- The directory is read — [reads](aim:tsv#Record:Mitglied), [satisfies](aim:tsv.app#Requirements[SUCHE])
+
+### Returns
+
+```schema
+mitgliedId: string optional ref(tsv#Mitglied.id)
+istMitglied: boolean required
+```
+
+### Bindings
+
+- binds: `src/api/members.ts#lookupMember` — as: handler
+- binds: `route:GET /api/members/lookup` — as: route

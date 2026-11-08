@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v6.2
+# Agentic Intent Model (AIM) v6.4
 
 This revision says the language once: the specification is rewritten into thirteen sections, a third of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
 
@@ -9,6 +9,27 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 **This repository is the specification itself** — the language, its reference examples, and the role prompts. Tooling, the package catalog, and publishing live in separate repositories.
 
 ---
+
+## What's new in 6.4
+
+From the NASA example set beside BPMN 2 and DMN: three real processes — lifecycle gates, a launch countdown, anomaly resolution — each had a place where the language ran out. 6.4 fills them the AIM way: no new verb, every fill a property of a construct that exists, and one behaviour where two realizations could otherwise differ. A model valid under 6.3 is valid 6.4. See [the 6.4 proposal](./proposals/6.4-flow-constructs.md).
+
+- **What a case is.** One run of one process. A case keeps its Events in one order; a wait hears every Event of its case since it began, so an Event that came early is taken when the wait is reached. A child case ends with its parent.
+- **Races.** A step waiting on several Events takes whichever comes first; `— continues: OfferAccepted` says which go on.
+- **What ends a case.** `### Ends on` lists the Events that end the case wherever it is; a deadline with `### Ends` interrupts the case, runs its cleanup and ends it — and a cleanup that does not finish stays visible, never silent.
+- **A step over a collection.** `— for each [launch#Record:Countdown.stations] as station` runs the step once per item, together or `in order`; the next step is the join.
+- **Timed waits.** `— after: 10 business-days` or `— until [launch#Record:Countdown.resumeAt]` delays a step, in the case's time zone and working days.
+- **Criteria as rules.** `### Criteria` beside `### Decides` states the decision as first-hit rules over the operation's inputs, with a required `otherwise`.
+
+## What's new in 6.3
+
+From Amy's Studio, where an owner wrote "we have a shipping department" and got a process, and from writing a whole organisation (NASA) in the language. A model valid under 6.2 is valid 6.3; the renamed spellings are still read and are rewritten when a model is opened. See [the 6.3 proposal](./proposals/6.3-four-facets.md).
+
+- **Four facets, one meaning at any level.** `## Organisation:` (a group that acts as one), `## Project:` (a goal with an end; it never performs), `## Software:` (software described here) and `## Service:` (a system consumed through a connection). A department is an Organisation at the root or three levels down; nesting says where a thing is described, nothing more. Each stays a facet until it earns an intent of its own.
+- **Process and Operation.** `Flow` is renamed `Process` and `Contract` is renamed `Operation` — the words owners, BPMN and automations already use. The old spellings stay readable everywhere they are written.
+- **A Capability is a function.** Named by what it does (`DDEXGenerator`), never by a vendor; a Service, a Software or a library answers it.
+- **A process before its steps.** A Process with only a Summary is a named process, not yet worked out.
+- **Where a rule comes from.** A requirement may end with `— from [shop#Knowledge:AGB]` or `— from: customers complained, 2026-10`, so a changed source flags the rules drawn from it.
 
 ## What's new in 6.2
 
@@ -123,14 +144,17 @@ The owner's task-list surface.
 
 ### Actions
 
-- Submitting the "New Task" form — [exposes](aim:#Contract:CreateTodo)
+- Submitting the "New Task" form — [exposes](aim:nemicko.demo.todo#Operation:CreateTodo)
 ```
 
-The `[exposes](aim:#Contract:CreateTodo)` token is a typed edge: `View → exposes → Contract:CreateTodo`. Collect every such token across a project and you have the relation graph.
+The `[exposes](aim:nemicko.demo.todo#Operation:CreateTodo)` token is a typed edge: `View → exposes → Operation:CreateTodo`. Collect every such token across a project and you have the relation graph.
 
-Two worked examples ship with the spec:
+Worked examples ship with the spec:
 - [examples/nemicko.demo.todo.aim](./examples/nemicko.demo.todo.aim) — a complete intent in a single file.
 - [examples/helpdesk/](./examples/helpdesk/) — a multi-file app (an intent tree, a mapping, and a binding file) whose graph spans files, exercising **every** facet and the closed verb set end to end. Start with its [README](./examples/helpdesk/README.md) for the rendered graph.
+- [examples/documents/](./examples/documents/) — document import (5.8); [examples/performers/](./examples/performers/) — who does the work and who may (5.10).
+- [examples/nasa/](./examples/nasa/) — an Artemis mission from formulation to flight, against **6.3**: an organisation at depth with a directorate that decides, a mission as a project holding three processes, mission control as software with parts, and the Deep Space Network described at JPL and consumed by mission control as a service. Its [README](./examples/nasa/README.md) lists what writing it found; `6.4/` beside its tree holds the countdown in 6.4 form with eleven acceptance scenarios.
+- [examples/club/](./examples/club/) — a sports club, against **6.3 and 6.4**: the smallest organisation everyone knows, half the size of NASA, reaching every construct of the two proposals — a member who is a Persona and a Record, a tournament as a project, the member app as software and as the service a department consumes, and three processes with a race, `Ends on`, deadlines that end the case, a child case per member, timed waits and criteria rules. Start with its [README](./examples/club/README.md).
 
 ---
 
@@ -157,12 +181,12 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v6.0 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v6.4 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
 - **[brain/](./brain/)** — the shared and per-role operating-brain instructions.
-- **[examples/](./examples/)** — conformance examples: a single-file intent and the multi-file [helpdesk](./examples/helpdesk/) app.
+- **[examples/](./examples/)** — conformance examples: a single-file intent, the multi-file [helpdesk](./examples/helpdesk/) app, [documents](./examples/documents/) and [performers](./examples/performers/), and the two organisation-scale examples against 6.3 and 6.4, [nasa](./examples/nasa/) and [club](./examples/club/).
 - **[.claude-plugin/](./.claude-plugin/)** + **[skills/amy/](./skills/amy/)** — Claude Code plugin **Amy**: one auto-invoked skill that reads the task and enters the right mode, plus the mode subagents from [agents/](./agents/).
 - **[GEMINI.md](./GEMINI.md)** + **[gemini-extension.json](./gemini-extension.json)** — Gemini CLI extension **Amy**: one assistant that reads the request and enters the right mode (Architect / Developer / Reviewer / Encoder).
 - **[codex/prompts/amy.md](./codex/prompts/amy.md)** — OpenAI Codex `/amy` prompt; Codex also reads [AGENTS.md](./AGENTS.md) automatically, so an AIM project self-bootstraps with no install.
@@ -189,6 +213,6 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v6.0**
+Current spec: **AIM v6.4**
 
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License

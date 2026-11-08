@@ -1,0 +1,37 @@
+---
+aim: nasa.jpl
+kind: intent
+parent: nasa
+nature: organisation
+---
+
+# Jet Propulsion Laboratory
+
+## Summary
+
+The laboratory in Pasadena that builds and flies NASA's robotic missions and runs the Deep Space Network for every mission, crewed or not. It is a federally funded research and development center: NASA's work, done by an organisation that is not NASA — JPL is operated for the agency by Caltech under contract.
+
+## Requirements
+
+- **NETWORK** — The Deep Space Network serves every NASA mission by priority, and a crewed mission in flight outranks every other.
+
+## Children
+
+- [dsn](./dsn/nasa.jpl.dsn.aim) — The Deep Space Network: the antennas, their schedule, the downlinks and uplinks
+
+## Organisation: Caltech
+
+### Summary
+
+The California Institute of Technology, which operates JPL for NASA under a contract renewed every five years; it employs JPL's staff and answers to NASA for the laboratory's work. It appears here as the organisation JPL is, not as a part of NASA.
+
+## Persona: NetworkOperator
+
+### Role
+
+- Schedules the antennas and runs the tracking passes.
+
+### Access
+
+- Works the pass schedule — [accesses](aim:nasa.jpl.dsn#View:PassSchedule)
+- Plans the antennas' maintenance — [invokes](aim:nasa.jpl.dsn#Operation:PlanMaintenance)

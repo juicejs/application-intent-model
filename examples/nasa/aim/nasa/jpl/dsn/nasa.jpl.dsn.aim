@@ -1,0 +1,174 @@
+---
+aim: nasa.jpl.dsn
+kind: intent
+parent: nasa.jpl
+nature: software
+---
+
+# Deep Space Network
+
+## Summary
+
+The three antenna complexes at Goldstone, Madrid and Canberra and the system that schedules them: which antenna tracks which vehicle when, the downlink of a pass's frames, and the uplink of a command with its acknowledgement. Described here, where it is built and run. Mission control at Johnson reaches it as a service through one link; so does every other mission.
+
+## Requirements
+
+- **PRIORITY** — Passes are scheduled by mission priority, and a crewed mission in flight is never bumped — from [nasa.jpl#Requirements[NETWORK]]
+- **ACK** — Every uplinked command is acknowledged to the sender or reported as not acknowledged before the pass ends.
+- **MAINTAINED** — Each antenna is taken out of the schedule for maintenance once a week.
+
+## Record: TrackingPass
+
+### Summary
+
+One scheduled pass: which antenna tracks which vehicle, from when to when, at what priority.
+
+### Schema
+
+```schema
+id: string required unique
+vehicle: string required
+antenna: enum(goldstone, madrid, canberra) required
+startsAt: datetime required
+endsAt: datetime required
+priority: integer required min(1)
+```
+
+## Operation: ScheduleTrack
+
+### Summary
+
+A mission asks for a pass in a window; the network answers with the pass it can give, by priority.
+
+### Input
+
+```schema
+vehicle: string required
+windowOpens: datetime required
+windowCloses: datetime required
+priority: integer required min(1)
+```
+
+### Ensures
+
+- A pass exists for the vehicle, or the request is answered with none — [mutates](aim:nasa.jpl.dsn#Record:TrackingPass), [satisfies](aim:nasa.jpl.dsn#Requirements[PRIORITY])
+
+### Returns
+
+```schema
+passId: string required ref(nasa.jpl.dsn#TrackingPass.id)
+```
+
+### Bindings
+
+- binds: `sps/scheduler.py#schedule_track` — as: handler
+
+## Operation: Downlink
+
+### Summary
+
+The frames an antenna received during a pass are handed to the mission.
+
+### Input
+
+```schema
+passId: string required ref(nasa.jpl.dsn#TrackingPass.id)
+```
+
+### Ensures
+
+- The pass is current — [reads](aim:nasa.jpl.dsn#Record:TrackingPass)
+
+### Returns
+
+- The frames received during the pass, in order.
+
+## Operation: Uplink
+
+### Summary
+
+A command is radiated to the vehicle on the pass and the vehicle's acknowledgement, or its absence, is returned.
+
+### Input
+
+```schema
+passId: string required ref(nasa.jpl.dsn#TrackingPass.id)
+command: string required min(1)
+```
+
+### Ensures
+
+- The pass is current — [reads](aim:nasa.jpl.dsn#Record:TrackingPass)
+- The acknowledgement is reported — [emits](aim:nasa.jpl.dsn#Event:CommandAcknowledged), [satisfies](aim:nasa.jpl.dsn#Requirements[ACK])
+
+### Returns
+
+- Whether the vehicle acknowledged.
+
+## Operation: PlanMaintenance
+
+### Summary
+
+The operator takes an antenna out of the schedule for its weekly maintenance.
+
+### Input
+
+```schema
+antenna: enum(goldstone, madrid, canberra) required
+from: datetime required
+until: datetime required
+```
+
+### Authz
+
+- `nasa.jpl#Persona:NetworkOperator`
+
+### Ensures
+
+- No pass is scheduled on the antenna in the window — [mutates](aim:nasa.jpl.dsn#Record:TrackingPass), [satisfies](aim:nasa.jpl.dsn#Requirements[MAINTAINED])
+
+## View: PassSchedule
+
+### Summary
+
+The operator's schedule: every pass on every antenna, and the way to book one.
+
+### Display
+
+- Every pass by antenna and time — [reads](aim:nasa.jpl.dsn#Record:TrackingPass)
+
+### Actions
+
+- Book a pass — [exposes](aim:nasa.jpl.dsn#Operation:ScheduleTrack)
+- Take an antenna down — [exposes](aim:nasa.jpl.dsn#Operation:PlanMaintenance)
+
+## Event: CommandAcknowledged
+
+### Summary
+
+The vehicle acknowledged an uplinked command, or did not before the pass ended.
+
+### Payload
+
+```schema
+passId: string required ref(nasa.jpl.dsn#TrackingPass.id)
+acknowledged: boolean required
+```
+
+## Trigger: WeeklyMaintenance
+
+### Summary
+
+Every Monday the operator is reminded to plan the week's antenna maintenance.
+
+### Kind
+
+- schedule
+
+### Schedule
+
+- weekly on Monday
+
+### Fires
+
+- [triggers](aim:nasa.jpl.dsn#Operation:PlanMaintenance)

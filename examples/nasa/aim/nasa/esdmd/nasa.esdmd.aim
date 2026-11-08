@@ -1,0 +1,39 @@
+---
+aim: nasa.esdmd
+kind: intent
+parent: nasa
+nature: organisation
+---
+
+# Exploration Systems Development Mission Directorate
+
+## Summary
+
+The directorate that develops and flies the Artemis missions: the rocket, the crew vehicle, the lander and the ground systems, and the missions that use them. It is the decision authority for every Artemis mission, so it acts in each mission's lifecycle: at the key decision points it is the one that decides.
+
+## Requirements
+
+- **DECIDE** — The directorate, not the mission, holds every key decision point; a mission moves from formulation into development only by its decision.
+- **ONE-AT-A-TIME** — A mission in development has a named mission manager and a standing review board before its first gate.
+
+## Role
+
+- The decision authority for Artemis missions.
+
+## Access
+
+- Decides a key decision point — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:KeyDecisionPoint)
+
+## Children
+
+- [artemis3](./artemis3/nasa.esdmd.artemis3.aim) — Artemis III: the first crewed landing near the lunar south pole
+
+## Project: ArtemisIV
+
+### Label
+
+Artemis IV
+
+### Summary
+
+The first crew to dock with the Gateway station in lunar orbit, in 2028; its own mission once its reviews begin.

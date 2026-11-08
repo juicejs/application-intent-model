@@ -1,0 +1,119 @@
+---
+aim: nasa.jsc.mcc.trajectory
+kind: intent
+parent: nasa.jsc.mcc
+nature: software
+---
+
+# Trajectory
+
+## Summary
+
+The part of mission control that plans burns: from the vehicle's last telemetry and the ephemeris of the Earth, Moon and Sun it computes the burn that puts the vehicle where the flight plan wants it, and on the flight director's order turns the plan into a command.
+
+## Requirements
+
+- **EPHEMERIS** — Every burn is computed on the current ephemeris, never a cached one older than the pass.
+- **ORDERED** — A burn is executed only on a flight director's order, and only as a command through the link.
+
+## Dependencies
+
+### Requires
+
+- Ephemeris as Horizons
+
+## Record: Burn
+
+### Summary
+
+One planned manoeuvre: when, how much, and whether it has been executed.
+
+### Schema
+
+```schema
+id: string required unique
+vehicle: string required
+plannedAt: datetime required
+deltaV: decimal required min(0)
+status: enum(planned, executed) required default(planned)
+```
+
+## Capability: Ephemeris
+
+### Summary
+
+What the software must be able to ask about the solar system, whoever answers: the position and velocity of a body at a time.
+
+### Operations
+
+- `State(body, time) -> vector`
+
+### Bindings
+
+- binds: `http:ssd.jpl.nasa.gov/api/horizons.api` — as: provider
+
+## Service: JPLHorizons
+
+### Label
+
+JPL Horizons
+
+### Summary
+
+JPL's ephemeris service, reached over its web API; the one that answers the Ephemeris capability today.
+
+### Bindings
+
+- binds: `http:ssd.jpl.nasa.gov/api/horizons.api` — as: connection
+
+## Operation: ComputeBurn
+
+### Summary
+
+A flight controller plans a burn from the latest frames and the ephemeris.
+
+### Input
+
+```schema
+vehicle: string required
+targetAt: datetime required
+```
+
+### Authz
+
+- `nasa.jsc#Persona:FlightController`
+
+### Ensures
+
+- The vehicle's state is taken from its latest frames — [reads](aim:nasa.jsc.mcc.telemetry#Record:TelemetryFrame)
+- The bodies' states are taken from the ephemeris — [invokes](aim:nasa.jsc.mcc.trajectory#Capability:Ephemeris), [satisfies](aim:nasa.jsc.mcc.trajectory#Requirements[EPHEMERIS])
+- The burn is planned — [mutates](aim:nasa.jsc.mcc.trajectory#Record:Burn)
+
+### Bindings
+
+- binds: `src/trajectory/burn.ts#computeBurn` — as: handler
+
+## Operation: ExecuteBurn
+
+### Summary
+
+On the flight director's order the planned burn is sent to the vehicle as a command.
+
+### Input
+
+```schema
+burnId: string required ref(nasa.jsc.mcc.trajectory#Burn.id)
+```
+
+### Authz
+
+- `nasa#Persona:FlightDirector`
+
+### Expects
+
+- The burn is planned and not yet executed.
+
+### Ensures
+
+- The command goes up — [invokes](aim:nasa.jsc.mcc.telemetry#Operation:SendCommand), [satisfies](aim:nasa.jsc.mcc.trajectory#Requirements[ORDERED])
+- The burn is executed — [mutates](aim:nasa.jsc.mcc.trajectory#Record:Burn)

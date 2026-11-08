@@ -1,0 +1,326 @@
+---
+aim: tsv.turnier2027.anmeldung
+kind: intent
+parent: tsv.turnier2027
+nature: process
+---
+
+# Registering the teams
+
+## Summary
+
+The board starts it when the federation opens registration. Every team the club enters is put in its age group by its youngest birth year and registered through the federation's portal; the club then waits for the federation's confirmation, pays the entry fee, and waits for the draw. A registration window that closes before the federation has confirmed ends the run; a withdrawal by the board ends it at any point.
+
+## Requirements
+
+- **FENSTER** — The registration is complete inside the federation's window; a run the window closes on is abandoned — from [tsv.turnier2027#Requirements[MELDUNG]]
+- **JEDE** — Every team listed for the tournament is registered, none by hand outside this run.
+- **KLASSE** — The age group is decided by rule from the team's youngest birth year, never by the committee's judgement — from [tsv.turnier2027#Requirements[ALTERSKLASSE]]
+
+## Steps
+
+1. Registration opens — [emits](aim:tsv.turnier2027.anmeldung#Event:MeldungGeoeffnet), [mutates](aim:tsv.turnier2027.anmeldung#Record:Meldung)
+2. Put every team in its age group and register it — for each [tsv.turnier2027#Record:Turnier.mannschaften] as mannschaftId — [invokes](aim:tsv.turnier2027.anmeldung#Operation:AltersklasseBestimmen)
+3. Wait for the federation's confirmation — [subscribes](aim:tsv.turnier2027.anmeldung#Event:MeldungBestaetigt)
+4. Pay the entry fee — [invokes](aim:tsv.turnier2027.anmeldung#Operation:StartgeldZahlen)
+5. Wait for the draw — until [tsv.turnier2027#Record:Turnier.auslosungAm]
+6. The teams are told their groups — [emits](aim:tsv.turnier2027.anmeldung#Event:MeldungAbgeschlossen)
+
+## Ends on
+
+- [tsv.turnier2027.anmeldung#Event:MeldungZurueckgezogen]
+
+## On Error
+
+- A team the portal refuses is registered again after the committee corrected its data; the step stays incomplete until every team is registered.
+
+## Record: Meldung
+
+### Label
+
+Meldung
+
+### Summary
+
+One registration run: when it opened, the registration numbers the portal gave, and whether the federation confirmed.
+
+### Schema
+
+```schema
+id: string required unique
+turnierId: string required ref(tsv.turnier2027#Turnier.id)
+geoeffnetAm: datetime required
+status: enum(offen, bestaetigt, abgeschlossen, zurueckgezogen) required default(offen)
+```
+
+## Record: Mannschaftsmeldung
+
+### Label
+
+Mannschaftsmeldung
+
+### Summary
+
+One team's registration: its age group and the number the portal gave it.
+
+### Schema
+
+```schema
+id: string required unique
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+mannschaftId: string required ref(tsv.fussball#Mannschaft.id)
+altersklasse: enum(U9, U11, U13, U15, U17) required
+meldenummer: string optional
+```
+
+## State: Meldungsstatus
+
+### Summary
+
+A run is open until the federation confirms it, complete when the draw is known, and withdrawn when the board pulls out.
+
+### Of
+
+- `tsv.turnier2027.anmeldung#Record:Meldung.status`
+
+### States
+
+- Offen — initial
+- Bestaetigt
+- Abgeschlossen — final
+- Zurueckgezogen — final
+
+### Moves
+
+- Offen → Bestaetigt — [tsv.turnier2027.anmeldung#Operation:BestaetigungErfassen]
+- Bestaetigt → Abgeschlossen — [tsv.turnier2027.anmeldung#Operation:StartgeldZahlen]
+- Offen → Zurueckgezogen — [tsv.turnier2027.anmeldung#Operation:Zurueckziehen]
+- Bestaetigt → Zurueckgezogen — [tsv.turnier2027.anmeldung#Operation:Zurueckziehen]
+
+### Only in
+
+- Bestaetigt — [tsv.turnier2027.anmeldung#Operation:StartgeldZahlen]
+
+## Operation: AltersklasseBestimmen
+
+### Label
+
+Altersklasse bestimmen
+
+### Summary
+
+A team's age group follows from its youngest birth year by the federation's table; the team is then registered in that group.
+
+### Input
+
+```schema
+mannschaftId: string required ref(tsv.fussball#Mannschaft.id)
+jahrgang: integer required label("Jüngster Jahrgang")
+```
+
+### Authz
+
+- `tsv.turnier2027#Organisation:Turnierausschuss`
+
+### Ensures
+
+- The team is read — [reads](aim:tsv.fussball#Record:Mannschaft), [satisfies](aim:tsv.turnier2027.anmeldung#Requirements[KLASSE])
+
+### Decides
+
+- **U9** — born 2018 or later — [invokes](aim:tsv.turnier2027.anmeldung#Operation:MannschaftMelden)
+- **U11** — born 2016 or 2017 — [invokes](aim:tsv.turnier2027.anmeldung#Operation:MannschaftMelden)
+- **U13** — born 2014 or 2015 — [invokes](aim:tsv.turnier2027.anmeldung#Operation:MannschaftMelden)
+- **U15** — born 2012 or 2013 — [invokes](aim:tsv.turnier2027.anmeldung#Operation:MannschaftMelden)
+- **U17** — born 2010 or 2011 — [invokes](aim:tsv.turnier2027.anmeldung#Operation:MannschaftMelden)
+- **ZuAlt** — born before 2010: not a youth team, not registered
+
+### Criteria
+
+```criteria
+U9 when jahrgang >= 2018
+U11 when jahrgang >= 2016
+U13 when jahrgang >= 2014
+U15 when jahrgang >= 2012
+U17 when jahrgang >= 2010
+otherwise ZuAlt
+```
+
+## Operation: MannschaftMelden
+
+### Label
+
+Mannschaft melden
+
+### Summary
+
+One team is registered in its age group through the federation's portal and the number the portal gives is kept.
+
+### Input
+
+```schema
+mannschaftId: string required ref(tsv.fussball#Mannschaft.id)
+altersklasse: enum(U9, U11, U13, U15, U17) required
+```
+
+### Authz
+
+- `tsv.turnier2027#Organisation:Turnierausschuss`
+
+### Ensures
+
+- The portal registers the team — [invokes](aim:tsv.turnier2027#Capability:Verbandsmeldung)
+- The registration is kept — [mutates](aim:tsv.turnier2027.anmeldung#Record:Mannschaftsmeldung), [satisfies](aim:tsv.turnier2027.anmeldung#Requirements[JEDE])
+
+## Operation: BestaetigungErfassen
+
+### Label
+
+Bestätigung erfassen
+
+### Summary
+
+The federation confirms the club's registration; the run is confirmed.
+
+### Input
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+```
+
+### Authz
+
+- `tsv#Organisation:Landesverband`
+
+### Ensures
+
+- The run is confirmed — [mutates](aim:tsv.turnier2027.anmeldung#Record:Meldung)
+- The club is told — [emits](aim:tsv.turnier2027.anmeldung#Event:MeldungBestaetigt)
+
+## Operation: StartgeldZahlen
+
+### Label
+
+Startgeld zahlen
+
+### Summary
+
+The committee pays the federation's entry fee for the registered teams; the registration is complete.
+
+### Input
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+```
+
+### Authz
+
+- `tsv.turnier2027#Organisation:Turnierausschuss`
+
+### Expects
+
+- The federation has confirmed.
+
+### Ensures
+
+- The registration is complete — [mutates](aim:tsv.turnier2027.anmeldung#Record:Meldung), [satisfies](aim:tsv.turnier2027.anmeldung#Requirements[FENSTER])
+
+## Operation: Zurueckziehen
+
+### Label
+
+Meldung zurückziehen
+
+### Summary
+
+The board withdraws the club's registration.
+
+### Input
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+```
+
+### Authz
+
+- `tsv#Persona:Vorstand`
+
+### Ensures
+
+- The run is withdrawn — [mutates](aim:tsv.turnier2027.anmeldung#Record:Meldung)
+- Everyone is told — [emits](aim:tsv.turnier2027.anmeldung#Event:MeldungZurueckgezogen)
+
+## Event: MeldungGeoeffnet
+
+### Summary
+
+The club started registering its teams.
+
+### Payload
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+geoeffnetAm: datetime required
+```
+
+## Event: MeldungBestaetigt
+
+### Summary
+
+The federation confirmed the club's registration.
+
+### Payload
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+```
+
+## Event: MeldungAbgeschlossen
+
+### Summary
+
+The registration is complete and the groups are known.
+
+### Payload
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+```
+
+## Event: MeldungZurueckgezogen
+
+### Summary
+
+The board withdrew the registration.
+
+### Payload
+
+```schema
+meldungId: string required ref(tsv.turnier2027.anmeldung#Meldung.id)
+```
+
+## Trigger: Meldeschluss
+
+### Label
+
+Meldeschluss
+
+### Summary
+
+The federation's window closes thirty days after the club started; a run the federation has not confirmed by then is withdrawn and ends.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 30 days after [tsv.turnier2027.anmeldung#Event:MeldungGeoeffnet] — unless [tsv.turnier2027.anmeldung#Event:MeldungBestaetigt]
+
+### Fires
+
+- [triggers](aim:tsv.turnier2027.anmeldung#Operation:Zurueckziehen), [satisfies](aim:tsv.turnier2027.anmeldung#Requirements[FENSTER])
+
+### Ends
+
+- the case

@@ -1,0 +1,394 @@
+---
+aim: tsv.aufnahme
+kind: intent
+parent: tsv
+nature: process
+---
+
+# Taking a member in
+
+## Summary
+
+A person applies; the board decides; the treasurer sets the fee class by rule; the club sends its offer and waits for the person to accept or decline; the statutory fourteen days in which they may still withdraw pass; the treasurer creates the member and sends the card. An applicant may withdraw at any point, which ends the run; an application that goes nowhere for thirty days is closed and ends. The applicant starts it.
+
+## Requirements
+
+- **VORSTAND** — Nobody is created as a member before the board has decided for them — from [tsv#Requirements[SATZUNG]]
+- **KLASSE** — The fee class follows from age and family membership by rule, never by the treasurer's judgement — from [tsv#Knowledge:Beitragsordnung]
+- **WIDERRUF** — A person who accepted may withdraw within fourteen days; the member is created only after they have passed — from: § 355 BGB, the consumer's right of withdrawal
+- **DREISSIG** — An application without an answer thirty days after it was made is closed — from: the board's decision of March 2025
+- **AUSWEIS** — Every new member receives their membership card as a PDF on the day they are created.
+
+## Steps
+
+1. The application is made — [invokes](aim:tsv.aufnahme#Operation:AntragStellen)
+2. The board decides — [invokes](aim:tsv.aufnahme#Operation:Entscheiden) — continues: Aufgenommen
+3. The fee class is set by rule — [invokes](aim:tsv.aufnahme#Operation:BeitragsklasseFestlegen) — continues: Jugend, Familie, Erwachsene
+4. The offer is sent — [invokes](aim:tsv.aufnahme#Operation:AngebotSenden)
+5. Wait for the answer — [subscribes](aim:tsv.aufnahme#Event:AngebotAngenommen), [subscribes](aim:tsv.aufnahme#Event:AngebotAbgelehnt) — continues: AngebotAngenommen
+6. The withdrawal period passes — after: 14 days
+7. The member is created and the card sent — [invokes](aim:tsv.aufnahme#Operation:MitgliedAnlegen)
+
+## Ends on
+
+- [tsv.aufnahme#Event:AntragZurueckgezogen]
+
+## On Error
+
+- A card that cannot be rendered is sent the next day; the member exists from the day they were created.
+
+## Operation: AntragStellen
+
+### Label
+
+Antrag stellen
+
+### Summary
+
+A person applies for membership with their data; they exist from now on as an applicant.
+
+### Input
+
+```schema
+name: string required
+geburtsdatum: date required
+email: email required
+familienmitglied: boolean required label("Ein Familienmitglied ist bereits Mitglied")
+```
+
+### Authz
+
+- `tsv#Persona:Mitglied`
+
+### Ensures
+
+- The applicant exists — [mutates](aim:tsv#Record:Mitglied)
+- The board is told — [emits](aim:tsv.aufnahme#Event:AntragGestellt)
+
+## Operation: Entscheiden
+
+### Label
+
+Entscheiden
+
+### Summary
+
+The board takes the applicant in or declines, on the statutes.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Vorstand`
+
+### Expects
+
+- The person is an applicant.
+
+### Ensures
+
+- The statutes are consulted — [reads](aim:tsv#Record:Mitglied), [consults](aim:tsv#Knowledge:Satzung), [satisfies](aim:tsv.aufnahme#Requirements[VORSTAND])
+
+### Decides
+
+- **Aufgenommen** — nothing in the statutes stands against the person
+- **Abgelehnt** — a ground of the statutes stands against them; the application is closed — [invokes](aim:tsv.aufnahme#Operation:AntragSchliessen)
+
+## Operation: BeitragsklasseFestlegen
+
+### Label
+
+Beitragsklasse festlegen
+
+### Summary
+
+The fee class follows from the applicant's age and whether a family member already belongs.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+alter: integer required min(0) label("Alter in Jahren")
+familienmitglied: boolean required
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The applicant is read — [reads](aim:tsv#Record:Mitglied), [satisfies](aim:tsv.aufnahme#Requirements[KLASSE])
+
+### Decides
+
+- **Jugend** — under eighteen — [mutates](aim:tsv#Record:Mitglied)
+- **Familie** — an adult whose family member already belongs — [mutates](aim:tsv#Record:Mitglied)
+- **Erwachsene** — any other adult — [mutates](aim:tsv#Record:Mitglied)
+
+### Criteria
+
+```criteria
+Jugend when alter < 18
+Familie when familienmitglied = true
+otherwise Erwachsene
+```
+
+## Operation: AngebotSenden
+
+### Label
+
+Angebot senden
+
+### Summary
+
+The club's offer goes to the applicant: the fee class, the amount, and the way to accept or decline.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The applicant is told — [reads](aim:tsv#Record:Mitglied), [emits](aim:tsv.aufnahme#Event:AngebotGesendet)
+
+## Operation: Annehmen
+
+### Label
+
+Annehmen
+
+### Summary
+
+The applicant accepts the offer.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+iban: string required label("IBAN für das Lastschriftmandat")
+```
+
+### Authz
+
+- `tsv#Persona:Mitglied`
+
+### Ensures
+
+- The mandate's account is kept — [mutates](aim:tsv#Record:Mitglied)
+- The club is told — [emits](aim:tsv.aufnahme#Event:AngebotAngenommen)
+
+## Operation: Ablehnen
+
+### Label
+
+Ablehnen
+
+### Summary
+
+The applicant declines the offer; the application is closed.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Mitglied`
+
+### Ensures
+
+- The club is told — [emits](aim:tsv.aufnahme#Event:AngebotAbgelehnt)
+- The application is closed — [invokes](aim:tsv.aufnahme#Operation:AntragSchliessen)
+
+## Operation: Zurueckziehen
+
+### Label
+
+Antrag zurückziehen
+
+### Summary
+
+The applicant withdraws, before or after accepting; the application is deleted.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Mitglied`
+
+### Ensures
+
+- The application is deleted — [mutates](aim:tsv#Record:Mitglied), [satisfies](aim:tsv.aufnahme#Requirements[WIDERRUF])
+- The club is told — [emits](aim:tsv.aufnahme#Event:AntragZurueckgezogen)
+
+## Operation: MitgliedAnlegen
+
+### Label
+
+Mitglied anlegen
+
+### Summary
+
+The treasurer creates the member and sends the card.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Expects
+
+- The board decided for the person, they accepted, and fourteen days have passed.
+
+### Ensures
+
+- The person is a member from today — [mutates](aim:tsv#Record:Mitglied)
+- The card is rendered and sent — [invokes](aim:tsv#Capability:MitgliedsausweisPdf), [satisfies](aim:tsv.aufnahme#Requirements[AUSWEIS])
+- The club is told — [emits](aim:tsv.aufnahme#Event:MitgliedAufgenommen)
+
+## Operation: AntragSchliessen
+
+### Label
+
+Antrag schließen
+
+### Summary
+
+An application is closed and the applicant's data deleted.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Vorstand`
+
+### Ensures
+
+- The application is deleted — [mutates](aim:tsv#Record:Mitglied), [satisfies](aim:tsv.aufnahme#Requirements[DREISSIG])
+
+## Event: AntragGestellt
+
+### Summary
+
+A person applied.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+am: datetime required
+```
+
+## Event: AngebotGesendet
+
+### Summary
+
+The club's offer went to the applicant.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+## Event: AngebotAngenommen
+
+### Summary
+
+The applicant accepted.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+am: datetime required
+```
+
+## Event: AngebotAbgelehnt
+
+### Summary
+
+The applicant declined.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+## Event: AntragZurueckgezogen
+
+### Summary
+
+The applicant withdrew.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+## Event: MitgliedAufgenommen
+
+### Summary
+
+A new member was created.
+
+### Payload
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+seit: date required
+```
+
+## Trigger: AntragVerfallen
+
+### Label
+
+Antrag verfallen
+
+### Summary
+
+Thirty days after the application, if the applicant has not accepted, the application is closed and the run ends.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 30 days after [tsv.aufnahme#Event:AntragGestellt] — unless [tsv.aufnahme#Event:AngebotAngenommen]
+
+### Fires
+
+- [triggers](aim:tsv.aufnahme#Operation:AntragSchliessen), [satisfies](aim:tsv.aufnahme#Requirements[DREISSIG])
+
+### Ends
+
+- the case

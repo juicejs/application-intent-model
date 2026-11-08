@@ -1,0 +1,390 @@
+---
+aim: tsv.beitrag.einzug
+kind: intent
+parent: tsv.beitrag
+nature: process
+---
+
+# One member's fee
+
+## Summary
+
+One collection, started by the year's run for one member: the fee of their class is issued, the direct debit submitted to the bank, and the payment awaited. A fee unpaid after fourteen days is reminded; one still unpaid fourteen days after that is reported to the board, and the collection ends there. A member who resigns has the fee cancelled, which ends the collection wherever it stands.
+
+## Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+## Requirements
+
+- **KLASSE** — The amount is the member's fee class's amount of the fee rules, nothing else — from [tsv#Knowledge:Beitragsordnung]
+- **MANDAT** — The direct debit is submitted against the mandate the member gave on joining — from [tsv#Requirements[BEITRAG]]
+- **MAHNUNG** — A fee unpaid fourteen days after it was issued is reminded once; one unpaid fourteen days after the reminder goes to the board — from [tsv#Knowledge:Beitragsordnung]
+- **STORNO** — A resigned member's open fee is cancelled, never collected.
+
+## Steps
+
+1. The fee is issued — [invokes](aim:tsv.beitrag.einzug#Operation:BeitragStellen)
+2. The direct debit is submitted — [invokes](aim:tsv.beitrag.einzug#Operation:LastschriftEinreichen)
+3. Wait for the payment — [subscribes](aim:tsv.beitrag.einzug#Event:BeitragBezahlt)
+4. The collection is complete — [emits](aim:tsv.beitrag.einzug#Event:EinzugAbgeschlossen)
+
+## Ends on
+
+- [tsv.beitrag.einzug#Event:BeitragStorniert]
+- [tsv.beitrag.einzug#Event:AnVorstandGemeldet]
+
+## On Error
+
+- A direct debit the bank returns unpaid leaves the fee open; the reminder runs on its own deadline.
+
+## Record: Beitrag
+
+### Label
+
+Beitrag
+
+### Summary
+
+One member's fee for one year: the amount, the direct debit it was collected by, and where it stands.
+
+### Schema
+
+```schema
+id: string required unique
+mitgliedId: string required ref(tsv#Mitglied.id)
+jahr: integer required
+betrag: decimal required min(0)
+lastschriftId: string optional
+status: enum(offen, gemahnt, bezahlt, storniert, gemeldet) required default(offen)
+```
+
+## State: Beitragsstatus
+
+### Summary
+
+A fee is open until it is paid; it may be reminded once while open; it is cancelled when the member resigns and reported when it stays unpaid after the reminder.
+
+### Of
+
+- `tsv.beitrag.einzug#Record:Beitrag.status`
+
+### States
+
+- Offen — initial
+- Gemahnt
+- Bezahlt — final
+- Storniert — final
+- Gemeldet — final
+
+### Moves
+
+- Offen → Bezahlt — [tsv.beitrag.einzug#Operation:ZahlungErfassen]
+- Gemahnt → Bezahlt — [tsv.beitrag.einzug#Operation:ZahlungErfassen]
+- Offen → Gemahnt — [tsv.beitrag.einzug#Operation:Mahnen]
+- Offen → Storniert — [tsv.beitrag.einzug#Operation:Stornieren]
+- Gemahnt → Storniert — [tsv.beitrag.einzug#Operation:Stornieren]
+- Gemahnt → Gemeldet — [tsv.beitrag.einzug#Operation:VorstandMelden]
+
+### Only in
+
+- Offen — [tsv.beitrag.einzug#Operation:LastschriftEinreichen], [tsv.beitrag.einzug#Operation:Mahnen]
+- Gemahnt — [tsv.beitrag.einzug#Operation:VorstandMelden]
+
+## Operation: BeitragStellen
+
+### Label
+
+Beitrag stellen
+
+### Summary
+
+The year's fee is issued to the member at their fee class's amount.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+jahr: integer required
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The amount follows the fee class — [reads](aim:tsv#Record:Mitglied), [consults](aim:tsv#Knowledge:Beitragsordnung), [satisfies](aim:tsv.beitrag.einzug#Requirements[KLASSE])
+- The fee exists — [mutates](aim:tsv.beitrag.einzug#Record:Beitrag)
+- The clock starts — [emits](aim:tsv.beitrag.einzug#Event:BeitragGestellt)
+
+## Operation: LastschriftEinreichen
+
+### Label
+
+Lastschrift einreichen
+
+### Summary
+
+The fee goes to the bank as one direct debit against the member's mandate.
+
+### Input
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The direct debit is submitted — [reads](aim:tsv#Record:Mitglied), [invokes](aim:tsv#Capability:SepaLastschrift), [satisfies](aim:tsv.beitrag.einzug#Requirements[MANDAT])
+- Its number is kept on the fee — [mutates](aim:tsv.beitrag.einzug#Record:Beitrag)
+
+### Bindings
+
+- binds: `src/fees/debit.ts#submitDirectDebit` — as: handler
+
+## Operation: ZahlungErfassen
+
+### Label
+
+Zahlung erfassen
+
+### Summary
+
+The bank's notification that a direct debit was collected marks the fee paid.
+
+### Input
+
+```schema
+lastschriftId: string required
+```
+
+### Ensures
+
+- The fee is paid — [mutates](aim:tsv.beitrag.einzug#Record:Beitrag)
+- The collection is told — [emits](aim:tsv.beitrag.einzug#Event:BeitragBezahlt)
+
+### Bindings
+
+- binds: `route:POST /webhooks/volksbank` — as: route
+
+## Operation: Mahnen
+
+### Label
+
+Mahnen
+
+### Summary
+
+The member is reminded once of the unpaid fee.
+
+### Input
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The fee is marked reminded — [mutates](aim:tsv.beitrag.einzug#Record:Beitrag), [satisfies](aim:tsv.beitrag.einzug#Requirements[MAHNUNG])
+- The second clock starts — [emits](aim:tsv.beitrag.einzug#Event:Gemahnt)
+
+## Operation: VorstandMelden
+
+### Label
+
+Dem Vorstand melden
+
+### Summary
+
+A fee still unpaid after the reminder is reported to the board; the collection ends.
+
+### Input
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The fee is marked reported — [mutates](aim:tsv.beitrag.einzug#Record:Beitrag), [satisfies](aim:tsv.beitrag.einzug#Requirements[MAHNUNG])
+- The board is told — [emits](aim:tsv.beitrag.einzug#Event:AnVorstandGemeldet)
+
+## Operation: Stornieren
+
+### Label
+
+Stornieren
+
+### Summary
+
+A resigned member's open fee is cancelled.
+
+### Input
+
+```schema
+mitgliedId: string required ref(tsv#Mitglied.id)
+```
+
+### Authz
+
+- `tsv#Persona:Kassenwart`
+
+### Ensures
+
+- The fee is cancelled — [mutates](aim:tsv.beitrag.einzug#Record:Beitrag), [satisfies](aim:tsv.beitrag.einzug#Requirements[STORNO])
+- The collection is told — [emits](aim:tsv.beitrag.einzug#Event:BeitragStorniert)
+
+## Event: BeitragGestellt
+
+### Summary
+
+A fee was issued.
+
+### Payload
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+am: date required
+```
+
+## Event: BeitragBezahlt
+
+### Summary
+
+A fee was paid.
+
+### Payload
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+## Event: Gemahnt
+
+### Summary
+
+A member was reminded.
+
+### Payload
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+am: date required
+```
+
+## Event: AnVorstandGemeldet
+
+### Summary
+
+An unpaid fee went to the board.
+
+### Payload
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+## Event: BeitragStorniert
+
+### Summary
+
+A fee was cancelled.
+
+### Payload
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+## Event: EinzugAbgeschlossen
+
+### Summary
+
+The collection ended with the fee paid.
+
+### Payload
+
+```schema
+beitragId: string required ref(tsv.beitrag.einzug#Beitrag.id)
+```
+
+## Trigger: Zahlungseingang
+
+### Label
+
+Zahlungseingang
+
+### Summary
+
+The bank's notification of a collected or returned direct debit arrives at the club's registered endpoint.
+
+### Kind
+
+- webhook
+
+### Fires
+
+- [triggers](aim:tsv.beitrag.einzug#Operation:ZahlungErfassen)
+
+## Trigger: ErsteMahnung
+
+### Label
+
+Erste Mahnung
+
+### Summary
+
+Fourteen days after the fee was issued, if it is not paid, the member is reminded.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 14 days after [tsv.beitrag.einzug#Event:BeitragGestellt] — unless [tsv.beitrag.einzug#Event:BeitragBezahlt]
+
+### Fires
+
+- [triggers](aim:tsv.beitrag.einzug#Operation:Mahnen), [satisfies](aim:tsv.beitrag.einzug#Requirements[MAHNUNG])
+
+## Trigger: ZweiteFrist
+
+### Label
+
+Zweite Frist
+
+### Summary
+
+Fourteen days after the reminder, if the fee is still not paid, it goes to the board and the collection ends.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 14 days after [tsv.beitrag.einzug#Event:Gemahnt] — unless [tsv.beitrag.einzug#Event:BeitragBezahlt]
+
+### Fires
+
+- [triggers](aim:tsv.beitrag.einzug#Operation:VorstandMelden), [satisfies](aim:tsv.beitrag.einzug#Requirements[MAHNUNG])
+
+### Ends
+
+- the case

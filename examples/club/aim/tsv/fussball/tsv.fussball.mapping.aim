@@ -1,0 +1,22 @@
+---
+aim: tsv.fussball
+kind: mapping
+---
+
+# Football department mappings
+
+Binds the lookup the department requires (`## Dependencies → ### Requires` in `tsv.fussball.aim`) to the system that answers it: the club's own member app, described at `tsv.app`. The same software is a Software where it is described and a Service here, where it is consumed; the Service facet `tsv.fussball#Service:Mitgliederverzeichnis` is the department's naming of it, and this mapping is the answer.
+
+## Map: Mitglieder
+
+### Summary
+
+Resolves the `Mitglieder` alias — the Mitgliedersuche capability — to the member app's lookup.
+
+### Target
+
+- `tsv.app`
+
+### Operation Map
+
+- `Mitglieder.Suchen` → `tsv.app.MitgliedSuchen`

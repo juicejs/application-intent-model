@@ -1,0 +1,101 @@
+---
+aim: nasa.jsc.mcc
+kind: intent
+parent: nasa.jsc
+nature: software
+---
+
+# Mission control software
+
+## Summary
+
+The software the flight control team works on: it ingests the vehicle's telemetry from every tracking pass, flags limit violations, plans and executes burns, watches the crew's vital signs, and sends commands up. It talks to the vehicle through the Deep Space Network, which it reaches through one link. Three parts carry its behaviour: telemetry, trajectory and crew systems; the console that shows them, and the look of that console, are shared here.
+
+## Requirements
+
+- **LIVE** — Every telemetry frame reaches the console within two seconds of its downlink.
+- **LINK** — Every downlink and every uplink goes through the Deep Space Network link; no other path reaches the vehicle.
+- **SAFE-COMMAND** — A command is sent only by a flight director, and every command sent is acknowledged or sent again.
+
+## Children
+
+- [telemetry](./telemetry/nasa.jsc.mcc.telemetry.aim) — Ingests frames, flags limit violations, sends commands
+- [trajectory](./trajectory/nasa.jsc.mcc.trajectory.aim) — Plans and executes burns from the ephemeris
+- [crew](./crew/nasa.jsc.mcc.crew.aim) — Watches the crew's vital signs
+
+## Dependencies
+
+### Requires
+
+- SpaceLink as Link
+
+## Style: Console
+
+### Summary
+
+Dark, dense and still: the console is read for hours in a dim room, and nothing on it moves unless a value did.
+
+### Palette
+
+- surface: near black `#0b0f14`
+- ink: pale grey `#d8dee6`
+- alert: amber, the only warm hue
+- critical: red `#e5484d`
+
+### Type
+
+- face: monospace for every value
+
+### Layout
+
+- alerts: at the top, newest first, never scrolling away on their own
+
+## View: ConsoleDisplay
+
+### Summary
+
+The flight controller's console: the vehicle's telemetry, the planned burns, and the way to a command.
+
+### Display
+
+- Every frame of the vehicle, by system, with its limits — [reads](aim:nasa.jsc.mcc.telemetry#Record:TelemetryFrame), [reads](aim:nasa.jsc.mcc.telemetry#Record:Limit)
+- The burns planned and executed — [reads](aim:nasa.jsc.mcc.trajectory#Record:Burn)
+
+### Actions
+
+- Send a command — [exposes](aim:nasa.jsc.mcc.telemetry#Operation:SendCommand)
+- Crew health — [navigates](aim:nasa.jsc.mcc.crew#View:CrewHealth)
+
+### Layout
+
+- The system that last violated a limit is shown first.
+
+### Bindings
+
+- binds: `src/console/ConsoleDisplay.tsx#ConsoleDisplay` — as: component
+
+## Service: DeepSpaceNetwork
+
+### Label
+
+Deep Space Network
+
+### Summary
+
+The network of antennas, built and run at JPL, that this software reaches to schedule a tracking pass, pull the frames down and push a command up. Its own model is JPL's; this is the link mission control holds to it.
+
+### Bindings
+
+- binds: `aim:nasa.jpl.dsn` — as: provider
+
+## Capability: SpaceLink
+
+### Summary
+
+What the software must be able to do with the vehicle, whoever carries the signal: book a pass, receive the frames of a pass, and send a command and get its acknowledgement.
+
+### Operations
+
+- `ScheduleTrack(vehicle, window) -> pass`
+- `Downlink(pass) -> frames`
+- `Uplink(pass, command) -> ack`

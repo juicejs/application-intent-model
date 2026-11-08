@@ -1,0 +1,335 @@
+---
+aim: nasa.esdmd.artemis3.countdown
+kind: intent
+parent: nasa.esdmd.artemis3
+nature: process
+---
+
+# Launch countdown
+
+## Summary
+
+From the launch director's call to stations to liftoff, inside one launch window. The count runs to a built-in hold at T-10 minutes, where the weather is polled, the range gives its clearance, the lander in lunar orbit is confirmed ready, and the launch director polls the team. Any red answer scrubs; the window closing scrubs. The launch director starts it.
+
+## Requirements
+
+- **WINDOW** — The vehicle lifts off inside the launch window or not at all; the window's close ends the countdown.
+- **WEATHER** — The count does not leave the hold while a launch commit criterion for weather is violated.
+- **RANGE** — The count does not leave the hold without the range's clearance — from [nasa#Requirements[RANGE]]
+- **LANDER** — The go poll is not taken until the lander is reported ready — from [nasa.esdmd.artemis3#Requirements[LANDER]]
+- **POLL** — Every station answers the go poll; one no-go scrubs.
+
+## Steps
+
+1. Call to stations — [emits](aim:nasa.esdmd.artemis3.countdown#Event:CountdownStarted), [mutates](aim:nasa.esdmd.artemis3.countdown#Record:Countdown)
+2. The launch team loads propellant and the crew boards.
+3. Built-in hold at T-10 minutes — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:EnterHold)
+4. Weather — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:PollWeather) — continues: Green
+5. Range — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:ClearRange) — continues: Clear
+6. Wait for the lander — [subscribes](aim:nasa.esdmd.artemis3.countdown#Event:LanderReady)
+7. Go/No-Go poll — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:PollGoNoGo) — continues: Go
+8. Terminal count and liftoff — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:CommitToLaunch)
+
+## On Error
+
+- A scrub keeps the countdown record as it was; the next attempt is a new countdown inside the next window.
+
+## Dependencies
+
+### Requires
+
+- LaunchWeather as Weather
+
+## Record: Countdown
+
+### Summary
+
+One attempt: when it started, which mission, and whether it is running, holding, scrubbed or launched.
+
+### Schema
+
+```schema
+id: string required unique
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+startedAt: datetime required
+status: enum(running, holding, scrubbed, launched) required default(running)
+```
+
+## State: CountdownStatus
+
+### Summary
+
+A countdown runs, holds at T-10, resumes on a go poll, and ends either scrubbed or launched.
+
+### Of
+
+- `nasa.esdmd.artemis3.countdown#Record:Countdown.status`
+
+### States
+
+- Running — initial
+- Holding
+- Scrubbed — final
+- Launched — final
+
+### Moves
+
+- Running → Holding — [nasa.esdmd.artemis3.countdown#Operation:EnterHold]
+- Holding → Running — [nasa.esdmd.artemis3.countdown#Operation:PollGoNoGo]
+- Running → Scrubbed — [nasa.esdmd.artemis3.countdown#Operation:Scrub]
+- Holding → Scrubbed — [nasa.esdmd.artemis3.countdown#Operation:Scrub]
+- Running → Launched — [nasa.esdmd.artemis3.countdown#Operation:CommitToLaunch]
+
+### Only in
+
+- Holding — [nasa.esdmd.artemis3.countdown#Operation:PollWeather], [nasa.esdmd.artemis3.countdown#Operation:ClearRange], [nasa.esdmd.artemis3.countdown#Operation:PollGoNoGo]
+
+## Capability: LaunchWeather
+
+### Summary
+
+What the countdown must be able to learn about the weather at the pad for the window, whoever answers it: the launch commit criteria and whether each is met.
+
+### Operations
+
+- `Forecast(site, window) -> constraints`
+
+### Bindings
+
+- binds: `http:api.weather.gov/gridpoints` — as: provider
+
+## Operation: EnterHold
+
+### Summary
+
+The count stops at T-10 minutes for the final checks.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa#Persona:LaunchDirector`
+
+### Ensures
+
+- The countdown is holding — [mutates](aim:nasa.esdmd.artemis3.countdown#Record:Countdown)
+
+## Operation: PollWeather
+
+### Summary
+
+The weather officer's criteria are checked against the forecast for the window.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa#Persona:LaunchDirector`
+
+### Ensures
+
+- The forecast is read for the window — [reads](aim:nasa.esdmd.artemis3.countdown#Record:Countdown), [invokes](aim:nasa.esdmd.artemis3.countdown#Capability:LaunchWeather)
+
+### Decides
+
+- **Green** — every launch commit criterion for weather is met — [satisfies](aim:nasa.esdmd.artemis3.countdown#Requirements[WEATHER])
+- **Red** — a criterion is violated with no forecast of clearing inside the window — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:Scrub)
+
+## Operation: ClearRange
+
+### Summary
+
+The range confirms the airspace and sea lanes are clear and its safety systems are ready.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa.ksc#Organisation:EasternRange`
+
+### Ensures
+
+- The range's answer is on record — [reads](aim:nasa.esdmd.artemis3.countdown#Record:Countdown), [satisfies](aim:nasa.esdmd.artemis3.countdown#Requirements[RANGE])
+
+### Decides
+
+- **Clear** — the range is clear and its safety systems are ready
+- **NoGo** — an intrusion or a safety system fault that cannot be cleared inside the window — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:Scrub)
+
+## Operation: ReportLanderReadiness
+
+### Summary
+
+SpaceX reports that the lander in lunar orbit is ready to receive the crew.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa.esdmd.artemis3#Organisation:SpaceX`
+
+### Ensures
+
+- The lander's state is read through the mission's link — [invokes](aim:nasa.esdmd.artemis3#Capability:LanderStatus)
+- The countdown is told — [emits](aim:nasa.esdmd.artemis3.countdown#Event:LanderReady), [satisfies](aim:nasa.esdmd.artemis3.countdown#Requirements[LANDER])
+
+## Operation: PollGoNoGo
+
+### Summary
+
+The launch director polls every station; the count resumes only on all go.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa#Persona:LaunchDirector`
+
+### Expects
+
+- The lander is reported ready.
+
+### Ensures
+
+- Every station's answer is on record — [reads](aim:nasa.esdmd.artemis3.countdown#Record:Countdown)
+
+### Decides
+
+- **Go** — every station answers go — [mutates](aim:nasa.esdmd.artemis3.countdown#Record:Countdown), [satisfies](aim:nasa.esdmd.artemis3.countdown#Requirements[POLL])
+- **NoGo** — any station answers no-go — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:Scrub)
+
+## Operation: Scrub
+
+### Summary
+
+The attempt ends; the vehicle is safed and the propellant drained.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa#Persona:LaunchDirector`
+
+### Ensures
+
+- The countdown is scrubbed — [mutates](aim:nasa.esdmd.artemis3.countdown#Record:Countdown)
+- The team and the crew are told — [emits](aim:nasa.esdmd.artemis3.countdown#Event:LaunchScrubbed)
+
+## Operation: CommitToLaunch
+
+### Summary
+
+The terminal count runs and the vehicle lifts off; the mission is in flight.
+
+### Input
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+### Authz
+
+- `nasa#Persona:LaunchDirector`
+
+### Expects
+
+- The countdown is running after a go poll, and the window is open.
+
+### Ensures
+
+- The countdown is launched — [mutates](aim:nasa.esdmd.artemis3.countdown#Record:Countdown), [satisfies](aim:nasa.esdmd.artemis3.countdown#Requirements[WINDOW])
+- The mission is in flight — [mutates](aim:nasa.esdmd.artemis3#Record:Mission)
+- Liftoff — [emits](aim:nasa.esdmd.artemis3.countdown#Event:Liftoff)
+
+## Event: CountdownStarted
+
+### Summary
+
+The launch director called the team to stations.
+
+### Payload
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+startedAt: datetime required
+```
+
+## Event: LanderReady
+
+### Summary
+
+SpaceX reported the lander ready for the crew.
+
+### Payload
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+```
+
+## Event: LaunchScrubbed
+
+### Summary
+
+The attempt was scrubbed.
+
+### Payload
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+reason: string required
+```
+
+## Event: Liftoff
+
+### Summary
+
+The vehicle left the pad.
+
+### Payload
+
+```schema
+countdownId: string required ref(nasa.esdmd.artemis3.countdown#Countdown.id)
+liftoffAt: datetime required
+```
+
+## Trigger: WindowCloses
+
+### Summary
+
+Three hours after the call to stations the window has closed; a countdown that has not lifted off by then is scrubbed.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 3 hours after [nasa.esdmd.artemis3.countdown#Event:CountdownStarted] — unless [nasa.esdmd.artemis3.countdown#Event:Liftoff]
+
+### Fires
+
+- [triggers](aim:nasa.esdmd.artemis3.countdown#Operation:Scrub), [satisfies](aim:nasa.esdmd.artemis3.countdown#Requirements[WINDOW])

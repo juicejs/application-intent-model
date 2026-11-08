@@ -1,0 +1,42 @@
+---
+aim: tsv.app.beitraege
+kind: intent
+parent: tsv.app
+nature: software
+---
+
+# Fees module
+
+## Summary
+
+The part of the member app the treasurer works in: every fee of the year with its status, the ones overdue first, and the reminder at hand. Described inside the app; built and run with it, never on its own.
+
+## Requirements
+
+- **UEBERSICHT** — The treasurer sees every fee of the current year with its status within one screen — from [tsv#Requirements[BEITRAG]]
+
+## View: Beitragsuebersicht
+
+### Label
+
+Beitragsübersicht
+
+### Summary
+
+The fees of the year, overdue first, with the reminder as the action.
+
+### Display
+
+- Every fee with its member, amount and status — [reads](aim:tsv.beitrag.einzug#Record:Beitrag), [reads](aim:tsv#Record:Mitglied)
+
+### Actions
+
+- Send a reminder — [exposes](aim:tsv.beitrag.einzug#Operation:Mahnen)
+
+### Layout
+
+- Overdue fees come first, then reminded, then open, then paid.
+
+### Bindings
+
+- binds: `src/pages/Beitraege.tsx#Beitragsuebersicht` — as: component

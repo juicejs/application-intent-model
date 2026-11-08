@@ -1,0 +1,24 @@
+---
+aim: nasa.jsc.mcc
+kind: mapping
+---
+
+# Mission control mappings
+
+Binds the link mission control requires (`## Dependencies → ### Requires` in the intent) to the system that answers it: the Deep Space Network, whose own model is `nasa.jpl.dsn`. The Service facet `nasa.jsc.mcc#Service:DeepSpaceNetwork` is mission control's naming of that system; this mapping is the answer, operation by operation.
+
+## Map: Link
+
+### Summary
+
+Resolves the `Link` alias — the SpaceLink capability — to the Deep Space Network's own operations.
+
+### Target
+
+- `nasa.jpl.dsn`
+
+### Operation Map
+
+- `Link.ScheduleTrack` → `nasa.jpl.dsn.ScheduleTrack`
+- `Link.Downlink` → `nasa.jpl.dsn.Downlink`
+- `Link.Uplink` → `nasa.jpl.dsn.Uplink`

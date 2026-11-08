@@ -1,0 +1,82 @@
+---
+aim: volksbank
+kind: intent
+nature: service
+provenance: inferred
+---
+
+# Volksbank Seehausen — direct-debit interface
+
+## Summary
+
+The bank's direct-debit interface as the club reaches it, written from what the bank's API offers: submit one SEPA direct debit against a mandate, ask what became of it, and receive the payments that arrived. This is the provider's model, outside the club's tree and read-only to it; the club's mapping points here. Written by discovery from the API description and not yet confirmed by the bank.
+
+## Requirements
+
+- **MANDAT** — A direct debit is submitted only against a mandate the account holder signed; the interface refuses any other.
+- **STATUS** — The status of a submitted direct debit is answered as submitted, paid or returned, never as unknown.
+
+## Operation: LastschriftEinreichen
+
+### Summary
+
+One SEPA direct debit is submitted for collection.
+
+### Input
+
+```schema
+iban: string required
+betrag: decimal required min(0)
+verwendungszweck: string required max(140)
+mandatsreferenz: string required
+```
+
+### Returns
+
+```schema
+lastschriftId: string required
+```
+
+### Bindings
+
+- binds: `route:POST /v1/direct-debits` — as: handler
+
+## Operation: LastschriftStatus
+
+### Summary
+
+What became of a submitted direct debit.
+
+### Input
+
+```schema
+lastschriftId: string required
+```
+
+### Returns
+
+```schema
+status: enum(eingereicht, bezahlt, zurueckgegeben) required
+```
+
+### Bindings
+
+- binds: `route:GET /v1/direct-debits/{id}` — as: handler
+
+## Event: ZahlungEingegangen
+
+### Summary
+
+A direct debit was collected, or returned unpaid; the bank announces it to the account holder's registered endpoint.
+
+### Payload
+
+```schema
+lastschriftId: string required
+status: enum(bezahlt, zurueckgegeben) required
+am: date required
+```
+
+### Routing
+
+- Channel: webhook, the account holder's registered endpoint

@@ -1,0 +1,40 @@
+---
+aim: nasa.jsc
+kind: intent
+parent: nasa
+nature: organisation
+---
+
+# Johnson Space Center
+
+## Summary
+
+The center in Houston that trains the astronauts and flies the missions: flight operations, the flight control teams, and the mission control software they work on. Its flight controllers sit at the consoles for every crewed flight and triage what the software flags.
+
+## Requirements
+
+- **CONSOLE** — Every flight controller on shift sees the vehicle's telemetry on the console within seconds of its downlink.
+- **TRIAGE** — A flight controller, not the software, decides whether a flagged reading is an anomaly.
+
+## Children
+
+- [mcc](./mcc/nasa.jsc.mcc.aim) — The mission control software: telemetry, trajectory and crew systems
+
+## Persona: FlightController
+
+### Role
+
+- Watches one vehicle system from a console, triages what the software flags, and writes the team's proposed resolutions.
+
+### Access
+
+- Watches the consoles — [accesses](aim:nasa.jsc.mcc#View:ConsoleDisplay)
+- Triages an anomaly — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:TriageAnomaly)
+- Proposes a resolution — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:ProposeResolution)
+- Plans a burn — [invokes](aim:nasa.jsc.mcc.trajectory#Operation:ComputeBurn)
+
+## Organisation: FlightOperationsDirectorate
+
+### Summary
+
+The directorate at Johnson that runs mission control and trains every flight controller and flight director; a part of the center that will have its own processes once its training and certification work is described.

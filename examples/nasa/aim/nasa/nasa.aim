@@ -1,0 +1,103 @@
+---
+aim: nasa
+kind: intent
+nature: organisation
+timezone: America/New_York
+calendar: US
+---
+
+# NASA
+
+## Summary
+
+The National Aeronautics and Space Administration: the agency that formulates, develops, launches and flies human and robotic missions. This root holds what every mission and every center shares — the people who direct flights and missions, the rules that bind them, and the index of the organisation's parts. The work itself lives below: a directorate runs a mission as a project, a center describes its software, and the network that carries every signal is described where it is built and used where it is needed.
+
+## Requirements
+
+- **SAFETY** — No mission flies without a flight readiness review passed by its standing review board.
+- **GATES** — Every mission passes the same lifecycle gates, in order, and a gate is not passed while a review action stays open — from [nasa#Knowledge:NPR7120]
+- **RANGE** — No vehicle leaves a NASA pad without the range's clearance.
+- **RULES** — A flight director decides every real anomaly on the flight rules, never on judgement alone — from [nasa#Knowledge:FlightRules]
+
+## Children
+
+- [esdmd](./esdmd/nasa.esdmd.aim) — The directorate that runs the Artemis missions and holds their key decisions
+- [jsc](./jsc/nasa.jsc.aim) — Johnson Space Center: flight operations and the mission control software
+- [jpl](./jpl/nasa.jpl.aim) — The Jet Propulsion Laboratory, operated for NASA by Caltech, which builds and runs the Deep Space Network
+- [ksc](./ksc/nasa.ksc.aim) — Kennedy Space Center: the pads, the launch team and the range it launches from
+
+## Persona: FlightDirector
+
+### Role
+
+- Leads the flight control team in mission control and decides every anomaly in flight.
+
+### Access
+
+- Watches the consoles — [accesses](aim:nasa.jsc.mcc#View:ConsoleDisplay)
+- Decides an anomaly's resolution — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:DecideResolution)
+- Orders a burn — [invokes](aim:nasa.jsc.mcc.trajectory#Operation:ExecuteBurn)
+- Sends a command to the vehicle — [invokes](aim:nasa.jsc.mcc.telemetry#Operation:SendCommand)
+
+## Persona: MissionManager
+
+### Role
+
+- Accountable for one mission from formulation to the end of flight; owns its reviews and their actions.
+
+### Access
+
+- Opens a lifecycle review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:OpenReview)
+- Closes the actions of a review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:CloseActions)
+- Takes an escalated review to the directorate — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:EscalateReview)
+- Takes an escalated anomaly to the directorate — [invokes](aim:nasa.esdmd.artemis3.anomaly#Operation:EscalateAnomaly)
+- Closes the mission after splashdown — [invokes](aim:nasa.esdmd.artemis3#Operation:CloseMission)
+
+## Persona: LaunchDirector
+
+### Role
+
+- Runs the countdown from the firing room and gives the final go.
+
+### Access
+
+- Starts a countdown — [invokes](aim:nasa.esdmd.artemis3.countdown)
+- Calls the built-in hold — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:EnterHold)
+- Polls the weather — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:PollWeather)
+- Polls the team for go — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:PollGoNoGo)
+- Commits to launch — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:CommitToLaunch)
+- Scrubs — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:Scrub)
+
+## Persona: Astronaut
+
+### Role
+
+- A crew member in flight; sees their own vital signs and hears what mission control advises.
+
+### Access
+
+- Sees the crew's health — [accesses](aim:nasa.jsc.mcc.crew#View:CrewHealth)
+
+## Knowledge: NPR7120
+
+### Label
+
+NPR 7120.5
+
+### Summary
+
+NASA's program and project management requirements: which lifecycle reviews a mission passes, what each review must show, and who holds the key decision points.
+
+### Source
+
+The NASA Procedural Requirements document, in the agency's directives library.
+
+## Knowledge: FlightRules
+
+### Summary
+
+The flight rules: for every vehicle system, what is nominal, what is a violation, and what a flight director may and may not do about it before and during flight.
+
+### Source
+
+The mission's flight rules book, kept by flight operations at Johnson.

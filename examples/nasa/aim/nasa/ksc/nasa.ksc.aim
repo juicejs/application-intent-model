@@ -1,0 +1,45 @@
+---
+aim: nasa.ksc
+kind: intent
+parent: nasa
+nature: organisation
+---
+
+# Kennedy Space Center
+
+## Summary
+
+The center on the Florida coast that launches: the pads, the firing room and the launch team. It launches from the Eastern Range, which is not NASA's — the Space Force runs it and clears every launch — and it reads the weather from the National Weather Service. Both appear here as what they are to Kennedy: an organisation that acts in its countdowns, and a system it uses.
+
+## Requirements
+
+- **CLEARED** — No countdown leaves its final hold without the range's clearance — from [nasa#Requirements[RANGE]]
+- **CRITERIA** — The launch commit criteria for weather are checked against the National Weather Service's forecast for the pad, never against a look at the sky — from: the launch commit criteria document
+
+## Organisation: EasternRange
+
+### Label
+
+Space Launch Delta 45
+
+### Summary
+
+The Space Force unit that runs the Eastern Range: the airspace, the sea lanes and the flight termination systems. It clears, or refuses to clear, every launch from Kennedy's pads.
+
+### Access
+
+- Clears the range — [invokes](aim:nasa.esdmd.artemis3.countdown#Operation:ClearRange)
+
+## Service: NOAAWeather
+
+### Label
+
+National Weather Service
+
+### Summary
+
+The forecast for the pad, read over the National Weather Service's API; the system that answers every countdown's weather capability today.
+
+### Bindings
+
+- binds: `http:api.weather.gov/gridpoints` — as: connection

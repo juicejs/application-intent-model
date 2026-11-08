@@ -1,0 +1,37 @@
+---
+aim: tsv.turnen
+kind: intent
+parent: tsv
+nature: organisation
+---
+
+# Gymnastics department
+
+## Summary
+
+Children's gymnastics on Monday and Wednesday afternoons and a women's group on Thursday evenings, all in the town's hall. The department has one instructor per group, wants the hall renovated, and otherwise asks nothing of the club but its share of the hall hours.
+
+## Requirements
+
+- **AUFSICHT** — No group trains without a licensed instructor present — from [tsv#Knowledge:Satzung]
+- **HALLE** — The department uses the hall only in the hours the town grants it — from: the town's hall rules
+
+## Persona: Uebungsleiterin
+
+### Label
+
+Übungsleiterin
+
+### Role
+
+- Leads one group, holds the instructor licence, and keeps the group's attendance.
+
+## Project: Hallensanierung
+
+### Label
+
+Hallensanierung
+
+### Summary
+
+Get the town to renovate the hall's floor and lighting by the autumn of 2027; the department's project once it has a plan and a budget.

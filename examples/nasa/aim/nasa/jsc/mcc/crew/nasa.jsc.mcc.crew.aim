@@ -1,0 +1,85 @@
+---
+aim: nasa.jsc.mcc.crew
+kind: intent
+parent: nasa.jsc.mcc
+nature: software
+---
+
+# Crew systems
+
+## Summary
+
+The part of mission control that watches the crew: each astronaut's vital signs as they arrive among the telemetry, flagged when they leave their nominal band, and shown on one screen the flight surgeon and the crew themselves can read.
+
+## Requirements
+
+- **BAND** — A vital sign outside its nominal band raises a crew alert at once.
+- **OWN** — An astronaut sees their own vital signs; mission control sees everyone's.
+
+## Record: VitalSign
+
+### Summary
+
+One reading of one crew member: heart rate, oxygen or carbon dioxide.
+
+### Schema
+
+```schema
+id: string required unique
+astronaut: string required
+kind: enum(heart_rate, o2, co2) required
+value: number required
+at: datetime required
+```
+
+## Operation: FlagVitalSign
+
+### Summary
+
+A reading is compared with the crew member's nominal band.
+
+### Input
+
+```schema
+vitalSignId: string required ref(nasa.jsc.mcc.crew#VitalSign.id)
+```
+
+### Ensures
+
+- The reading is read — [reads](aim:nasa.jsc.mcc.crew#Record:VitalSign)
+
+### Decides
+
+- **Nominal** — the value lies inside the crew member's band
+- **Alert** — the value lies outside it — [emits](aim:nasa.jsc.mcc.crew#Event:CrewAlert), [satisfies](aim:nasa.jsc.mcc.crew#Requirements[BAND])
+
+## View: CrewHealth
+
+### Summary
+
+The crew's vital signs, latest first, with every alert.
+
+### Display
+
+- Each crew member's latest readings and their band — [reads](aim:nasa.jsc.mcc.crew#Record:VitalSign)
+
+### Actions
+
+- Advise the crew — [exposes](aim:nasa.jsc.mcc.telemetry#Operation:SendCommand)
+
+### Layout
+
+- A crew member with an open alert is shown first.
+
+## Event: CrewAlert
+
+### Summary
+
+A crew member's vital sign left its nominal band.
+
+### Payload
+
+```schema
+vitalSignId: string required ref(nasa.jsc.mcc.crew#VitalSign.id)
+astronaut: string required
+```

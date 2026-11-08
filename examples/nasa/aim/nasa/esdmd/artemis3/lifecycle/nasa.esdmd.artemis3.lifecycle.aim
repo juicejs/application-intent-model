@@ -1,0 +1,307 @@
+---
+aim: nasa.esdmd.artemis3.lifecycle
+kind: intent
+parent: nasa.esdmd.artemis3
+nature: process
+---
+
+# Mission lifecycle gates
+
+## Summary
+
+From formulation to flight readiness, the mission passes its gates in order: system requirements review, preliminary design review, the directorate's key decision point, critical design review and flight readiness review. The standing review board conducts each review and decides whether the mission proceeds, reworks, or stops; the directorate decides the key decision point. A review that asks for rework is held again once its actions are closed, and a review that stays open too long is escalated.
+
+## Requirements
+
+- **ORDER** — The gates are passed in the order of the steps below; none is skipped.
+- **ACTIONS** — A review with open actions is in rework; it is held again only after every action is closed — from [nasa#Requirements[GATES]]
+- **NINETY** — A review still open ninety business days after it was opened is escalated to the directorate — from: the directorate's review policy, 2024
+- **BY-THE-BOOK** — The board judges every review against NPR 7120.5 — from [nasa#Knowledge:NPR7120]
+
+## Steps
+
+1. Formulation: the mission's concept, requirements and cost are written, and the mission exists — [mutates](aim:nasa.esdmd.artemis3#Record:Mission)
+2. Open the system requirements review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:OpenReview)
+3. The board conducts the system requirements review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview) — continues: Proceed
+4. Open the preliminary design review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:OpenReview)
+5. The board conducts the preliminary design review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview) — continues: Proceed
+6. Key decision point: the directorate commits the mission to development — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:KeyDecisionPoint) — continues: Approved
+7. Open the critical design review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:OpenReview)
+8. The board conducts the critical design review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview) — continues: Proceed
+9. Open the flight readiness review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:OpenReview)
+10. The board conducts the flight readiness review — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview) — continues: Proceed
+11. Flight readiness is announced — [emits](aim:nasa.esdmd.artemis3.lifecycle#Event:FlightReadinessGranted)
+
+## On Error
+
+- A review whose board cannot convene is rescheduled; its deadline keeps counting from the day it was opened.
+
+## Record: Review
+
+### Summary
+
+One lifecycle review: which gate, when it was opened, where it stands and what the board decided.
+
+### Schema
+
+```schema
+id: string required unique
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+gate: enum(SRR, PDR, KDP_D, CDR, FRR) required
+status: enum(open, rework, closed) required default(open)
+decision: enum(proceed, rework, terminate) optional
+openedAt: datetime required
+```
+
+## Record: Action
+
+### Summary
+
+A review action: something the board requires before the gate is passed.
+
+### Schema
+
+```schema
+id: string required unique
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+text: string required min(1)
+closed: boolean required default(false)
+```
+
+## State: ReviewStatus
+
+### Summary
+
+A review is open until the board decides; a rework decision keeps it in rework until the mission manager closes every action, which reopens it for the board.
+
+### Of
+
+- `nasa.esdmd.artemis3.lifecycle#Record:Review.status`
+
+### States
+
+- Open — initial
+- Rework
+- Closed — final
+
+### Moves
+
+- Open → Closed — [nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview]
+- Open → Rework — [nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview]
+- Rework → Open — [nasa.esdmd.artemis3.lifecycle#Operation:CloseActions]
+
+### Only in
+
+- Rework — [nasa.esdmd.artemis3.lifecycle#Operation:CloseActions]
+
+## Operation: OpenReview
+
+### Summary
+
+The mission manager opens the next gate's review and the clock on it starts.
+
+### Input
+
+```schema
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+gate: enum(SRR, PDR, KDP_D, CDR, FRR) required
+```
+
+### Authz
+
+- `nasa#Persona:MissionManager`
+
+### Expects
+
+- The previous gate is closed with a proceed decision.
+
+### Ensures
+
+- A review exists for the gate — [mutates](aim:nasa.esdmd.artemis3.lifecycle#Record:Review), [satisfies](aim:nasa.esdmd.artemis3.lifecycle#Requirements[ORDER])
+- The clock starts — [emits](aim:nasa.esdmd.artemis3.lifecycle#Event:ReviewOpened)
+
+## Operation: ConductGateReview
+
+### Summary
+
+The standing review board holds the review and decides whether the mission proceeds, reworks, or stops.
+
+### Input
+
+```schema
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+```
+
+### Authz
+
+- `nasa.esdmd.artemis3#Organisation:StandingReviewBoard`
+
+### Expects
+
+- The review is open.
+
+### Ensures
+
+- The decision and its date are on the review — [mutates](aim:nasa.esdmd.artemis3.lifecycle#Record:Review), [reads](aim:nasa.esdmd.artemis3.lifecycle#Record:Action), [consults](aim:nasa#Knowledge:NPR7120), [satisfies](aim:nasa.esdmd.artemis3.lifecycle#Requirements[BY-THE-BOOK])
+- A passed flight readiness review clears the mission to launch — [mutates](aim:nasa.esdmd.artemis3#Record:Mission), [satisfies](aim:nasa#Requirements[SAFETY])
+
+### Decides
+
+- **Proceed** — every entrance criterion of the gate is met and no action stays open — [emits](aim:nasa.esdmd.artemis3.lifecycle#Event:ReviewClosed)
+- **Rework** — criteria are unmet but can be met; the board writes the actions — [mutates](aim:nasa.esdmd.artemis3.lifecycle#Record:Action)
+- **Terminate** — the mission cannot meet its criteria; the directorate ends it outside this process — [emits](aim:nasa.esdmd.artemis3.lifecycle#Event:ReviewClosed)
+
+## Operation: CloseActions
+
+### Summary
+
+The mission manager closes the review's actions; when every one is closed the review reopens and the board holds it again.
+
+### Input
+
+```schema
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+```
+
+### Authz
+
+- `nasa#Persona:MissionManager`
+
+### Expects
+
+- The review is in rework.
+
+### Ensures
+
+- Every action of the review is closed — [mutates](aim:nasa.esdmd.artemis3.lifecycle#Record:Action), [satisfies](aim:nasa.esdmd.artemis3.lifecycle#Requirements[ACTIONS])
+- The review is open again — [mutates](aim:nasa.esdmd.artemis3.lifecycle#Record:Review)
+- The board reviews again — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:ConductGateReview)
+
+## Operation: KeyDecisionPoint
+
+### Summary
+
+The directorate decides whether the mission enters development.
+
+### Input
+
+```schema
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+```
+
+### Authz
+
+- `nasa.esdmd`
+
+### Expects
+
+- The preliminary design review is closed with a proceed decision.
+
+### Ensures
+
+- The decision is recorded against the mission — [reads](aim:nasa.esdmd.artemis3.lifecycle#Record:Review), [consults](aim:nasa#Knowledge:NPR7120)
+
+### Decides
+
+- **Approved** — cost, schedule and technical baselines are credible — [mutates](aim:nasa.esdmd.artemis3#Record:Mission), [emits](aim:nasa.esdmd.artemis3.lifecycle#Event:KeyDecisionMade)
+- **Deferred** — a baseline is not credible yet; a delta review is opened — [invokes](aim:nasa.esdmd.artemis3.lifecycle#Operation:OpenReview)
+
+## Operation: EscalateReview
+
+### Summary
+
+A review open too long goes to the directorate with the mission manager's account of why.
+
+### Input
+
+```schema
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+```
+
+### Authz
+
+- `nasa#Persona:MissionManager`
+
+### Ensures
+
+- The directorate is told — [reads](aim:nasa.esdmd.artemis3.lifecycle#Record:Review), [emits](aim:nasa.esdmd.artemis3.lifecycle#Event:ReviewEscalated), [satisfies](aim:nasa.esdmd.artemis3.lifecycle#Requirements[NINETY])
+
+## Event: ReviewOpened
+
+### Summary
+
+A gate review was opened.
+
+### Payload
+
+```schema
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+openedAt: datetime required
+```
+
+## Event: ReviewClosed
+
+### Summary
+
+The board closed a review, with a proceed or a terminate decision.
+
+### Payload
+
+```schema
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+decision: enum(proceed, terminate) required
+```
+
+## Event: KeyDecisionMade
+
+### Summary
+
+The directorate committed the mission to development.
+
+### Payload
+
+```schema
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+```
+
+## Event: ReviewEscalated
+
+### Summary
+
+A review open beyond its deadline was taken to the directorate.
+
+### Payload
+
+```schema
+reviewId: string required ref(nasa.esdmd.artemis3.lifecycle#Review.id)
+```
+
+## Event: FlightReadinessGranted
+
+### Summary
+
+The flight readiness review is passed; the mission may be launched.
+
+### Payload
+
+```schema
+missionId: string required ref(nasa.esdmd.artemis3#Mission.id)
+```
+
+## Trigger: ReviewClosureDeadline
+
+### Summary
+
+A review still open ninety business days after it was opened is escalated; the deadline is disarmed when the board closes the review.
+
+### Kind
+
+- deadline
+
+### Schedule
+
+- 90 business-days after [nasa.esdmd.artemis3.lifecycle#Event:ReviewOpened] — unless [nasa.esdmd.artemis3.lifecycle#Event:ReviewClosed]
+
+### Fires
+
+- [triggers](aim:nasa.esdmd.artemis3.lifecycle#Operation:EscalateReview), [satisfies](aim:nasa.esdmd.artemis3.lifecycle#Requirements[NINETY])

@@ -1,0 +1,23 @@
+---
+aim: tsv
+kind: mapping
+---
+
+# Club mappings
+
+Binds the capability the club requires at its root (`## Dependencies → ### Requires` in `tsv.aim`) to the system that answers it: the bank, whose own model is `volksbank`. The Service facet `tsv#Service:Volksbank` is the club's naming of that system; this mapping is the answer, operation by operation. The membership-card capability is answered by a direct binding on the Capability itself and needs no map.
+
+## Map: Sepa
+
+### Summary
+
+Resolves the `Sepa` alias — the SepaLastschrift capability — to the bank's direct-debit operations.
+
+### Target
+
+- `volksbank`
+
+### Operation Map
+
+- `Sepa.Einreichen` → `volksbank.LastschriftEinreichen`
+- `Sepa.Status` → `volksbank.LastschriftStatus`

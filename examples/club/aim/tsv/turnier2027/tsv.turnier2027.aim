@@ -1,0 +1,94 @@
+---
+aim: tsv.turnier2027
+kind: intent
+parent: tsv
+nature: project
+---
+
+# Summer tournament 2027
+
+## Summary
+
+Host the regional youth tournament on the club's pitches on the first weekend of July 2027, with the club's own teams registered and the federation's confirmation in hand by the end of May. The project contains the work — the registration with the federation — and the committee that exists only for it. It performs nothing itself.
+
+## Requirements
+
+- **MELDUNG** — Every team the club fields is registered with the federation inside the registration window — from [tsv#Requirements[VERBAND]]
+- **ALTERSKLASSE** — A team is registered in the age group its youngest birth year puts it in — from: the federation's youth playing rules
+- **AUSLOSUNG** — The club's teams know their groups the day the federation publishes the draw.
+
+## Children
+
+- [anmeldung](./anmeldung/tsv.turnier2027.anmeldung.aim) — Registering the club's teams with the federation
+
+## Dependencies
+
+### Requires
+
+- Verbandsmeldung as Verband
+
+## Record: Turnier
+
+### Label
+
+Turnier
+
+### Summary
+
+The tournament as a thing with a date, the teams the club enters, and the moment the draw is published.
+
+### Schema
+
+```schema
+id: string required unique
+datum: date required
+mannschaften: list(ref(tsv.fussball#Mannschaft.id)) required
+auslosungAm: datetime optional label("Auslosung am")
+```
+
+## Organisation: Turnierausschuss
+
+### Label
+
+Turnierausschuss
+
+### Summary
+
+The committee the board appoints for this tournament — a coach, a parent, the groundsman — which runs the registration and the day itself; dissolved when the tournament is over.
+
+### Access
+
+- Registers a team — [invokes](aim:tsv.turnier2027.anmeldung#Operation:MannschaftMelden)
+- Pays the entry fee — [invokes](aim:tsv.turnier2027.anmeldung#Operation:StartgeldZahlen)
+
+## Service: Verbandsportal
+
+### Label
+
+Verbandsportal
+
+### Summary
+
+The federation's registration portal, reached through its API; the system that answers the registration capability today. The federation's own model is not in this tree.
+
+### Bindings
+
+- binds: `http:portal.bfv.example/api/anmeldung` — as: connection
+
+## Capability: Verbandsmeldung
+
+### Label
+
+Verbandsmeldung
+
+### Summary
+
+What the registration must be able to do, whoever provides it: register one team in one age group and receive the registration's number.
+
+### Operations
+
+- `Melden(mannschaft, altersklasse) -> meldenummer`
+
+### Bindings
+
+- binds: `http:portal.bfv.example/api/anmeldung` — as: provider
