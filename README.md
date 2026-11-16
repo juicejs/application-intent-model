@@ -1,4 +1,4 @@
-# Agentic Intent Model (AIM) v6.4
+# Agentic Intent Model (AIM) v6.5
 
 This revision says the language once: the specification is rewritten into thirteen sections, a third of its former length, and a model valid under 5.13 is valid 6.0 as it is. It adds four commitments — a local role that `plays` a shared one, ownership through `ref(...)` chains with `cross-owner(...)` and `!owner`, in-state guards (`→ unchanged`), and every write held to Schema, Immutable, ownership and State. See [the 6.0 proposal](./proposals/6.0-language-revision.md) for what changed and where each 5.13 section went.
 
@@ -9,6 +9,14 @@ AIM is a specification language for humans and AI agents. It captures the **inte
 **This repository is the specification itself** — the language, its reference examples, and the role prompts. Tooling, the package catalog, and publishing live in separate repositories.
 
 ---
+
+## What's new in 6.5
+
+From five real cases — a customer's recipe skill, an invitation text that a valid model could never produce, a menu whose arrangement had nowhere to go, the correction of written exams, and a building crew waiting for concrete. In each, what the owner cared about was a noun: the thing the work hands over. A model valid under 6.4 is valid 6.5; nothing is migrated. See [the 6.5 proposal](./proposals/6.5-output-facet.md).
+
+- **Output.** A sixteenth facet for a result of work that is handed over — a text, a document, a file, data, or a thing in the world such as concrete on site. It states what one is made from (`### Input`), what it contains (`### Contains`, `### Constraints`), the form it comes in (`### Format`: `text`, `data`, `document`, `file` or `physical`), what holds for every one (`### Ensures`) and, for a document, its arrangement (`### Layout`). It never acts and is never kept.
+- **`produces` and `needs`.** Work, or an actor directly, `produces` an Output and answers for it; work that cannot be done without one `needs` it. A Persona can ask for a result without an Operation in between.
+- **Content apart from its form.** The content is checked before anything is rendered or handed over; the rendering carries the whole content and nothing more. Who or what makes it — a person, a supplier, code, a model call, an agent — stays open.
 
 ## What's new in 6.4
 
@@ -181,7 +189,7 @@ GitHub will render `.aim` files as Markdown — frontmatter, headings, lists, an
 
 ## Repository contents
 
-- **[specification.md](./specification.md)** — the authoritative AIM v6.4 language spec.
+- **[specification.md](./specification.md)** — the authoritative AIM v6.5 language spec.
 - **[AGENTS.md](./AGENTS.md)** — the reference project-bootstrap file (cold-start entry point for any AI coding agent).
 - **[PROMPT.md](./PROMPT.md)** — role-based prompts for any AI assistant.
 - **[agents/](./agents/)** — Architect, Developer, Reviewer, and Encoder persona files.
@@ -213,6 +221,6 @@ Any other agent: point it at [AGENTS.md](./AGENTS.md) and the spec at <https://i
 
 ---
 
-Current spec: **AIM v6.4**
+Current spec: **AIM v6.5**
 
 Built by **[Juice d.o.o.](https://juice.com.hr)** · MIT License
